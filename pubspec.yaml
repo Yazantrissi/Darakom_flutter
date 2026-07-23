@@ -37,6 +37,7 @@ dependencies:
   get: ^4.7.3
   dio: ^5.10.0
   shared_preferences: ^2.5.5
+  file_picker: ^8.0.3
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +60,12 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # مسار الصور
+  assets:
+    - assets/images/logo.png
+
+  # إعدادات الخطوط
   fonts:
     - family: Tajawal
       fonts:

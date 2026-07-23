@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'views/splash/splash_screen.dart'; // تأكد من مطابقة المسار لمكان حفظ الشاشة
+import 'views/home/client_dashboard_screen.dart';
 
 void main() {
   // التأكد من تهيئة كل خدمات فلاتر بشكل صحيح قبل تشغيل التطبيق
@@ -69,6 +70,7 @@ class DarakomApp extends StatelessWidget {
       ),
 
       // تعيين شاشة البداية لتكون أول ما يظهر عند فتح التطبيق
+      //home: ClientDashboardScreen(),
       home: SplashScreen(),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/splash_controller.dart';
+import '../../controllers/splash/splash_controller.dart';
 
 class SplashScreen extends StatelessWidget {
   SplashScreen({super.key});
@@ -20,11 +20,11 @@ class SplashScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // أيقونة الشعار (يمكنك استبدالها بـ Image.asset لاحقاً)
-                  const Icon(
-                    Icons.foundation_rounded,
-                    size: 120,
-                    color: Color(0xFFF58A1E), // البرتقالي الحيوي
+                  // الشعار الحقيقي للتطبيق المضاف من المرفقات
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 140, // حجم مناسب ليتناسق مع الواجهة
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 16),
 

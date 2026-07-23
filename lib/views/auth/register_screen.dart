@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/register_controller.dart';
+import '../../controllers/auth/register_controller.dart';
+import '../../widgets/custom_file_upload_section.dart'; // استيراد ويدجت المرفقات
 
 class RegisterScreen extends StatelessWidget {
   RegisterScreen({super.key});
@@ -95,70 +96,6 @@ class RegisterScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
 
-                      // الحقول الديناميكية الخاصة بمزود الخدمة
-                      Obx(() => Visibility(
-                        visible: !controller.isCustomerTab.value,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // التخصص
-                            DropdownButtonFormField<String>(
-                              value: controller.selectedSpecialization.value,
-                              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                              style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
-                              decoration: _buildInputDecoration(hint: 'التخصص', icon: Icons.work_outline),
-                              items: controller.specializations.map((String type) {
-                                return DropdownMenuItem(value: type, child: Text(type));
-                              }).toList(),
-                              onChanged: controller.changeSpecialization,
-                            ),
-                            const SizedBox(height: 16),
-
-                            // الرقم النقابي (يظهر بعد اختيار التخصص)
-                            if (controller.selectedSpecialization.value != null) ...[
-                              _buildTextField(
-                                controller: controller.syndicateNumberController,
-                                hint: 'الرقم النقابي / رقم التسجيل',
-                                icon: Icons.badge_outlined,
-                                isLtr: true,
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // نوع الحرفة (يظهر فقط إذا كان التخصص "حرفي")
-                            if (controller.selectedSpecialization.value == 'حرفي') ...[
-                              DropdownButtonFormField<String>(
-                                value: controller.selectedCraft.value,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
-                                decoration: _buildInputDecoration(hint: 'نوع الحرفة', icon: Icons.handyman_outlined),
-                                items: controller.crafts.map((String craft) {
-                                  return DropdownMenuItem(value: craft, child: Text(craft));
-                                }).toList(),
-                                onChanged: controller.changeCraft,
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // زر رفع الأوراق الثبوتية
-                            OutlinedButton.icon(
-                              onPressed: controller.uploadDocuments,
-                              icon: const Icon(Icons.upload_file, color: Color(0xFF1A2A44)),
-                              label: const Text(
-                                'رفع الأوراق الثبوتية',
-                                style: TextStyle(fontFamily: 'Tajawal', color: Color(0xFF1A2A44), fontWeight: FontWeight.bold),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                side: BorderSide(color: Colors.grey.shade300, width: 1.5),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        ),
-                      )),
-
                       // كلمة المرور
                       Obx(() => TextFormField(
                         controller: controller.passwordController,
@@ -197,6 +134,65 @@ class RegisterScreen extends StatelessWidget {
                       )),
                       const SizedBox(height: 16),
 
+                      // الحقول الديناميكية الخاصة بمزود الخدمة
+                      Obx(() => Visibility(
+                        visible: !controller.isCustomerTab.value,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // التخصص
+                            DropdownButtonFormField<String>(
+                              value: controller.selectedSpecialization.value,
+                              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                              style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
+                              decoration: _buildInputDecoration(hint: 'التخصص', icon: Icons.work_outline),
+                              items: controller.specializations.map((String type) {
+                                return DropdownMenuItem(value: type, child: Text(type));
+                              }).toList(),
+                              onChanged: controller.changeSpecialization,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // الرقم النقابي
+                            if (controller.selectedSpecialization.value != null) ...[
+                              _buildTextField(
+                                controller: controller.syndicateNumberController,
+                                hint: 'الرقم النقابي / رقم التسجيل',
+                                icon: Icons.badge_outlined,
+                                isLtr: true,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // نوع الحرفة
+                            if (controller.selectedSpecialization.value == 'حرفي') ...[
+                              DropdownButtonFormField<String>(
+                                value: controller.selectedCraft.value,
+                                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
+                                decoration: _buildInputDecoration(hint: 'نوع الحرفة', icon: Icons.handyman_outlined),
+                                items: controller.crafts.map((String craft) {
+                                  return DropdownMenuItem(value: craft, child: Text(craft));
+                                }).toList(),
+                                onChanged: controller.changeCraft,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // المكون الجديد لرفع الأوراق الثبوتية المتعددة
+                            CustomFileUploadSection(
+                              attachments: controller.registerAttachments,
+                              onAdd: controller.addRegisterAttachment,
+                              onRemove: controller.removeRegisterAttachment,
+                              onPick: controller.pickRegisterAttachment,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      )),
+
+
+
                       // سياسة الخصوصية
                       Obx(() => Row(
                         children: [
@@ -219,7 +215,7 @@ class RegisterScreen extends StatelessWidget {
                       // زر إنشاء حساب
                       Obx(() => ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFF58A1E), // البرتقالي الحيوي
+                          backgroundColor: const Color(0xFFF58A1E),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           elevation: 0,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
@@ -244,7 +240,7 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  // تبويبات الانتقال (Toggle Tabs)
+  // تبويبات الانتقال
   Widget _buildCustomTabBar() {
     return Container(
       height: 50,
@@ -304,7 +300,6 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  // دالة مساعدة لإنشاء حقول النصوص
   Widget _buildTextField({
     required TextEditingController controller,
     required String hint,
@@ -320,7 +315,6 @@ class RegisterScreen extends StatelessWidget {
     );
   }
 
-  // دالة تصميم الحقول الداخلية
   InputDecoration _buildInputDecoration({required String hint, required IconData icon}) {
     return InputDecoration(
       hintText: hint,

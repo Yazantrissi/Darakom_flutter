@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../views/auth/login_screen.dart';
+import '../../views/auth/login_screen.dart';
 
 class OnboardingController extends GetxController {
   // للتحكم في التمرير بين الشاشات

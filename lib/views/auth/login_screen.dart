@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/auth_controller.dart';
+import '../../controllers/auth/auth_controller.dart';
 import 'register_screen.dart';
-import 'forgot_password_screen.dart'; // تأكد من استيراد شاشة استعادة كلمة المرور
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatelessWidget {
   LoginScreen({super.key});
 
-  // استدعاء المتحكم الخاص بإدارة الحالة
   final AuthController controller = Get.put(AuthController());
 
   @override
@@ -23,11 +22,11 @@ class LoginScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // الشعار (App Logo)
-                  const Icon(
-                    Icons.foundation_rounded, // يمكنك لاحقاً استبدالها بصورة الشعار الحقيقي
-                    size: 90,
-                    color: Color(0xFF1A2A44), // الكحلي الداكن
+                  // الشعار الحقيقي للتطبيق من المرفقات
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 120,
+                    fit: BoxFit.contain,
                   ),
                   const SizedBox(height: 16),
 
@@ -73,7 +72,7 @@ class LoginScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
 
-                        // حقل كلمة المرور مع زر الإظهار/الإخفاء
+                        // hقل كلمة المرور مع زر الإظهار/الإخفاء
                         Obx(() => TextFormField(
                           controller: controller.passwordController,
                           obscureText: controller.isPasswordHidden.value,
@@ -98,12 +97,11 @@ class LoginScreen extends StatelessWidget {
 
                         const SizedBox(height: 8),
 
-                        // رابط نسيت كلمة المرور (محاذاة لليمين، لون برتقالي)
+                        // رابط نسيت كلمة المرور
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
-                              // الانتقال إلى شاشة استعادة كلمة المرور
                               Get.to(() => ForgotPasswordScreen());
                             },
                             style: TextButton.styleFrom(
@@ -125,14 +123,14 @@ class LoginScreen extends StatelessWidget {
 
                         const SizedBox(height: 28),
 
-                        // زر تسجيل الدخول (عرض كامل الشاشة للبطاقة)
+                        // زر تسجيل الدخول
                         Obx(() => ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF58A1E), // لون برتقالي
+                            backgroundColor: const Color(0xFFF58A1E),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0), // زوايا 12px
+                              borderRadius: BorderRadius.circular(12.0),
                             ),
                           ),
                           onPressed: controller.isLoading.value ? null : controller.login,
@@ -197,14 +195,13 @@ class LoginScreen extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () {
-                          // الانتقال إلى شاشة إنشاء الحساب
                           Get.to(() => RegisterScreen());
                         },
                         child: const Text(
                           'انشاء حساب جديد',
                           style: TextStyle(
                             fontFamily: 'Tajawal',
-                            color: Color(0xFF1A2A44), // الكحلي
+                            color: Color(0xFF1A2A44),
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
@@ -221,7 +218,6 @@ class LoginScreen extends StatelessWidget {
     );
   }
 
-  // دالة مساعدة لتصميم حقول الإدخال
   InputDecoration _buildInputDecoration({required String hint, required IconData icon}) {
     return InputDecoration(
       hintText: hint,
@@ -229,7 +225,7 @@ class LoginScreen extends StatelessWidget {
       hintTextDirection: TextDirection.rtl,
       prefixIcon: Icon(icon, color: Colors.grey.shade500),
       filled: true,
-      fillColor: const Color(0xFFF9FAFC), // خلفية الحقل أفتح بقليل من خلفية الشاشة
+      fillColor: const Color(0xFFF9FAFC),
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.0),
@@ -241,12 +237,11 @@ class LoginScreen extends StatelessWidget {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: Color(0xFF1A2A44), width: 1.5), // كحلي عند التحديد
+        borderSide: const BorderSide(color: Color(0xFF1A2A44), width: 1.5),
       ),
     );
   }
 
-  // دالة مساعدة لبناء أزرار السوشيال ميديا
   Widget _buildSocialButton({required IconData icon, required Color color}) {
     return Container(
       decoration: BoxDecoration(
@@ -255,9 +250,7 @@ class LoginScreen extends StatelessWidget {
       ),
       child: IconButton(
         icon: Icon(icon, size: 32, color: color),
-        onPressed: () {
-          // إجراء تسجيل الدخول الاجتماعي
-        },
+        onPressed: () {},
       ),
     );
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/auth/register_controller.dart';
-import '../../widgets/custom_file_upload_section.dart'; // استيراد ويدجت المرفقات
+import '../../widgets/custom_file_upload_section.dart';
 
 class RegisterScreen extends StatelessWidget {
   RegisterScreen({super.key});
@@ -48,7 +48,7 @@ class RegisterScreen extends StatelessWidget {
                 _buildCustomTabBar(),
                 const SizedBox(height: 24),
 
-                // البطاقة البيضاء (Card-based layout)
+                // البطاقة البيضاء
                 Container(
                   padding: const EdgeInsets.all(24.0),
                   decoration: BoxDecoration(
@@ -94,6 +94,19 @@ class RegisterScreen extends StatelessWidget {
                         icon: Icons.email_outlined,
                         isLtr: true,
                       ),
+                      const SizedBox(height: 16),
+
+                      // حقل اختيار المحافظة (يظهر للعميل ومزود الخدمة)
+                      Obx(() => DropdownButtonFormField<String>(
+                        value: controller.selectedGovernorate.value,
+                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                        style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
+                        decoration: _buildInputDecoration(hint: 'المحافظة', icon: Icons.location_on_outlined),
+                        items: controller.governorates.map((String city) {
+                          return DropdownMenuItem(value: city, child: Text(city));
+                        }).toList(),
+                        onChanged: controller.changeGovernorate,
+                      )),
                       const SizedBox(height: 16),
 
                       // كلمة المرور
@@ -179,7 +192,7 @@ class RegisterScreen extends StatelessWidget {
                               const SizedBox(height: 16),
                             ],
 
-                            // المكون الجديد لرفع الأوراق الثبوتية المتعددة
+                            // المكون لرفع الأوراق الثبوتية المتعددة
                             CustomFileUploadSection(
                               attachments: controller.registerAttachments,
                               onAdd: controller.addRegisterAttachment,
@@ -190,8 +203,6 @@ class RegisterScreen extends StatelessWidget {
                           ],
                         ),
                       )),
-
-
 
                       // سياسة الخصوصية
                       Obx(() => Row(

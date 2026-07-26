@@ -1,0 +1,153 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import '../../controllers/home/search_providers_controller.dart';
+
+class SearchProvidersScreen extends StatelessWidget {
+  SearchProvidersScreen({super.key});
+
+  final SearchProvidersController controller = Get.put(SearchProvidersController());
+
+  // الألوان الأساسية للهوية
+  final Color navyColor = const Color(0xFF1A2A44);
+  final Color orangeColor = const Color(0xFFF58A1E);
+  final Color bgColor = const Color(0xFFF5F7FA);
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl, // الواجهة من اليمين لليسار
+      child: Scaffold(
+        backgroundColor: bgColor,
+        appBar: AppBar(
+          backgroundColor: navyColor,
+          elevation: 0,
+          title: const Text('البحث عن مزود خدمة', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold)),
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white),
+            onPressed: () => Get.back(),
+          ),
+        ),
+        body: Column(
+          children: [
+            // 1. شريط البحث العلوي
+            Container(
+              padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: navyColor,
+                borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32.0), bottomRight: Radius.circular(32.0)),
+              ),
+              child: TextField(
+                controller: controller.searchController,
+                onChanged: controller.onSearch,
+                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
+                decoration: InputDecoration(
+                  hintText: 'ابحث بالاسم أو بـ ID المزود...',
+                  hintStyle: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 14),
+                  prefixIcon: const Icon(Icons.search_rounded, color: Colors.grey),
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.0), borderSide: BorderSide.none),
+                ),
+              ),
+            ),
+
+            // 2. نتائج البحث
+            Expanded(
+              child: Obx(() {
+                if (controller.searchResults.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 60, color: Colors.grey.shade300),
+                        const SizedBox(height: 16),
+                        Text('لا يوجد نتائج مطابقة للبحث', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey.shade500)),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.all(24.0),
+                  itemCount: controller.searchResults.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final provider = controller.searchResults[index];
+                    return _buildProviderCard(provider);
+                  },
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // بطاقة عرض تفاصيل المزود في نتائج البحث
+  Widget _buildProviderCard(Map<String, dynamic> provider) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16.0),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // أيقونة المزود
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: orangeColor.withOpacity(0.5)),
+            ),
+            child: Icon(Icons.person_outline_rounded, color: navyColor, size: 28),
+          ),
+          const SizedBox(width: 16),
+
+          // التفاصيل
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        provider['name'],
+                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Text(
+                      'ID: ${provider['id']}',
+                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: orangeColor, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(provider['specialty'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                    const SizedBox(width: 4),
+                    Text('${provider['rating']}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: navyColor)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

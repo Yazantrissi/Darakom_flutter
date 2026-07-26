@@ -1,3 +1,4 @@
+import 'package:darakom_app/views/provider/provider_dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'views/splash/splash_screen.dart'; // تأكد من مطابقة المسار لمكان حفظ الشاشة
@@ -71,7 +72,8 @@ class DarakomApp extends StatelessWidget {
 
       // تعيين شاشة البداية لتكون أول ما يظهر عند فتح التطبيق
       //home: ClientDashboardScreen(),
-      home: SplashScreen(),
+      home: ProviderDashboardScreen(),
+      //home: SplashScreen(),
     );
   }
 }

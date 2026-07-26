@@ -19,12 +19,22 @@ class RegisterController extends GetxController {
   var isLoading = false.obs;
   var isPrivacyAccepted = false.obs;
 
+  // متغير المحافظة (الجديد)
+  Rx<String?> selectedGovernorate = Rx<String?>(null);
+
   // متغيرات القوائم المنسدلة (مزود الخدمة)
   Rx<String?> selectedSpecialization = Rx<String?>(null);
   Rx<String?> selectedCraft = Rx<String?>(null);
 
   // --- قائمة المرفقات الديناميكية ---
   var registerAttachments = <AttachmentModel>[].obs;
+
+  // قائمة المحافظات السورية (الجديدة)
+  final List<String> governorates = [
+    'دمشق', 'ريف دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية',
+    'طرطوس', 'إدلب', 'الرقة', 'دير الزور', 'الحسكة', 'درعا',
+    'السويداء', 'القنيطرة'
+  ];
 
   final List<String> specializations = [
     'مكتب هندسي', 'مهندس مدني', 'مهندس معماري', 'استشاري', 'مقاول', 'حرفي'
@@ -51,6 +61,9 @@ class RegisterController extends GetxController {
   void togglePasswordVisibility() => isPasswordHidden.value = !isPasswordHidden.value;
   void toggleConfirmPasswordVisibility() => isConfirmPasswordHidden.value = !isConfirmPasswordHidden.value;
 
+  // دالة تغيير المحافظة
+  void changeGovernorate(String? value) => selectedGovernorate.value = value;
+
   void changeSpecialization(String? value) {
     selectedSpecialization.value = value;
     if (value != 'حرفي') {
@@ -60,7 +73,7 @@ class RegisterController extends GetxController {
 
   void changeCraft(String? value) => selectedCraft.value = value;
 
-  // --- دوال رفع الملفات (البديل للزر القديم) ---
+  // --- دوال رفع الملفات ---
   void addRegisterAttachment() {
     registerAttachments.add(AttachmentModel());
   }
@@ -106,6 +119,11 @@ class RegisterController extends GetxController {
   }
 
   Future<void> register() async {
+    if (selectedGovernorate.value == null) {
+      Get.snackbar('تنبيه', 'يرجى اختيار المحافظة', backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
     if (!isPrivacyAccepted.value) {
       Get.snackbar('تنبيه', 'يجب الموافقة على سياسة الخصوصية أولاً',
           backgroundColor: Colors.redAccent, colorText: Colors.white);
@@ -116,7 +134,7 @@ class RegisterController extends GetxController {
     await Future.delayed(const Duration(seconds: 2));
 
     String role = isCustomerTab.value ? 'عميل' : selectedSpecialization.value ?? 'مزود خدمة';
-    print("تم تسجيل الحساب بنجاح: ${firstNameController.text} - $role");
+    print("تم تسجيل الحساب بنجاح: ${firstNameController.text} - $role - المحافظة: ${selectedGovernorate.value}");
 
     isLoading.value = false;
   }

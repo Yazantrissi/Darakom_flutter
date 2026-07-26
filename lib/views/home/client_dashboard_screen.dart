@@ -101,7 +101,7 @@ class ClientDashboardScreen extends StatelessWidget {
 }
 
 // ==========================================
-// محتوى الصفحة الرئيسية (Home Tab) المحدث
+// محتوى الصفحة الرئيسية (Home Tab)
 // ==========================================
 class _HomeTab extends StatelessWidget {
   final ClientDashboardController controller;
@@ -124,7 +124,7 @@ class _HomeTab extends StatelessWidget {
                 _buildAddProjectButton(),
                 const SizedBox(height: 32),
 
-                // --- قسم المشاريع قيد الانتظار (البديل للعروض المميزة) ---
+                // --- قسم المشاريع قيد الانتظار ---
                 _buildSectionTitle(
                     'مشاريع قيد الانتظار',
                     actionText: 'عرض الكل',
@@ -178,14 +178,32 @@ class _HomeTab extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: () => Get.to(() => NotificationsScreen()),
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.notifications_none_rounded, color: Colors.white),
-                ),
+              // تجميع زر الإشعارات وزر البحث معاً
+              Row(
+                children: [
+                  // زر البحث الجديد
+                  GestureDetector(
+                    onTap: controller.goToSearchProviders, // استدعاء دالة البحث
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.search_rounded, color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // زر الإشعارات
+                  GestureDetector(
+                    onTap: () => Get.to(() => NotificationsScreen()),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                      child: const Icon(Icons.notifications_none_rounded, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
+
+              // الشعار واسم التطبيق
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
@@ -197,6 +215,8 @@ class _HomeTab extends StatelessWidget {
                   ],
                 ),
               ),
+
+              // القائمة الجانبية
               Builder(
                 builder: (context) => GestureDetector(
                   onTap: () => Scaffold.of(context).openDrawer(),
@@ -277,7 +297,7 @@ class _HomeTab extends StatelessWidget {
     );
   }
 
-  // المكون الجديد للمشاريع قيد الانتظار (أفقي ليناسب المساحة)
+  // المشاريع قيد الانتظار (أفقي)
   Widget _buildPendingProjectsSection() {
     return SizedBox(
       height: 140, // ارتفاع الكرت
@@ -350,6 +370,7 @@ class _HomeTab extends StatelessWidget {
     );
   }
 
+  // المشاريع قيد الإنشاء
   Widget _buildActiveProjectsSection() {
     return ListView.separated(
       shrinkWrap: true,
@@ -399,6 +420,7 @@ class _HomeTab extends StatelessWidget {
     );
   }
 
+  // المشاريع المنتهية
   Widget _buildCompletedProjectsSection() {
     return Center(
       child: Text('يمكنك استعراض المشاريع المنتهية من تبويب "مشاريعي"', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500)),

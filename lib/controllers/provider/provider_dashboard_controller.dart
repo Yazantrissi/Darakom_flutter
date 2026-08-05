@@ -42,4 +42,22 @@ class ProviderDashboardController extends GetxController {
       'nextMilestone': 'الانتهاء من أعمال العظم',
     },
   ];
+
+  // قائمة العروض التي قدمها المزود وحالتها
+  final List<Map<String, dynamic>> myOffers = [
+    {
+      'id': 401,
+      'projectName': 'تصميم داخلي لمكتب تجاري',
+      'status': 'قيد الانتظار',
+      'date': '2023-10-25',
+      'amount': '12,000 ر.س',
+    },
+    {
+      'id': 402,
+      'projectName': 'تأسيس سباكة وكهرباء - استراحة',
+      'status': 'مقبول',
+      'date': '2023-10-20',
+      'amount': '8,500 ر.س',
+    },
+  ];
 }

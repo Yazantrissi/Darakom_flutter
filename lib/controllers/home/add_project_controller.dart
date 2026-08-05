@@ -2,20 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../models/attachment_model.dart';
+import 'my_projects_controller.dart';
 
 class AddProjectController extends GetxController {
+  // وضع التعديل
+  var isEditMode = false.obs;
+  var editingProjectId = 0.obs;
+
   // تبويبات نوع المشروع (إنشاء = true / تشطيب = false)
   var isConstructionTab = true.obs;
 
   // الحقول المشتركة
+  final TextEditingController projectNameController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController areaController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
 
-  // المحافظات (أمثلة افتراضية)
+  // المحافظات السورية
   var selectedGovernorate = Rx<String?>(null);
   final List<String> governorates = [
-    'الرياض', 'مكة المكرمة', 'المدينة المنورة', 'الشرقية', 'القصيم', 'عسير', 'تبوك'
+    'دمشق', 'ريف دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية',
+    'طرطوس', 'إدلب', 'الرقة', 'دير الزور', 'الحسكة', 'درعا',
+    'السويداء', 'القنيطرة'
   ];
 
   // --- قسم الإنشاء (Construction) ---
@@ -41,7 +49,38 @@ class AddProjectController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // إضافة ملف واحد افتراضياً عند فتح الشاشة
+    // التحقق إذا كان هناك بيانات مرسلة للتعديل
+    if (Get.arguments != null && Get.arguments is Map<String, dynamic>) {
+      initializeForEdit(Get.arguments);
+    } else {
+      // إضافة ملف واحد افتراضياً عند فتح الشاشة في حالة الإضافة الجديدة
+      addAttachment();
+    }
+  }
+
+  void initializeForEdit(Map<String, dynamic> project) {
+    isEditMode.value = true;
+    editingProjectId.value = project['id'];
+    
+    projectNameController.text = project['projectName'] ?? '';
+    descriptionController.text = project['description'] ?? '';
+    areaController.text = project['area'] ?? '';
+    addressController.text = project['address'] ?? '';
+    selectedGovernorate.value = project['governorate'];
+    
+    isConstructionTab.value = project['type'] == 'إنشاء';
+    
+    if (isConstructionTab.value) {
+      selectedProvider.value = project['specialization'];
+      constructionDurationDays.value = (project['duration'] as int).toDouble();
+    } else {
+      selectedCraftsman.value = project['specialization'];
+      tenderType.value = project['tenderType'] ?? 'عادي';
+      finishingDuration.value = (project['duration'] as int).toDouble();
+    }
+    
+    // ملاحظة: المرفقات تتطلب معالجة خاصة في الحالات الواقعية (تحميل من السيرفر)
+    // حالياً سنتركها فارغة أو نضيف حقلاً واحداً
     addAttachment();
   }
 
@@ -116,27 +155,47 @@ class AddProjectController extends GetxController {
 
   // إرسال المشروع
   Future<void> submitProject() async {
-    isLoading.value = true;
+    if (projectNameController.text.isEmpty) {
+      Get.snackbar('خطأ', 'يرجى إدخال اسم المشروع', backgroundColor: Colors.redAccent, colorText: Colors.white);
+      return;
+    }
 
-    // محاكاة الإرسال للخادم
-    await Future.delayed(const Duration(seconds: 2));
+    isLoading.value = true;
+    await Future.delayed(const Duration(seconds: 1));
+
+    final updatedProject = {
+      'id': isEditMode.value ? editingProjectId.value : DateTime.now().millisecondsSinceEpoch,
+      'projectName': projectNameController.text,
+      'description': descriptionController.text,
+      'area': areaController.text,
+      'governorate': selectedGovernorate.value,
+      'address': addressController.text,
+      'type': isConstructionTab.value ? 'إنشاء' : 'تشطيب',
+      'specialization': isConstructionTab.value ? selectedProvider.value : selectedCraftsman.value,
+      'publishDate': isEditMode.value ? Get.arguments['publishDate'] : DateTime.now().toString().split(' ')[0],
+      'offersCount': isEditMode.value ? Get.arguments['offersCount'] : 0,
+      'status': isEditMode.value ? Get.arguments['status'] : 'تلقي العروض',
+      'duration': isConstructionTab.value ? constructionDurationDays.value.toInt() : finishingDuration.value.toInt(),
+    };
+
+    if (isEditMode.value) {
+      Get.find<MyProjectsController>().updatePendingProject(updatedProject);
+      Get.snackbar('تم بنجاح', 'تم تحديث المشروع بنجاح', backgroundColor: Colors.green, colorText: Colors.white);
+      
+      // العودة لصفحة التفاصيل مع البيانات الجديدة
+      Get.back(result: updatedProject);
+    } else {
+      // منطق الإضافة (يمكن استدعاء دالة الإضافة في المتحكم الرئيسي هنا)
+      Get.snackbar('تم بنجاح', 'تمت إضافة المشروع وطرحه في المنصة.', backgroundColor: Colors.green, colorText: Colors.white);
+      Get.back();
+    }
 
     isLoading.value = false;
-
-    Get.snackbar(
-      'تم بنجاح',
-      'تمت إضافة المشروع وطرحه في المنصة.',
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
-
-    Get.back(); // العودة للوحة التحكم
   }
 
   @override
   void onClose() {
+    projectNameController.dispose();
     descriptionController.dispose();
     areaController.dispose();
     addressController.dispose();

@@ -21,7 +21,10 @@ class AddProjectScreen extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: navyColor,
           elevation: 0,
-          title: const Text('إضافة مشروع جديد', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold)),
+          title: Obx(() => Text(
+            controller.isEditMode.value ? 'تعديل المشروع' : 'إضافة مشروع جديد',
+            style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold),
+          )),
           centerTitle: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white),
@@ -219,6 +222,8 @@ class AddProjectScreen extends StatelessWidget {
   Widget _buildSharedFields() {
     return Column(
       children: [
+        _buildTextField(controller: controller.projectNameController, label: 'اسم المشروع', icon: Icons.edit_note_rounded),
+        const SizedBox(height: 16),
         _buildTextField(controller: controller.descriptionController, label: 'وصف المشروع', icon: Icons.description_outlined, maxLines: 3),
         const SizedBox(height: 16),
         _buildTextField(controller: controller.areaController, label: 'المساحة (متر مربع)', icon: Icons.straighten_outlined, isNumber: true),
@@ -247,7 +252,10 @@ class AddProjectScreen extends StatelessWidget {
       onPressed: controller.isLoading.value ? null : controller.submitProject,
       child: controller.isLoading.value
           ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-          : const Text('إضافة المشروع', style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+          : Text(
+              controller.isEditMode.value ? 'حفظ التعديلات' : 'إضافة المشروع',
+              style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
     ));
   }
 

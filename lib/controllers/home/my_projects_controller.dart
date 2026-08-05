@@ -3,22 +3,48 @@ import 'package:get/get.dart';
 
 class MyProjectsController extends GetxController {
   // 1. قائمة المشاريع قيد الانتظار (الجديدة)
-  final List<Map<String, dynamic>> pendingProjects = [
+  var pendingProjects = <Map<String, dynamic>>[
     {
       'id': 101,
       'projectName': 'بناء ملحق خارجي - حي الملقا',
+      'description': 'أرغب في بناء ملحق خارجي بمساحة 20 متر مربع مع دورة مياه وتشطيب كامل.',
+      'area': '20',
+      'governorate': 'دمشق',
+      'address': 'حي الملقا - شارع الثلاثين',
+      'type': 'إنشاء',
+      'specialization': 'مقاول',
       'publishDate': '2026-07-10',
-      'offersCount': 4, // عدد العروض المستلمة
+      'offersCount': 4,
       'status': 'بانتظار اختيار مقاول',
+      'duration': 15,
     },
     {
       'id': 102,
       'projectName': 'تجديد واجهة عمارة سكنية',
+      'description': 'تجديد واجهة عمارة سكنية مكونة من 4 طوابق، تشمل الدهان وبعض الأعمال الحجرية.',
+      'area': '450',
+      'governorate': 'حلب',
+      'address': 'حي الحمدانية - رابع حي',
+      'type': 'تشطيب',
+      'specialization': 'دهان',
       'publishDate': '2026-07-12',
       'offersCount': 1,
       'status': 'تلقي العروض',
+      'duration': 10,
     },
-  ];
+  ].obs;
+
+  void deletePendingProject(int id) {
+    pendingProjects.removeWhere((p) => p['id'] == id);
+  }
+
+  void updatePendingProject(Map<String, dynamic> updatedProject) {
+    int index = pendingProjects.indexWhere((p) => p['id'] == updatedProject['id']);
+    if (index != -1) {
+      pendingProjects[index] = updatedProject;
+      pendingProjects.refresh();
+    }
+  }
 
   // 2. قائمة المشاريع قيد الإنشاء
   final List<Map<String, dynamic>> activeProjects = [

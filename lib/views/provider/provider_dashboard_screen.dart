@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/provider/provider_dashboard_controller.dart';
+import '../home/notifications_screen.dart';
+import 'my_projects_screen.dart';
+import 'tender_market_screen.dart';
+import 'my_offers_screen.dart';
+import 'provider_profile_screen.dart';
+import '../home/settings_screen.dart'; // استيراد شاشة الإعدادات المشتركة
+import 'provider_drawer.dart'; // استيراد القائمة الجانبية لمزود الخدمة
 
 class ProviderDashboardScreen extends StatelessWidget {
   ProviderDashboardScreen({super.key});
@@ -14,18 +21,20 @@ class ProviderDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // سيتم إضافة الشاشات الأخرى لاحقاً (تصفح المشاريع، مشاريعي، الإعدادات)
+    // قائمة الشاشات المربوطة بالشريط السفلي
     final List<Widget> pages = [
       _ProviderHomeTab(controller: controller, navyColor: navyColor, orangeColor: orangeColor),
-      const Center(child: Text('شاشة سوق المشاريع', style: TextStyle(fontFamily: 'Tajawal'))),
-      const Center(child: Text('شاشة إدارة المشاريع', style: TextStyle(fontFamily: 'Tajawal'))),
-      const Center(child: Text('شاشة الإعدادات', style: TextStyle(fontFamily: 'Tajawal'))),
+      TenderMarketScreen(),
+      MyOffersScreen(),
+      ProviderMyProjectsScreen(),
+      SettingsScreen(isProvider: true), // تم إزالة كلمة const من هنا لحل الخطأ
     ];
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: bgColor,
+        drawer: const ProviderDrawer(), // القائمة الجانبية الخاصة بمزود الخدمة
         body: Obx(() => IndexedStack(
           index: controller.currentIndex.value,
           children: pages,
@@ -46,9 +55,10 @@ class ProviderDashboardScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavItem(icon: Icons.home_outlined, label: 'الرئيسية', index: 0),
-            _buildNavItem(icon: Icons.search_rounded, label: 'سوق المشاريع', index: 1),
-            _buildNavItem(icon: Icons.handyman_outlined, label: 'مشاريعي', index: 2),
-            _buildNavItem(icon: Icons.person_outline, label: 'حسابي', index: 3),
+            _buildNavItem(icon: Icons.search_rounded, label: 'سوق المناقصات', index: 1),
+            _buildNavItem(icon: Icons.layers_outlined, label: 'العروض', index: 2),
+            _buildNavItem(icon: Icons.handyman_outlined, label: 'مشاريعي', index: 3),
+            _buildNavItem(icon: Icons.settings_outlined, label: 'الإعدادات', index: 4), // زر الإعدادات
           ],
         )),
       ),
@@ -105,16 +115,22 @@ class _ProviderHomeTab extends StatelessWidget {
                 _buildStatsSection(),
                 const SizedBox(height: 32),
 
-                // 2. فرص جديدة (المشاريع المطروحة)
-                _buildSectionTitle('فرص جديدة تناسبك', actionText: 'عرض الكل', onAction: () => controller.changePage(1)),
+                // 2. مشاريع جديدة
+                _buildSectionTitle('مشاريع جديدة', actionText: 'عرض الكل', onAction: () => controller.changePage(1)),
                 const SizedBox(height: 16),
                 _buildOpportunitiesSection(),
                 const SizedBox(height: 32),
 
-                // 3. المشاريع قيد التنفيذ
-                _buildSectionTitle('مشاريع قيد التنفيذ', actionText: 'إدارة', onAction: () => controller.changePage(2)),
+                // 3. مشاريع قيد التنفيذ
+                _buildSectionTitle('مشاريع قيد التنفيذ', actionText: 'إدارة', onAction: () => controller.changePage(3)),
                 const SizedBox(height: 16),
                 _buildActiveProjectsSection(),
+                const SizedBox(height: 32),
+
+                // 4. العروض
+                _buildSectionTitle('العروض', actionText: 'متابعة', onAction: () => controller.changePage(2)),
+                const SizedBox(height: 16),
+                _buildOffersSection(),
 
                 const SizedBox(height: 40),
               ],
@@ -137,10 +153,13 @@ class _ProviderHomeTab extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.notifications_none_rounded, color: Colors.white),
+              GestureDetector(
+                onTap: () => Get.to(() => NotificationsScreen()),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.notifications_none_rounded, color: Colors.white),
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -153,28 +172,42 @@ class _ProviderHomeTab extends StatelessWidget {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.menu_rounded, color: Colors.white),
+              // زر القائمة الجانبية
+              Builder(
+                builder: (context) => GestureDetector(
+                  onTap: () => Scaffold.of(context).openDrawer(),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.menu_rounded, color: Colors.white),
+                  ),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 24),
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
-                child: const Icon(Icons.engineering_rounded, color: Colors.white, size: 30),
+              GestureDetector(
+                onTap: () => Get.to(() => ProviderProfileScreen()),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
+                  child: const Icon(Icons.engineering_rounded, color: Colors.white, size: 30),
+                ),
               ),
               const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('مرحباً بك،', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 14)),
-                  const Text('مؤسسة البناء الحديث', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-                ],
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => Get.to(() => ProviderProfileScreen()),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('مرحباً بك،', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 14)),
+                      const Text('مؤسسة البناء الحديث', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -321,6 +354,72 @@ class _ProviderHomeTab extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text('المرحلة القادمة: ${project['nextMilestone']}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildOffersSection() {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: controller.myOffers.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 12),
+      itemBuilder: (context, index) {
+        final offer = controller.myOffers[index];
+        bool isAccepted = offer['status'] == 'مقبول';
+
+        return Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16.0),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 5, offset: const Offset(0, 2))],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isAccepted ? Colors.green.withOpacity(0.1) : orangeColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isAccepted ? Icons.check_circle_outline_rounded : Icons.hourglass_top_rounded,
+                  color: isAccepted ? Colors.green : orangeColor,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(offer['projectName'], style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 14, color: navyColor)),
+                    const SizedBox(height: 4),
+                    Text('القيمة: ${offer['amount']}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade600)),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isAccepted ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      offer['status'],
+                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: isAccepted ? Colors.green : Colors.grey.shade700, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(offer['date'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: Colors.grey.shade400)),
+                ],
+              ),
             ],
           ),
         );

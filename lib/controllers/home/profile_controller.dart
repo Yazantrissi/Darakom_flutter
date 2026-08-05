@@ -21,10 +21,10 @@ class ProfileController extends GetxController {
   // تحميل بيانات المستخدم الافتراضية
   void _loadUserData() {
     firstNameController.text = 'محمد';
-    lastNameController.text = 'العتيبي';
+    lastNameController.text = 'أحمد';
     emailController.text = 'mohammed@example.com';
-    phoneController.text = '0501234567';
-    addressController.text = 'الرياض، المملكة العربية السعودية';
+    phoneController.text = '0931234567';
+    addressController.text = 'دمشق، سوريا';
     bioController.text = 'مهتم ببناء وتصميم الفلل السكنية الحديثة والبحث عن أفضل المقاولين ومقدمي الخدمات الهندسية.';
   }
 

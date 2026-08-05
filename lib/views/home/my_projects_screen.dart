@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import '../../controllers/home/my_projects_controller.dart';
 import '../../controllers/home/client_dashboard_controller.dart';
 import '../tracking/project_tracking_screen.dart';
-import 'client_offers_screen.dart'; // استيراد شاشة العروض الانتقال إليها
+import 'client_offers_screen.dart';
+import 'client_project_details_screen.dart';
 
 class MyProjectsScreen extends StatelessWidget {
   MyProjectsScreen({super.key});
@@ -101,9 +102,8 @@ class MyProjectsScreen extends StatelessWidget {
     );
   }
 
-  // 1. قائمة المشاريع قيد الانتظار (الجديدة - تنتقل للعروض عند الضغط)
   Widget _buildPendingProjectsList() {
-    return ListView.separated(
+    return Obx(() => ListView.separated(
       padding: const EdgeInsets.all(24.0),
       itemCount: controller.pendingProjects.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
@@ -111,8 +111,8 @@ class MyProjectsScreen extends StatelessWidget {
         final project = controller.pendingProjects[index];
         return InkWell(
           onTap: () {
-            // الانتقال إلى شاشة العروض المستلمة لهذا المشروع
-            Get.to(() => ClientOffersScreen());
+            // الانتقال إلى شاشة تفاصيل المشروع
+            Get.to(() => ClientProjectDetailsScreen(project: project));
           },
           borderRadius: BorderRadius.circular(16.0),
           child: Container(
@@ -184,7 +184,7 @@ class MyProjectsScreen extends StatelessWidget {
           ),
         );
       },
-    );
+    ));
   }
 
   // 2. قائمة المشاريع قيد الإنشاء (تنتقل لتتبع المشروع)

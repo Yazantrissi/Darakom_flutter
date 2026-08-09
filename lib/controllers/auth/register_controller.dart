@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:file_picker/file_picker.dart'; // استيراد مكتبة اختيار الملفات
-import '../../models/attachment_model.dart'; // استيراد نموذج الملفات
+import 'package:file_picker/file_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../models/attachment_model.dart';
+import '../../models/province_model.dart';
+import '../../models/role_model.dart';
+import '../../models/document_type_model.dart';
+import '../../services/auth_service.dart';
+import '../../views/home/client_dashboard_screen.dart';
+import '../../views/provider/provider_dashboard_screen.dart';
 
 class RegisterController extends GetxController {
+  final AuthService _authService = Get.put(AuthService());
+
   // أدوات التحكم بالنصوص
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
@@ -11,6 +20,7 @@ class RegisterController extends GetxController {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController syndicateNumberController = TextEditingController();
+  final TextEditingController workAreaController = TextEditingController();
 
   // المتغيرات التفاعلية
   var isCustomerTab = true.obs;
@@ -19,59 +29,67 @@ class RegisterController extends GetxController {
   var isLoading = false.obs;
   var isPrivacyAccepted = false.obs;
 
-  // متغير المحافظة (الجديد)
-  Rx<String?> selectedGovernorate = Rx<String?>(null);
+  // قوائم البيانات
+  var provinces = <ProvinceModel>[
+    ProvinceModel(id: 1, name: 'دمشق'),
+    ProvinceModel(id: 2, name: 'حلب'),
+    ProvinceModel(id: 3, name: 'ريف دمشق'),
+    ProvinceModel(id: 4, name: 'درعا'),
+    ProvinceModel(id: 5, name: 'السويداء'),
+    ProvinceModel(id: 6, name: 'القنيطرة'),
+    ProvinceModel(id: 7, name: 'اللاذقية'),
+    ProvinceModel(id: 8, name: 'طرطوس'),
+    ProvinceModel(id: 9, name: 'إدلب'),
+    ProvinceModel(id: 10, name: 'حماة'),
+    ProvinceModel(id: 11, name: 'الحسكة'),
+    ProvinceModel(id: 12, name: 'الرقة'),
+    ProvinceModel(id: 13, name: 'دير الزور'),
+    ProvinceModel(id: 14, name: 'حمص'),
+  ].obs;
 
-  // متغيرات القوائم المنسدلة (مزود الخدمة)
-  Rx<String?> selectedSpecialization = Rx<String?>(null);
-  Rx<String?> selectedCraft = Rx<String?>(null);
+  var roles = <RoleModel>[
+    RoleModel(id: 1, name: 'مقاول'),
+    RoleModel(id: 2, name: 'مهندس معماري'),
+    RoleModel(id: 3, name: 'مهندس مدني'),
+    RoleModel(id: 4, name: 'مهندس مدني استشاري'),
+    RoleModel(id: 5, name: 'المكاتب الهندسية'),
+    RoleModel(id: 6, name: 'حرفي'),
+  ].obs;
+
+  var documentTypes = <DocumentTypeModel>[
+    DocumentTypeModel(id: 1, name: 'image'),
+    DocumentTypeModel(id: 2, name: 'pdf'),
+  ].obs;
+
+  Rx<ProvinceModel?> selectedProvince = Rx<ProvinceModel?>(null);
+  Rx<RoleModel?> selectedRole = Rx<RoleModel?>(null);
 
   // --- قائمة المرفقات الديناميكية ---
   var registerAttachments = <AttachmentModel>[].obs;
 
-  // قائمة المحافظات السورية (الجديدة)
-  final List<String> governorates = [
-    'دمشق', 'ريف دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية',
-    'طرطوس', 'إدلب', 'الرقة', 'دير الزور', 'الحسكة', 'درعا',
-    'السويداء', 'القنيطرة'
-  ];
-
-  final List<String> specializations = [
-    'مكتب هندسي', 'مهندس مدني', 'مهندس معماري', 'استشاري', 'مقاول', 'حرفي'
-  ];
-
-  final List<String> crafts = [
-    'كهرباء', 'سباكة', 'بلاط', 'تكييف', 'جبسنبورد', 'طاقة شمسية', 'دهان', 'نجارة', 'حدادة', 'غيرها'
-  ];
-
   @override
   void onInit() {
     super.onInit();
-    // إضافة حقل مرفق واحد افتراضياً عند فتح الشاشة
     addRegisterAttachment();
+    _fetchInitialData();
+  }
+
+  Future<void> _fetchInitialData() async {
+    // تم تثبيت البيانات محلياً بناءً على طلب المستخدم لتجنب مشاكل الاتصال بالباك إند
+    isLoading.value = false;
   }
 
   void switchTab(bool isCustomer) {
     isCustomerTab.value = isCustomer;
-    selectedSpecialization.value = null;
-    selectedCraft.value = null;
+    selectedRole.value = null;
     syndicateNumberController.clear();
   }
 
   void togglePasswordVisibility() => isPasswordHidden.value = !isPasswordHidden.value;
   void toggleConfirmPasswordVisibility() => isConfirmPasswordHidden.value = !isConfirmPasswordHidden.value;
 
-  // دالة تغيير المحافظة
-  void changeGovernorate(String? value) => selectedGovernorate.value = value;
-
-  void changeSpecialization(String? value) {
-    selectedSpecialization.value = value;
-    if (value != 'حرفي') {
-      selectedCraft.value = null;
-    }
-  }
-
-  void changeCraft(String? value) => selectedCraft.value = value;
+  void changeProvince(ProvinceModel? value) => selectedProvince.value = value;
+  void changeRole(RoleModel? value) => selectedRole.value = value;
 
   // --- دوال رفع الملفات ---
   void addRegisterAttachment() {
@@ -84,30 +102,16 @@ class RegisterController extends GetxController {
   }
 
   Future<void> pickRegisterAttachment(int index) async {
-    String? selectedType = registerAttachments[index].type.value;
-
-    if (selectedType == null) {
-      Get.snackbar(
-        'تنبيه',
-        'الرجاء اختيار نوع الملف أولاً',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
+    if (documentTypes.isEmpty) return;
+    
+    // Using simple document type selection for now
     FilePickerResult? result;
 
     try {
-      if (selectedType == 'صور') {
-        result = await FilePicker.platform.pickFiles(type: FileType.image);
-      } else if (selectedType == 'ملفات') {
-        result = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'],
-        );
-      }
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
+      );
 
       if (result != null && result.files.single.path != null) {
         registerAttachments[index].fileName.value = result.files.single.name;
@@ -119,24 +123,78 @@ class RegisterController extends GetxController {
   }
 
   Future<void> register() async {
-    if (selectedGovernorate.value == null) {
-      Get.snackbar('تنبيه', 'يرجى اختيار المحافظة', backgroundColor: Colors.orange, colorText: Colors.white);
-      return;
-    }
-
-    if (!isPrivacyAccepted.value) {
-      Get.snackbar('تنبيه', 'يجب الموافقة على سياسة الخصوصية أولاً',
-          backgroundColor: Colors.redAccent, colorText: Colors.white);
-      return;
-    }
+    if (!_validateInput()) return;
 
     isLoading.value = true;
-    await Future.delayed(const Duration(seconds: 2));
 
-    String role = isCustomerTab.value ? 'عميل' : selectedSpecialization.value ?? 'مزود خدمة';
-    print("تم تسجيل الحساب بنجاح: ${firstNameController.text} - $role - المحافظة: ${selectedGovernorate.value}");
+    Map<String, dynamic> data = {
+      'first_name': firstNameController.text,
+      'last_name': lastNameController.text,
+      'email': emailController.text,
+      'password': passwordController.text,
+      'password_confirmation': confirmPasswordController.text,
+      'province_id': selectedProvince.value?.id,
+      'type': isCustomerTab.value ? 'client' : 'provider',
+    };
 
+    if (!isCustomerTab.value) {
+      data['role_id'] = selectedRole.value?.id;
+      data['work_area'] = workAreaController.text;
+      data['experience_start'] = "2020-01-01"; // Placeholder, should be picked from UI
+    }
+
+    List<Map<String, dynamic>> docs = [];
+    for (var attr in registerAttachments) {
+      if (attr.filePath.value != null) {
+        docs.add({
+          'file_path': attr.filePath.value,
+          'file_name': attr.fileName.value,
+          'type_id': 1, // Placeholder, should be picked from UI
+          'description': attr.titleController.text,
+        });
+      }
+    }
+
+    final user = await _authService.register(data, documents: docs.isEmpty ? null : docs);
     isLoading.value = false;
+
+    if (user != null) {
+      final prefs = await SharedPreferences.getInstance();
+      if (user.token != null) {
+        await prefs.setString('token', user.token!);
+      }
+      await prefs.setString('user_type', user.type);
+
+      Get.snackbar('تم بنجاح', 'تم إنشاء الحساب بنجاح', backgroundColor: Colors.green, colorText: Colors.white);
+      
+      if (user.type == 'provider') {
+        Get.offAll(() => ProviderDashboardScreen());
+      } else {
+        Get.offAll(() => ClientDashboardScreen());
+      }
+    } else {
+      Get.snackbar('خطأ', 'حدث خطأ أثناء إنشاء الحساب', backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  }
+
+  bool _validateInput() {
+    if (firstNameController.text.isEmpty || lastNameController.text.isEmpty || emailController.text.isEmpty) {
+      Get.snackbar('تنبيه', 'يرجى ملء البيانات الأساسية', backgroundColor: Colors.orange, colorText: Colors.white);
+      return false;
+    }
+    if (selectedProvince.value == null) {
+      Get.snackbar('تنبيه', 'يرجى اختيار المحافظة', backgroundColor: Colors.orange, colorText: Colors.white);
+      return false;
+    }
+    if (passwordController.text != confirmPasswordController.text) {
+      Get.snackbar('تنبيه', 'كلمات المرور غير متطابقة', backgroundColor: Colors.orange, colorText: Colors.white);
+      return false;
+    }
+    if (!isPrivacyAccepted.value) {
+      Get.snackbar('تنبيه', 'يجب الموافقة على سياسة الخصوصية أولاً', backgroundColor: Colors.redAccent, colorText: Colors.white);
+      return false;
+    }
+    return true;
   }
 
   @override
@@ -147,6 +205,7 @@ class RegisterController extends GetxController {
     passwordController.dispose();
     confirmPasswordController.dispose();
     syndicateNumberController.dispose();
+    workAreaController.dispose();
     for (var attachment in registerAttachments) {
       attachment.dispose();
     }

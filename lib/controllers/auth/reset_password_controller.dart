@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../services/auth_service.dart';
 
 class ResetPasswordController extends GetxController {
+  final AuthService _authService = Get.find<AuthService>();
+
   // أدوات التحكم بالنصوص
   final TextEditingController currentPasswordController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
@@ -20,6 +23,11 @@ class ResetPasswordController extends GetxController {
 
   // دالة تحديث كلمة السر وإرسالها للسيرفر
   Future<void> updatePassword() async {
+    if (currentPasswordController.text.isEmpty || newPasswordController.text.isEmpty || confirmPasswordController.text.isEmpty) {
+      Get.snackbar('تنبيه', 'يرجى ملء جميع الحقول', backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
     // التحقق من تطابق كلمة السر الجديدة والتأكيد
     if (newPasswordController.text != confirmPasswordController.text) {
       Get.snackbar(
@@ -33,22 +41,16 @@ class ResetPasswordController extends GetxController {
     }
 
     isLoading.value = true;
-
-    // محاكاة الاتصال بالـ API
-    await Future.delayed(const Duration(seconds: 2));
-
+    final success = await _authService.changePassword(
+      currentPasswordController.text,
+      newPasswordController.text,
+      confirmPasswordController.text,
+    );
     isLoading.value = false;
 
-    Get.snackbar(
-      'تم بنجاح',
-      'تم تغيير كلمة السر بنجاح.',
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
-
-    Get.back(); // العودة لشاشة الإعدادات بعد النجاح
+    if (success) {
+      Get.back(); // العودة لشاشة الإعدادات بعد النجاح
+    }
   }
 
   @override

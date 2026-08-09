@@ -107,15 +107,35 @@ class SettingsScreen extends StatelessWidget {
               iconColor: Colors.redAccent,
               textColor: Colors.redAccent,
               hideArrow: true,
-              onTap: () {
-                Get.snackbar('تسجيل الخروج', 'تم تسجيل الخروج بنجاح', backgroundColor: Colors.redAccent, colorText: Colors.white);
-                // مستقبلاً: Get.offAll(() => LoginScreen());[cite: 20]
-              },
+              onTap: () => _showLogoutDialog(context),
             ),
 
             const SizedBox(height: 40),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تسجيل الخروج', textAlign: TextAlign.right),
+        content: const Text('هل أنت متأكد أنك تريد تسجيل الخروج؟', textAlign: TextAlign.right),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              controller.logout();
+            },
+            child: const Text('تسجيل الخروج', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../models/province_model.dart';
+import '../../models/role_model.dart';
 import '../../controllers/auth/register_controller.dart';
 import '../../widgets/custom_file_upload_section.dart';
 
@@ -97,15 +99,18 @@ class RegisterScreen extends StatelessWidget {
                       const SizedBox(height: 16),
 
                       // حقل اختيار المحافظة (يظهر للعميل ومزود الخدمة)
-                      Obx(() => DropdownButtonFormField<String>(
-                        value: controller.selectedGovernorate.value,
+                      Obx(() => DropdownButtonFormField<ProvinceModel>(
+                        value: controller.selectedProvince.value,
                         icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                         style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
-                        decoration: _buildInputDecoration(hint: 'المحافظة', icon: Icons.location_on_outlined),
-                        items: controller.governorates.map((String city) {
-                          return DropdownMenuItem(value: city, child: Text(city));
+                        decoration: _buildInputDecoration(
+                          hint: 'المحافظة',
+                          icon: Icons.location_on_outlined,
+                        ),
+                        items: controller.provinces.map((ProvinceModel province) {
+                          return DropdownMenuItem(value: province, child: Text(province.name));
                         }).toList(),
-                        onChanged: controller.changeGovernorate,
+                        onChanged: (val) => controller.changeProvince(val),
                       )),
                       const SizedBox(height: 16),
 
@@ -154,43 +159,37 @@ class RegisterScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // التخصص
-                            DropdownButtonFormField<String>(
-                              value: controller.selectedSpecialization.value,
+                            DropdownButtonFormField<RoleModel>(
+                              value: controller.selectedRole.value,
                               icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                               style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
-                              decoration: _buildInputDecoration(hint: 'التخصص', icon: Icons.work_outline),
-                              items: controller.specializations.map((String type) {
-                                return DropdownMenuItem(value: type, child: Text(type));
+                              decoration: _buildInputDecoration(
+                                hint: 'التخصص',
+                                icon: Icons.work_outline,
+                              ),
+                              items: controller.roles.map((RoleModel role) {
+                                return DropdownMenuItem(value: role, child: Text(role.name));
                               }).toList(),
-                              onChanged: controller.changeSpecialization,
+                              onChanged: (val) => controller.changeRole(val),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // منطقة العمل
+                            _buildTextField(
+                              controller: controller.workAreaController,
+                              hint: 'منطقة العمل (مثلاً: دمشق وريفها)',
+                              icon: Icons.map_outlined,
                             ),
                             const SizedBox(height: 16),
 
                             // الرقم النقابي
-                            if (controller.selectedSpecialization.value != null) ...[
-                              _buildTextField(
-                                controller: controller.syndicateNumberController,
-                                hint: 'الرقم النقابي / رقم التسجيل',
-                                icon: Icons.badge_outlined,
-                                isLtr: true,
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // نوع الحرفة
-                            if (controller.selectedSpecialization.value == 'حرفي') ...[
-                              DropdownButtonFormField<String>(
-                                value: controller.selectedCraft.value,
-                                icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
-                                decoration: _buildInputDecoration(hint: 'نوع الحرفة', icon: Icons.handyman_outlined),
-                                items: controller.crafts.map((String craft) {
-                                  return DropdownMenuItem(value: craft, child: Text(craft));
-                                }).toList(),
-                                onChanged: controller.changeCraft,
-                              ),
-                              const SizedBox(height: 16),
-                            ],
+                            _buildTextField(
+                              controller: controller.syndicateNumberController,
+                              hint: 'الرقم النقابي / رقم التسجيل',
+                              icon: Icons.badge_outlined,
+                              isLtr: true,
+                            ),
+                            const SizedBox(height: 16),
 
                             // المكون لرفع الأوراق الثبوتية المتعددة
                             CustomFileUploadSection(

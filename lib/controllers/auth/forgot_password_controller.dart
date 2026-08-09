@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../services/auth_service.dart';
+import '../../views/auth/verify_otp_screen.dart';
 
 class ForgotPasswordController extends GetxController {
+  final AuthService _authService = Get.find<AuthService>();
   final TextEditingController emailController = TextEditingController();
 
   var isLoading = false.obs;
@@ -18,26 +21,12 @@ class ForgotPasswordController extends GetxController {
     }
 
     isLoading.value = true;
-
-    // محاكاة إرسال الطلب للخادم (API Call)
-    await Future.delayed(const Duration(seconds: 2));
-
+    final success = await _authService.forgotPassword(emailController.text);
     isLoading.value = false;
 
-    // إظهار رسالة نجاح
-    Get.snackbar(
-      'تم الإرسال',
-      'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني بنجاح.',
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
-    );
-
-    // اختياري: العودة لشاشة تسجيل الدخول بعد ثانيتين من النجاح
-    Future.delayed(const Duration(seconds: 2), () {
-      Get.back();
-    });
+    if (success) {
+      Get.to(() => VerifyOtpScreen(email: emailController.text));
+    }
   }
 
   @override

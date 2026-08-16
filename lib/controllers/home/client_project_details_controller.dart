@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'my_projects_controller.dart';
+import '../../models/project_model.dart';
 import '../../views/home/client_offers_screen.dart';
 import '../../views/home/add_project_screen.dart';
 
 class ClientProjectDetailsController extends GetxController {
-  var project = <String, dynamic>{}.obs;
-  ClientProjectDetailsController({required Map<String, dynamic> projectData}) {
+  var project = ProjectModel(id: 0, title: '', description: '', status: '').obs;
+  
+  ClientProjectDetailsController({required ProjectModel projectData}) {
     project.value = projectData;
   }
 
@@ -17,9 +19,9 @@ class ClientProjectDetailsController extends GetxController {
   }
 
   Future<void> editProject() async {
-    final result = await Get.to(() => AddProjectScreen(), arguments: project.value);
+    final result = await Get.to(() => AddProjectScreen(), arguments: project.value.toJson());
     if (result != null && result is Map<String, dynamic>) {
-      project.value = result;
+      project.value = ProjectModel.fromJson(result);
       project.refresh();
     }
   }
@@ -35,7 +37,7 @@ class ClientProjectDetailsController extends GetxController {
       confirmTextColor: Colors.white,
       buttonColor: Colors.redAccent,
       onConfirm: () {
-        myProjectsController.deletePendingProject(project.value['id']);
+        myProjectsController.deletePendingProject(project.value.id);
         Get.back(); // إغلاق الديالوج
         Get.back(); // العودة من صفحة التفاصيل
         Get.snackbar(

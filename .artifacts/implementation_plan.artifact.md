@@ -1,48 +1,35 @@
-# Implementation Plan - Connecting Forgot Password to Backend
+# Implementation Plan - Add Mobile Number to Registration
 
-This plan outlines the steps to connect the "Forgot Password" and "Reset Password" flow to the Laravel backend.
+This plan outlines the steps to add a "Mobile Number" field to the registration process and connect it to the backend API.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> - The flow will consist of two steps:
->   1. Entering the email to receive an OTP code.
->   2. Entering the OTP code along with the new password.
-> - I will create a new `VerifyOtpScreen` to handle the second step.
-> - The current `ResetPasswordScreen` is designed for logged-in users to change their password. I will update its controller to use the backend's `change-password` endpoint.
+> - A new mandatory "Mobile Number" field will be added to the registration screen.
+> - The field will appear immediately after the "Confirm Password" field.
+> - Data will be sent to the backend using the key `phone`.
 
 ## Proposed Changes
 
-### Backend Project (darkum-backend)
-- No changes needed (endpoints `/forgot-password`, `/reset-password`, and `/change-password` already exist).
+### Controllers
 
-### Flutter Project (darakom_app)
+#### [MODIFY] [register_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/auth/register_controller.dart)
+- Add `phoneController` to manage the mobile number input.
+- Update `_validateInput()` to ensure the phone number is not empty and matches a basic pattern if needed.
+- Include `'phone': phoneController.text` in the data map sent to the registration API.
+- Ensure `phoneController` is disposed in the `onClose` method.
 
-#### [MODIFY] [api_constants.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/core/api_constants.dart)
-- Add endpoints for forgot password, reset password, and change password.
+### Views
 
-#### [MODIFY] [auth_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/auth_service.dart)
-- Add methods: `forgotPassword`, `resetPassword`, and `changePassword`.
-
-#### [MODIFY] [forgot_password_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/auth/forgot_password_controller.dart)
-- Call `AuthService.forgotPassword`.
-- On success, navigate to `VerifyOtpScreen`.
-
-#### [NEW] [verify_otp_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/auth/verify_otp_controller.dart)
-- Handle OTP input and new password input.
-- Call `AuthService.resetPassword`.
-
-#### [NEW] [verify_otp_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/auth/verify_otp_screen.dart)
-- UI for entering OTP and new password.
-
-#### [MODIFY] [reset_password_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/auth/reset_password_controller.dart)
-- Connect to `AuthService.changePassword` for logged-in users.
+#### [MODIFY] [register_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/auth/register_screen.dart)
+- Insert a new `_buildTextField` for the "Mobile Number" after the password confirmation field.
+- Set the `keyboardType` to `TextInputType.phone` for a better user experience.
+- Use `Icons.phone_android_outlined` as the icon.
 
 ## Verification Plan
 
 ### Manual Verification
-- Test "Forgot Password" flow:
-  - Enter email -> Receive OTP (simulated/check backend logs).
-  - Enter OTP and new password -> Success.
-- Test "Change Password" flow (from Settings):
-  - Enter current and new password -> Success.
+1. Navigate to the Registration screen.
+2. Verify the presence of the "Mobile Number" field after "Confirm Password".
+3. Test validation by leaving it empty (should show a warning).
+4. Perform a successful registration and verify (via console or backend) that the `phone` field is sent correctly.

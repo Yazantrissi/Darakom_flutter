@@ -17,6 +17,7 @@ class RegisterController extends GetxController {
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController syndicateNumberController = TextEditingController();
@@ -131,6 +132,7 @@ class RegisterController extends GetxController {
       'first_name': firstNameController.text,
       'last_name': lastNameController.text,
       'email': emailController.text,
+      'phone': phoneController.text,
       'password': passwordController.text,
       'password_confirmation': confirmPasswordController.text,
       'province_id': selectedProvince.value?.id,
@@ -178,8 +180,8 @@ class RegisterController extends GetxController {
   }
 
   bool _validateInput() {
-    if (firstNameController.text.isEmpty || lastNameController.text.isEmpty || emailController.text.isEmpty) {
-      Get.snackbar('تنبيه', 'يرجى ملء البيانات الأساسية', backgroundColor: Colors.orange, colorText: Colors.white);
+    if (firstNameController.text.isEmpty || lastNameController.text.isEmpty || emailController.text.isEmpty || phoneController.text.isEmpty) {
+      Get.snackbar('تنبيه', 'يرجى ملء البيانات الأساسية ورقم الموبايل', backgroundColor: Colors.orange, colorText: Colors.white);
       return false;
     }
     if (selectedProvince.value == null) {

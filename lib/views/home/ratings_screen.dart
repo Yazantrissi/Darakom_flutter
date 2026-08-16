@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/ratings_controller.dart';
+import '../../models/rating_model.dart';
 
 class RatingsScreen extends StatelessWidget {
   RatingsScreen({super.key});
@@ -94,7 +95,6 @@ class RatingsScreen extends StatelessWidget {
     );
   }
 
-  // 1. قائمة التقييمات التي قدمها العميل
   Widget _buildGivenRatingsList() {
     if (controller.givenRatings.isEmpty) return _buildEmptyState('لم تقم بتقديم أي تقييمات بعد');
 
@@ -105,12 +105,12 @@ class RatingsScreen extends StatelessWidget {
       itemBuilder: (context, index) {
         final rating = controller.givenRatings[index];
         return _buildRatingCard(
-          personName: rating['providerName'],
+          personName: rating.providerName ?? "",
           personTitle: 'مزود الخدمة',
-          projectName: rating['projectName'],
-          ratingValue: rating['rating'],
-          comment: rating['comment'],
-          date: rating['date'],
+          projectName: rating.projectName,
+          ratingValue: rating.rating,
+          comment: rating.comment,
+          date: rating.date,
         );
       },
     );
@@ -127,12 +127,12 @@ class RatingsScreen extends StatelessWidget {
       itemBuilder: (context, index) {
         final rating = controller.receivedRatings[index];
         return _buildRatingCard(
-          personName: rating['reviewerName'],
+          personName: rating.reviewerName ?? "",
           personTitle: 'المُقيِّم',
-          projectName: rating['projectName'],
-          ratingValue: rating['rating'],
-          comment: rating['comment'],
-          date: rating['date'],
+          projectName: rating.projectName,
+          ratingValue: rating.rating,
+          comment: rating.comment,
+          date: rating.date,
         );
       },
     );

@@ -2,39 +2,69 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../models/post_model.dart';
+import '../../models/user_model.dart';
+import '../../models/province_model.dart';
+import '../../models/role_model.dart';
+import '../../services/profile_service.dart';
 
 class ProviderProfileController extends GetxController {
-  // بيانات مزود الخدمة (محاكاة لما تم إدخاله عند التسجيل)
-  final firstNameController = TextEditingController(text: 'محمد');
-  final lastNameController = TextEditingController(text: 'العتيبي');
-  final emailController = TextEditingController(text: 'm.otaibi@example.com');
-  final syndicateNumberController = TextEditingController(text: 'ENG-123456');
+  final ProfileService _profileService = Get.find<ProfileService>();
+
+  // أدوات التحكم بالنصوص
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final phoneController = TextEditingController();
+  final syndicateNumberController = TextEditingController();
+  final workAreaController = TextEditingController();
+  final bioController = TextEditingController();
   
-  var selectedGovernorate = 'دمشق'.obs;
-  var selectedSpecialization = 'مكتب هندسي'.obs;
-  var selectedCraft = Rx<String?>(null);
+  var selectedGovernorate = Rx<ProvinceModel?>(null);
+  var selectedSpecialization = Rx<RoleModel?>(null);
 
   var isEditing = false.obs;
   var isLoading = false.obs;
+  var fullUserName = "".obs;
 
-  // قائمة البوستات
+  // قائمة البوستات (تحتاج ربط مستقبلي مع API الأعمال)
   var posts = <PostModel>[].obs;
 
-  // قوائم الخيارات (نفس الموجودة في التسجيل)
-  final List<String> governorates = [
-    'دمشق', 'ريف دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية',
-    'طرطوس', 'إدلب', 'الرقة', 'دير الزور', 'الحسكة', 'درعا',
-    'السويداء', 'القنيطرة'
+  // قوائم الخيارات (مطابقة للتسجيل والباك إند)
+  final List<ProvinceModel> provinces = [
+    ProvinceModel(id: 1, name: 'دمشق'),
+    ProvinceModel(id: 2, name: 'ريف دمشق'),
+    ProvinceModel(id: 3, name: 'حلب'),
+    ProvinceModel(id: 4, name: 'حمص'),
+    ProvinceModel(id: 5, name: 'حماة'),
+    ProvinceModel(id: 6, name: 'اللاذقية'),
+    ProvinceModel(id: 7, name: 'طرطوس'),
+    ProvinceModel(id: 8, name: 'إدلب'),
+    ProvinceModel(id: 9, name: 'الرقة'),
+    ProvinceModel(id: 10, name: 'دير الزور'),
+    ProvinceModel(id: 11, name: 'الحسكة'),
+    ProvinceModel(id: 12, name: 'درعا'),
+    ProvinceModel(id: 13, name: 'السويداء'),
+    ProvinceModel(id: 14, name: 'القنيطرة'),
   ];
 
-  final List<String> specializations = [
-    'مكتب هندسي', 'مهندس مدني', 'مهندس معماري', 'استشاري', 'مقاول', 'حرفي'
+  final List<RoleModel> specializations = [
+    RoleModel(id: 1, name: 'مقاول'),
+    RoleModel(id: 2, name: 'مهندس معماري'),
+    RoleModel(id: 3, name: 'مهندس مدني'),
+    RoleModel(id: 4, name: 'مهندس مدني استشاري'),
+    RoleModel(id: 5, name: 'المكاتب الهندسية'),
+    RoleModel(id: 6, name: 'حرفي'),
   ];
 
   @override
   void onInit() {
     super.onInit();
-    // إضافة بيانات تجريبية للبوستات
+    _loadUserData();
+    // إضافة بيانات تجريبية للبوستات حتى يتم إنشاء API خاص بها
+    _loadMockPosts();
+  }
+
+  void _loadMockPosts() {
     posts.addAll([
       PostModel(
         id: '1',
@@ -51,16 +81,79 @@ class ProviderProfileController extends GetxController {
     ]);
   }
 
+  // تحميل بيانات المستخدم من الـ API
+  Future<void> _loadUserData() async {
+    try {
+      isLoading.value = true;
+      final user = await _profileService.fetchProfile();
+      if (user != null) {
+        fullUserName.value = user.name;
+        firstNameController.text = user.firstName ?? user.name.split(' ')[0];
+        lastNameController.text = user.lastName ?? (user.name.contains(' ') ? user.name.split(' ')[1] : "");
+        emailController.text = user.email;
+        phoneController.text = user.phone ?? "";
+        syndicateNumberController.text = user.syndicateNumber ?? "";
+        workAreaController.text = user.workArea ?? "";
+        bioController.text = user.bio ?? "";
+        
+        if (user.provinceId != null) {
+          selectedGovernorate.value = provinces.firstWhereOrNull((p) => p.id == user.provinceId);
+        }
+        
+        if (user.roleId != null) {
+          selectedSpecialization.value = specializations.firstWhereOrNull((r) => r.id == user.roleId);
+        }
+      } else {
+        Get.snackbar(
+          'تنبيه',
+          'فشل في جلب بيانات الملف الشخصي لمزود الخدمة.',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      print("Error loading provider data: $e");
+      Get.snackbar(
+        'خطأ',
+        'حدث خطأ أثناء تحميل بيانات المزود.',
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   void toggleEdit() {
     isEditing.value = !isEditing.value;
   }
 
   Future<void> saveProfile() async {
     isLoading.value = true;
-    await Future.delayed(const Duration(seconds: 1));
-    isEditing.value = false;
+    
+    final data = {
+      'first_name': firstNameController.text,
+      'last_name': lastNameController.text,
+      'email': emailController.text,
+      'phone': phoneController.text,
+      'province_id': selectedGovernorate.value?.id,
+      'role_id': selectedSpecialization.value?.id,
+      'syndicate_number': syndicateNumberController.text,
+      'work_area': workAreaController.text,
+      'bio': bioController.text,
+    };
+
+    final success = await _profileService.updateProfile(data);
+    
+    if (success) {
+      fullUserName.value = "${firstNameController.text} ${lastNameController.text}";
+      isEditing.value = false;
+      Get.snackbar('نجاح', 'تم تحديث بيانات البروفايل بنجاح', backgroundColor: Colors.green, colorText: Colors.white);
+    } else {
+      Get.snackbar('خطأ', 'فشل في تحديث البيانات', backgroundColor: Colors.redAccent, colorText: Colors.white);
+    }
+    
     isLoading.value = false;
-    Get.snackbar('نجاح', 'تم تحديث بيانات البروفايل بنجاح', backgroundColor: Colors.green, colorText: Colors.white);
   }
 
   Future<void> addPost() async {
@@ -127,7 +220,10 @@ class ProviderProfileController extends GetxController {
     firstNameController.dispose();
     lastNameController.dispose();
     emailController.dispose();
+    phoneController.dispose();
     syndicateNumberController.dispose();
+    workAreaController.dispose();
+    bioController.dispose();
     super.onClose();
   }
 }

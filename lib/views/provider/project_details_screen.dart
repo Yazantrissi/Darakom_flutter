@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'submit_offer_screen.dart';
+import '../../models/project_model.dart';
 
 class ProjectDetailsScreen extends StatelessWidget {
-  final Map<String, dynamic> projectData;
+  final ProjectModel projectData;
 
   const ProjectDetailsScreen({super.key, required this.projectData});
 
@@ -37,13 +38,13 @@ class ProjectDetailsScreen extends StatelessWidget {
             children: [
               _buildProjectHeader(),
               const SizedBox(height: 24),
-              _buildDetailSection(Icons.description_outlined, 'وصف المشروع', projectData['description'] ?? 'لا يوجد وصف متاح لهذا المشروع حالياً.'),
+              _buildDetailSection(Icons.description_outlined, 'وصف المشروع', projectData.description.isNotEmpty ? projectData.description : 'لا يوجد وصف متاح لهذا المشروع حالياً.'),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(child: _buildDetailCard(Icons.straighten_outlined, 'المساحة', '350 م²')), // Mock data
                   const SizedBox(width: 16),
-                  Expanded(child: _buildDetailCard(Icons.map_outlined, 'المحافظة', projectData['location'])),
+                  Expanded(child: _buildDetailCard(Icons.map_outlined, 'المحافظة', projectData.location ?? "")),
                 ],
               ),
               const SizedBox(height: 16),
@@ -54,7 +55,10 @@ class ProjectDetailsScreen extends StatelessWidget {
               _buildAttachmentsList(),
               const SizedBox(height: 40),
               ElevatedButton(
-                onPressed: () => Get.to(() => SubmitOfferScreen(projectName: projectData['projectName'])),
+                onPressed: () => Get.to(() => SubmitOfferScreen(
+                      projectId: projectData.id,
+                      projectName: projectData.title,
+                    )),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: orangeColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -82,13 +86,13 @@ class ProjectDetailsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(projectData['projectName'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.bold, color: navyColor)),
+          Text(projectData.title, style: TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.bold, color: navyColor)),
           const SizedBox(height: 8),
           Row(
             children: [
               Icon(Icons.person_outline, size: 16, color: Colors.grey.shade400),
               const SizedBox(width: 8),
-              Text('العميل: ${projectData['clientName']}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 14)),
+              Text('العميل: ${projectData.clientName ?? ""}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 14)),
             ],
           ),
         ],

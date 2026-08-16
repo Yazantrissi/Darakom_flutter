@@ -4,9 +4,11 @@ import '../../controllers/provider/submit_offer_controller.dart';
 import '../../widgets/custom_file_upload_section.dart';
 
 class SubmitOfferScreen extends StatelessWidget {
+  final int projectId;
   final String projectName;
   final bool isEditMode;
-  SubmitOfferScreen({super.key, required this.projectName, this.isEditMode = false});
+  
+  SubmitOfferScreen({super.key, required this.projectId, required this.projectName, this.isEditMode = false});
 
   final SubmitOfferController controller = Get.put(SubmitOfferController());
 
@@ -52,7 +54,7 @@ class SubmitOfferScreen extends StatelessWidget {
                 children: [
                   Expanded(child: _buildTextField(controller: controller.totalDurationController, label: 'المدة الإجمالية (يوم)', icon: Icons.timer_outlined, isNumber: true)),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildTextField(controller: controller.totalPriceController, label: 'السعر الإجمالي (ل.س)', icon: Icons.payments_outlined, isNumber: true)),
+                  Expanded(child: _buildTextField(controller: controller.totalPriceController, label: 'السعر الإجمالي (ر.س)', icon: Icons.payments_outlined, isNumber: true)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -89,7 +91,7 @@ class SubmitOfferScreen extends StatelessWidget {
 
               const SizedBox(height: 40),
               Obx(() => ElevatedButton(
-                onPressed: controller.isLoading.value ? null : controller.submitOffer,
+                onPressed: controller.isLoading.value ? null : () => controller.submitOffer(projectId),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: navyColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),

@@ -29,7 +29,7 @@ class ProviderDrawer extends StatelessWidget {
               color: navyColor,
               borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32)),
             ),
-            child: Column(
+            child: Obx(() => Column(
               children: [
                 CircleAvatar(
                   radius: 40,
@@ -37,17 +37,17 @@ class ProviderDrawer extends StatelessWidget {
                   child: Icon(Icons.engineering_rounded, size: 40, color: navyColor),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'مؤسسة البناء الحديث',
-                  style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  controller.fullUserName.value,
+                  style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'مقاولات عامة',
-                  style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 14),
+                  controller.userEmail.value,
+                  style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white70, fontSize: 14),
                 ),
               ],
-            ),
+            )),
           ),
           const SizedBox(height: 16),
 

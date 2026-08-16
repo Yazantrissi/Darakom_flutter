@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../models/attachment_model.dart';
+import '../../models/project_model.dart';
 import 'my_projects_controller.dart';
 
 class AddProjectController extends GetxController {
@@ -50,37 +51,27 @@ class AddProjectController extends GetxController {
   void onInit() {
     super.onInit();
     // التحقق إذا كان هناك بيانات مرسلة للتعديل
-    if (Get.arguments != null && Get.arguments is Map<String, dynamic>) {
-      initializeForEdit(Get.arguments);
+    if (Get.arguments != null && Get.arguments is ProjectModel) {
+      initializeForEdit(Get.arguments as ProjectModel);
     } else {
       // إضافة ملف واحد افتراضياً عند فتح الشاشة في حالة الإضافة الجديدة
       addAttachment();
     }
   }
 
-  void initializeForEdit(Map<String, dynamic> project) {
+  void initializeForEdit(ProjectModel project) {
     isEditMode.value = true;
-    editingProjectId.value = project['id'];
+    editingProjectId.value = project.id;
     
-    projectNameController.text = project['projectName'] ?? '';
-    descriptionController.text = project['description'] ?? '';
-    areaController.text = project['area'] ?? '';
-    addressController.text = project['address'] ?? '';
-    selectedGovernorate.value = project['governorate'];
+    projectNameController.text = project.title;
+    descriptionController.text = project.description;
+    // area and address might need extra fields in ProjectModel
+    addressController.text = project.location ?? "";
+    selectedGovernorate.value = project.location; // Placeholder
     
-    isConstructionTab.value = project['type'] == 'إنشاء';
+    isConstructionTab.value = project.status != 'finishing'; // Logic depends on backend categories
     
-    if (isConstructionTab.value) {
-      selectedProvider.value = project['specialization'];
-      constructionDurationDays.value = (project['duration'] as int).toDouble();
-    } else {
-      selectedCraftsman.value = project['specialization'];
-      tenderType.value = project['tenderType'] ?? 'عادي';
-      finishingDuration.value = (project['duration'] as int).toDouble();
-    }
-    
-    // ملاحظة: المرفقات تتطلب معالجة خاصة في الحالات الواقعية (تحميل من السيرفر)
-    // حالياً سنتركها فارغة أو نضيف حقلاً واحداً
+    // Note: Mappings depend on how your backend stores project types and specializations
     addAttachment();
   }
 
@@ -163,20 +154,17 @@ class AddProjectController extends GetxController {
     isLoading.value = true;
     await Future.delayed(const Duration(seconds: 1));
 
-    final updatedProject = {
-      'id': isEditMode.value ? editingProjectId.value : DateTime.now().millisecondsSinceEpoch,
-      'projectName': projectNameController.text,
-      'description': descriptionController.text,
-      'area': areaController.text,
-      'governorate': selectedGovernorate.value,
-      'address': addressController.text,
-      'type': isConstructionTab.value ? 'إنشاء' : 'تشطيب',
-      'specialization': isConstructionTab.value ? selectedProvider.value : selectedCraftsman.value,
-      'publishDate': isEditMode.value ? Get.arguments['publishDate'] : DateTime.now().toString().split(' ')[0],
-      'offersCount': isEditMode.value ? Get.arguments['offersCount'] : 0,
-      'status': isEditMode.value ? Get.arguments['status'] : 'تلقي العروض',
-      'duration': isConstructionTab.value ? constructionDurationDays.value.toInt() : finishingDuration.value.toInt(),
-    };
+    // Create updated ProjectModel
+    final updatedProject = ProjectModel(
+      id: isEditMode.value ? editingProjectId.value : DateTime.now().millisecondsSinceEpoch,
+      title: projectNameController.text,
+      description: descriptionController.text,
+      location: selectedGovernorate.value,
+      status: isEditMode.value ? (Get.arguments as ProjectModel).status : 'new',
+      progressPercentage: isEditMode.value ? (Get.arguments as ProjectModel).progressPercentage : 0.0,
+      offersCount: isEditMode.value ? (Get.arguments as ProjectModel).offersCount : 0,
+      startDate: isEditMode.value ? (Get.arguments as ProjectModel).startDate : DateTime.now().toString().split(' ')[0],
+    );
 
     if (isEditMode.value) {
       Get.find<MyProjectsController>().updatePendingProject(updatedProject);
@@ -185,7 +173,7 @@ class AddProjectController extends GetxController {
       // العودة لصفحة التفاصيل مع البيانات الجديدة
       Get.back(result: updatedProject);
     } else {
-      // منطق الإضافة (يمكن استدعاء دالة الإضافة في المتحكم الرئيسي هنا)
+      // منطق الإضافة
       Get.snackbar('تم بنجاح', 'تمت إضافة المشروع وطرحه في المنصة.', backgroundColor: Colors.green, colorText: Colors.white);
       Get.back();
     }

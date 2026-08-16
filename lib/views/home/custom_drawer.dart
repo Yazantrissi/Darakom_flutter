@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../controllers/home/client_dashboard_controller.dart';
 import '../auth/login_screen.dart';
 import 'profile_screen.dart'; // استيراد شاشة البروفايل
 import '../tracking/project_tracking_screen.dart'; // استيراد شاشة متابعة المشروع
@@ -12,6 +13,8 @@ class CustomDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ClientDashboardController controller = Get.find<ClientDashboardController>();
+
     return Drawer(
       backgroundColor: const Color(0xFF0D1B2A), // الكحلي الداكن جداً
       child: SafeArea(
@@ -39,12 +42,12 @@ class CustomDrawer extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: Column(
+                      child: Obx(() => Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'محمد العتيبي',
-                            style: TextStyle(
+                          Text(
+                            controller.fullUserName.value,
+                            style: const TextStyle(
                               fontFamily: 'Tajawal',
                               color: Colors.white,
                               fontSize: 18,
@@ -53,8 +56,8 @@ class CustomDrawer extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'mohammed@example.com',
-                            style: TextStyle(
+                            controller.userEmail.value,
+                            style: const TextStyle(
                               fontFamily: 'Tajawal',
                               color: Colors.white70,
                               fontSize: 13,
@@ -62,7 +65,7 @@ class CustomDrawer extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
-                      ),
+                      )),
                     ),
                   ],
                 ),

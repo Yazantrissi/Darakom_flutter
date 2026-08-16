@@ -1,9 +1,0 @@
-- [x] إنشاء متحكم تفاصيل المشروع للعميل `ClientProjectDetailsController`
-- [x] تحديث `MyProjectsController` بإضافة منطق الحذف
-- [x] إنشاء واجهة تفاصيل المشروع للعميل `ClientProjectDetailsScreen`
-- [x] تحديث التنقل في `MyProjectsScreen`
-- [x] تحديث `MyProjectsController` لإضافة منطق التحديث
-- [x] تحديث `AddProjectController` لدعم وضع التعديل
-- [x] تحديث `ClientProjectDetailsController` لفتح صفحة التعديل
-- [x] تحديث `AddProjectScreen` لتغيير النصوص في وضع التعديل
-- [x] التحقق والمعاينة

@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'services/api_service.dart';
+import 'services/auth_service.dart';
+import 'services/project_service.dart';
+import 'services/offer_service.dart';
+import 'services/interaction_service.dart';
+import 'services/profile_service.dart';
 import 'views/splash/splash_screen.dart';
 
 void main() async {
@@ -8,6 +13,11 @@ void main() async {
   
   // Initialize Services
   Get.put(ApiService());
+  Get.put(AuthService());
+  Get.put(ProjectService());
+  Get.put(OfferService());
+  Get.put(InteractionService());
+  Get.put(ProfileService());
   
   runApp(const MyApp());
 }

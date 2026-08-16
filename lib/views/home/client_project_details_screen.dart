@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/client_project_details_controller.dart';
+import '../../models/project_model.dart';
 
 class ClientProjectDetailsScreen extends StatelessWidget {
-  final Map<String, dynamic> project;
+  final ProjectModel project;
   ClientProjectDetailsScreen({super.key, required this.project});
 
   late final ClientProjectDetailsController controller = Get.put(
     ClientProjectDetailsController(projectData: project),
-    tag: project['id'].toString(),
+    tag: project.id.toString(),
   );
 
   final Color navyColor = const Color(0xFF1A2A44);
@@ -61,7 +62,7 @@ class ClientProjectDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMainInfoCard(Map<String, dynamic> projectData) {
+  Widget _buildMainInfoCard(ProjectModel projectData) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -77,7 +78,7 @@ class ClientProjectDetailsScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  projectData['projectName'],
+                  projectData.title,
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor),
                 ),
               ),
@@ -85,22 +86,22 @@ class ClientProjectDetailsScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: orangeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                 child: Text(
-                  '${projectData['offersCount']} عروض',
+                  '${projectData.offersCount} عروض',
                   style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.location_on_outlined, '${projectData['governorate']} - ${projectData['address']}'),
+          _buildInfoRow(Icons.location_on_outlined, '${projectData.governorate} - ${projectData.address}'),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.calendar_today_outlined, 'تاريخ النشر: ${projectData['publishDate']}'),
+          _buildInfoRow(Icons.calendar_today_outlined, 'تاريخ النشر: ${projectData.publishDate}'),
         ],
       ),
     );
   }
 
-  Widget _buildDescriptionCard(Map<String, dynamic> projectData) {
+  Widget _buildDescriptionCard(ProjectModel projectData) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -110,13 +111,13 @@ class ClientProjectDetailsScreen extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade100),
       ),
       child: Text(
-        projectData['description'] ?? 'لا يوجد وصف متاح لهذا المشروع.',
+        projectData.description.isNotEmpty ? projectData.description : 'لا يوجد وصف متاح لهذا المشروع.',
         style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: navyColor, height: 1.6),
       ),
     );
   }
 
-  Widget _buildAdditionalDetailsGrid(Map<String, dynamic> projectData) {
+  Widget _buildAdditionalDetailsGrid(ProjectModel projectData) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -125,10 +126,10 @@ class ClientProjectDetailsScreen extends StatelessWidget {
       crossAxisSpacing: 16,
       childAspectRatio: 2.2,
       children: [
-        _buildDetailItem(Icons.straighten, 'المساحة', '${projectData['area']} م²'),
-        _buildDetailItem(Icons.category_outlined, 'النوع', projectData['type']),
-        _buildDetailItem(Icons.engineering_outlined, 'التخصص المطلوب', projectData['specialization']),
-        _buildDetailItem(Icons.timer_outlined, 'مدة الطرح', '${projectData['duration']} يوم'),
+        _buildDetailItem(Icons.straighten, 'المساحة', '${projectData.area} م²'),
+        _buildDetailItem(Icons.category_outlined, 'النوع', projectData.type ?? ""),
+        _buildDetailItem(Icons.engineering_outlined, 'التخصص المطلوب', projectData.specialization ?? ""),
+        _buildDetailItem(Icons.timer_outlined, 'مدة الطرح', '${projectData.duration} يوم'),
       ],
     );
   }

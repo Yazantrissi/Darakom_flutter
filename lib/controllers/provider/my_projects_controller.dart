@@ -1,36 +1,40 @@
 import 'package:get/get.dart';
+import '../../models/project_model.dart';
 
 class ProviderProjectsController extends GetxController {
   // التبويبات (مشاريع عامة = 0 / مشاريع خاصة = 1)
   var currentTabIndex = 0.obs;
 
   // قائمة المشاريع العامة (Mock Data)
-  final List<Map<String, dynamic>> publicProjects = [
-    {
-      'id': 7001,
-      'projectName': 'فيلا حي الياسمين',
-      'clientName': 'محمد العتيبي',
-      'progress': 0.65,
-      'status': 'قيد التنفيذ',
-    },
-    {
-      'id': 7002,
-      'projectName': 'تجديد عمارة سكنية',
-      'clientName': 'أحمد خالد',
-      'progress': 0.30,
-      'status': 'قيد التنفيذ',
-    },
+  final List<ProjectModel> publicProjects = [
+    ProjectModel(
+      id: 7001,
+      title: 'فيلا حي الياسمين',
+      clientName: 'محمد العتيبي',
+      progressPercentage: 65,
+      status: 'قيد التنفيذ',
+      description: '',
+    ),
+    ProjectModel(
+      id: 7002,
+      title: 'تجديد عمارة سكنية',
+      clientName: 'أحمد خالد',
+      progressPercentage: 30,
+      status: 'قيد التنفيذ',
+      description: '',
+    ),
   ].obs;
 
   // قائمة المشاريع الخاصة
-  final List<Map<String, dynamic>> privateProjects = [
-    {
-      'id': 8001,
-      'projectName': 'تصميم مكتب تجاري',
-      'clientName': 'شركة النور',
-      'progress': 0.85,
-      'status': 'قيد التنفيذ',
-    },
+  final List<ProjectModel> privateProjects = [
+    ProjectModel(
+      id: 8001,
+      title: 'تصميم مكتب تجاري',
+      clientName: 'شركة النور',
+      progressPercentage: 85,
+      status: 'قيد التنفيذ',
+      description: '',
+    ),
   ].obs;
 
   void changeTab(int index) {

@@ -1,14 +1,12 @@
-# Task List - Connecting Forgot Password to Backend
+# Task List - Add Mobile Number to Registration
 
-- [x] **Infrastructure**
-    - [x] Update `lib/core/api_constants.dart`
-    - [x] Update `lib/services/auth_service.dart` with new methods
-- [x] **Forgot Password Flow**
-    - [x] Update `lib/controllers/auth/forgot_password_controller.dart`
-    - [x] Create `lib/controllers/auth/verify_otp_controller.dart`
-    - [x] Create `lib/views/auth/verify_otp_screen.dart`
-- [x] **Change Password (Logged-in)**
-    - [x] Update `lib/controllers/auth/reset_password_controller.dart`
-- [x] **Verification**
-    - [x] Verify OTP flow manually (Code Review)
-    - [x] Verify Change Password flow manually (Code Review)
+- [ ] **Controller Updates**
+    - [x] Add `phoneController` to `RegisterController`.
+    - [x] Include `phone` in the registration data map.
+    - [x] Add validation for the phone number.
+    - [x] Ensure `phoneController` is disposed.
+- [ ] **View Updates**
+    - [x] Add the "Mobile Number" text field to `RegisterScreen`.
+    - [x] Set the keyboard type to `TextInputType.phone`.
+- [ ] **Verification**
+    - [ ] Manually verify the field appearance and functionality.

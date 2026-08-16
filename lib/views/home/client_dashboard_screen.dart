@@ -237,7 +237,10 @@ class _HomeTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text('مرحباً بك.', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 14)),
-                  const Text('محمد العتيبي', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20)),
+                  Obx(() => Text(
+                    controller.fullUserName.value,
+                    style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                  )),
                 ],
               ),
               const SizedBox(width: 16),
@@ -299,66 +302,136 @@ class _HomeTab extends StatelessWidget {
 
   // المشاريع قيد الانتظار (أفقي)
   Widget _buildPendingProjectsSection() {
-    return SizedBox(
-      height: 140, // ارتفاع الكرت
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: controller.pendingProjects.length,
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (controller.pendingProjects.isEmpty) {
+        return Center(child: Text('لا توجد مشاريع قيد الانتظار', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500)));
+      }
+      return SizedBox(
+        height: 140, // ارتفاع الكرت
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: controller.pendingProjects.length,
+          itemBuilder: (context, index) {
+            final project = controller.pendingProjects[index];
+            return GestureDetector(
+              onTap: () => controller.changePage(1), // الإنتقال لصفحة العروض عند الضغط
+              child: Container(
+                width: 280, // عرض الكرت
+                margin: const EdgeInsets.only(left: 16.0),
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16.0),
+                  border: Border.all(color: orangeColor.withOpacity(0.3)),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            project.title,
+                            style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15, color: navyColor),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(color: orangeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                          child: Text(
+                            '${project.offersCount ?? 0} عروض',
+                            style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      'الحالة: ${project.status}',
+                      style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.access_time_rounded, size: 14, color: Colors.grey.shade400),
+                        const SizedBox(width: 4),
+                        Text(
+                          'طُرح في: ${project.startDate ?? "غير محدد"}',
+                          style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    });
+  }
+
+  // المشاريع قيد الإنشاء
+  Widget _buildActiveProjectsSection() {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const SizedBox.shrink();
+      }
+      if (controller.activeProjects.isEmpty) {
+        return Center(child: Text('لا توجد مشاريع قيد التنفيذ', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500)));
+      }
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: controller.activeProjects.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          final project = controller.pendingProjects[index];
-          return GestureDetector(
-            onTap: () => controller.changePage(1), // الإنتقال لصفحة العروض عند الضغط
+          final project = controller.activeProjects[index];
+          return InkWell(
+            onTap: () => Get.to(() => ProjectTrackingScreen()),
+            borderRadius: BorderRadius.circular(16.0),
             child: Container(
-              width: 280, // عرض الكرت
-              margin: const EdgeInsets.only(left: 16.0),
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.0),
-                border: Border.all(color: orangeColor.withOpacity(0.3)),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))
-                ],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: Text(
-                          project['projectName'],
-                          style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15, color: navyColor),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: orangeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                        child: Text(
-                          '${project['offersCount']} عروض',
-                          style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
-                      ),
+                      Text(project.title, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
+                      Text('${project.progressPercentage}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
                     ],
                   ),
-                  const Spacer(),
-                  Text(
-                    'الحالة: ${project['status']}',
-                    style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12, fontWeight: FontWeight.w500),
+                  const SizedBox(height: 16),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8.0),
+                    child: LinearProgressIndicator(
+                        value: project.progressPercentage / 100,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(orangeColor),
+                        minHeight: 8),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
-                      Icon(Icons.access_time_rounded, size: 14, color: Colors.grey.shade400),
-                      const SizedBox(width: 4),
-                      Text(
-                        'طُرح في: ${project['publishDate']}',
-                        style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12),
-                      ),
+                      Icon(Icons.calendar_month_outlined, size: 14, color: Colors.grey.shade500),
+                      const SizedBox(width: 6),
+                      Text('تاريخ التسليم المتوقع: ${project.endDate ?? "غير محدد"}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
                     ],
                   ),
                 ],
@@ -366,58 +439,8 @@ class _HomeTab extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
-  }
-
-  // المشاريع قيد الإنشاء
-  Widget _buildActiveProjectsSection() {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: controller.activeProjects.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final project = controller.activeProjects[index];
-        return InkWell(
-          onTap: () => Get.to(() => ProjectTrackingScreen()),
-          borderRadius: BorderRadius.circular(16.0),
-          child: Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16.0),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(project['projectName'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
-                    Text('${(project['progress'] * 100).toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8.0),
-                  child: LinearProgressIndicator(value: project['progress'], backgroundColor: Colors.grey.shade200, valueColor: AlwaysStoppedAnimation<Color>(orangeColor), minHeight: 8),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Icon(Icons.calendar_month_outlined, size: 14, color: Colors.grey.shade500),
-                    const SizedBox(width: 6),
-                    Text('تاريخ التسليم: ${project['deliveryDate']}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+      );
+    });
   }
 
   // المشاريع المنتهية

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/favorites_controller.dart';
+import '../../models/user_model.dart';
 
 class FavoritesScreen extends StatelessWidget {
   FavoritesScreen({super.key});
@@ -81,7 +82,7 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProviderCard(Map<String, dynamic> provider) {
+  Widget _buildProviderCard(UserModel provider) {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
@@ -122,12 +123,12 @@ class FavoritesScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      provider['name'],
+                      provider.name,
                       style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      provider['specialty'],
+                      provider.type,
                       style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500),
                     ),
                   ],
@@ -143,7 +144,7 @@ class FavoritesScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Text('${provider['rating']}', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text('0.0', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(width: 4),
                     const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
                   ],
@@ -159,15 +160,15 @@ class FavoritesScreen extends StatelessWidget {
           // رقم المشاريع المنتهية
           Row(
             children: [
-              Icon(Icons.check_circle_outline_rounded, size: 18, color: Colors.green.shade600),
+              const Icon(Icons.check_circle_outline_rounded, size: 18, color: Color(0xFF43A047)), // Green 600
               const SizedBox(width: 8),
               Text(
                 'المشاريع المنتهية بنجاح: ',
                 style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade600),
               ),
-              Text(
-                '${provider['completedProjects']} مشروع',
-                style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Colors.green.shade700),
+              const Text(
+                '0 مشروع',
+                style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)), // Green 700
               ),
             ],
           ),
@@ -181,7 +182,7 @@ class FavoritesScreen extends StatelessWidget {
               Expanded(
                 flex: 3, // أخذ مساحة أكبر قليلاً
                 child: ElevatedButton.icon(
-                  onPressed: () => controller.sendDirectOffer(provider['name']),
+                  onPressed: () => controller.sendDirectOffer(provider.name),
                   icon: const Icon(Icons.send_rounded, size: 16, color: Colors.white),
                   label: const Text('تقديم عرض مباشر', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
                   style: ElevatedButton.styleFrom(
@@ -198,7 +199,7 @@ class FavoritesScreen extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: OutlinedButton(
-                  onPressed: () => controller.viewProfile(provider['name']),
+                  onPressed: () => controller.viewProfile(provider.name),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: navyColor, width: 1.2),

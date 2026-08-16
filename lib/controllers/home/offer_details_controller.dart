@@ -1,23 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../models/offer_model.dart';
 
 class OfferDetailsController extends GetxController {
   var isLoading = false.obs;
+  var offer = OfferModel(id: 0, projectId: 0, status: '', cost: 0, duration: 0, durationUnit: '').obs;
 
-  // بيانات العرض (وهمية للتجربة، مستقبلاً تأتي من الـ API بناءً على معرف العرض id)
-  final Map<String, dynamic> offerData = {
-    'providerName': 'مؤسسة البناء الحديث',
-    'specialty': 'مقاولات عامة',
-    'rating': 4.9,
-    'totalPrice': '125,000 ر.س',
-    'duration': '6 أشهر',
-    'workSummary': 'يشمل العرض تنفيذ أعمال العظم (الهيكل الأسود) بالمواد، بالإضافة إلى تأسيس السباكة والكهرباء حسب المخططات المرفقة، مع الالتزام بأعلى معايير الجودة والكود السعودي للبناء.',
-    'attachments': [
-      {'name': 'المخطط_التنفيذي.pdf', 'type': 'file'},
-      {'name': 'صورة_موقع_العمل_1.jpg', 'type': 'image', 'url': 'assets/images/offer1.jpg'},
-      {'name': 'جدول_الكميات.xlsx', 'type': 'file'},
-    ],
-  };
+  void setOffer(OfferModel offerData) {
+    offer.value = offerData;
+  }
 
   // دالة قبول العرض
   Future<void> acceptOffer() async {

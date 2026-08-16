@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/my_projects_controller.dart';
 import '../../controllers/home/client_dashboard_controller.dart';
+import '../../models/project_model.dart';
 import '../tracking/project_tracking_screen.dart';
 import 'client_offers_screen.dart';
 import 'client_project_details_screen.dart';
@@ -131,7 +132,7 @@ class MyProjectsScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        project['projectName'],
+                        project.title,
                         style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -140,7 +141,7 @@ class MyProjectsScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(color: orangeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                       child: Text(
-                        '${project['offersCount']} عروض',
+                        '${project.offersCount} عروض',
                         style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -148,7 +149,7 @@ class MyProjectsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'الحالة: ${project['status']}',
+                  'الحالة: ${project.status}',
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 16),
@@ -162,7 +163,7 @@ class MyProjectsScreen extends StatelessWidget {
                         Icon(Icons.access_time_rounded, size: 16, color: Colors.grey.shade500),
                         const SizedBox(width: 6),
                         Text(
-                          'تاريخ الطرح: ${project['publishDate']}',
+                          'تاريخ الطرح: ${project.publishDate}',
                           style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12),
                         ),
                       ],
@@ -211,23 +212,23 @@ class MyProjectsScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(project['projectName'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
-                    Text('${(project['progress'] * 100).toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
+                    Text(project.title, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
+                    Text('${project.progressPercentage.toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(project['providerName'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
+                Text(project.providerName ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
                 const SizedBox(height: 16),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
-                  child: LinearProgressIndicator(value: project['progress'], backgroundColor: Colors.grey.shade200, valueColor: AlwaysStoppedAnimation<Color>(orangeColor), minHeight: 8),
+                  child: LinearProgressIndicator(value: project.progressPercentage / 100, backgroundColor: Colors.grey.shade200, valueColor: AlwaysStoppedAnimation<Color>(orangeColor), minHeight: 8),
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Icon(Icons.calendar_month_outlined, size: 14, color: Colors.grey.shade500),
                     const SizedBox(width: 6),
-                    Text('تاريخ التسليم المتوقع: ${project['deliveryDate']}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
+                    Text('تاريخ التسليم المتوقع: ${project.endDate}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
                   ],
                 ),
               ],
@@ -261,7 +262,7 @@ class MyProjectsScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      project['projectName'],
+                      project.title,
                       style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -274,13 +275,13 @@ class MyProjectsScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              Text(project['providerName'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
+              Text(project.providerName ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Icon(Icons.check_circle_outline_rounded, size: 16, color: Colors.green.shade600),
                   const SizedBox(width: 6),
-                  Text('تم الانتهاء في: ${project['completionDate']}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
+                  Text('تم الانتهاء في: ${project.endDate}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
                 ],
               ),
               const SizedBox(height: 16),
@@ -293,7 +294,7 @@ class MyProjectsScreen extends StatelessWidget {
                   // زر تقييم المشروع (برتقالي)
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => controller.showRatingDialog(project['projectName']),
+                      onPressed: () => controller.showRatingDialog(project.title),
                       icon: const Icon(Icons.star_outline_rounded, size: 18, color: Colors.white),
                       label: const Text('تقييم', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                       style: ElevatedButton.styleFrom(
@@ -308,7 +309,7 @@ class MyProjectsScreen extends StatelessWidget {
                   // زر تقديم شكوى (أحمر مفرغ)
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => controller.showComplaintDialog(project['projectName']),
+                      onPressed: () => controller.showComplaintDialog(project.title),
                       icon: const Icon(Icons.report_problem_outlined, size: 18, color: Colors.redAccent),
                       label: const Text('شكوى', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.redAccent)),
                       style: OutlinedButton.styleFrom(

@@ -1,49 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:file_picker/file_picker.dart';
+import '../../services/offer_service.dart';
 import '../../models/attachment_model.dart';
-import '../../models/project_stage_model.dart';
 
 class SubmitOfferController extends GetxController {
-  // الحقول الأساسية للعرض
+  final OfferService _offerService = Get.find<OfferService>();
+
   final TextEditingController offerProjectNameController = TextEditingController();
   final TextEditingController totalDurationController = TextEditingController();
   final TextEditingController totalPriceController = TextEditingController();
   final TextEditingController startDateController = TextEditingController();
 
-  // قائمة مراحل المشروع
-  var projectStages = <ProjectStageModel>[].obs;
-
-  // قائمة المرفقات
+  var isLoading = false.obs;
+  var projectStages = <StageItem>[].obs;
   var offerAttachments = <AttachmentModel>[].obs;
 
-  var isLoading = false.obs;
-
-  @override
-  void onInit() {
-    super.onInit();
-    // إضافة مرحلة أولى افتراضياً
-    addStage();
-    // إضافة حقل مرفق واحد افتراضياً
-    addAttachment();
-  }
-
-  // --- إدارة المراحل ---
   void addStage() {
-    projectStages.add(ProjectStageModel());
+    projectStages.add(StageItem());
   }
 
   void removeStage(int index) {
-    if (projectStages.length > 1) {
-      projectStages[index].dispose();
-      projectStages.removeAt(index);
-    } else {
-      Get.snackbar('تنبيه', 'يجب أن يحتوي المشروع على مرحلة واحدة على الأقل', 
-          snackPosition: SnackPosition.BOTTOM);
-    }
+    projectStages.removeAt(index);
   }
 
-  // --- إدارة المرفقات (نفس منطق إضافة مشروع) ---
   void addAttachment() {
     offerAttachments.add(AttachmentModel());
   }
@@ -54,48 +33,37 @@ class SubmitOfferController extends GetxController {
   }
 
   Future<void> pickAttachment(int index) async {
-    String? selectedType = offerAttachments[index].type.value;
+    // Logic for picking file using model
+  }
 
-    if (selectedType == null) {
-      Get.snackbar('تنبيه', 'الرجاء اختيار نوع الملف أولاً', backgroundColor: Colors.orange, colorText: Colors.white);
+  Future<void> submitOffer(int projectId) async {
+    if (offerProjectNameController.text.isEmpty || totalPriceController.text.isEmpty) {
+      Get.snackbar('تنبيه', 'يرجى إكمال البيانات الأساسية');
       return;
     }
 
-    FilePickerResult? result;
-    try {
-      if (selectedType == 'صور') {
-        result = await FilePicker.platform.pickFiles(type: FileType.image);
-      } else if (selectedType == 'ملفات') {
-        result = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'],
-        );
-      }
-
-      if (result != null && result.files.single.path != null) {
-        offerAttachments[index].fileName.value = result.files.single.name;
-        offerAttachments[index].filePath.value = result.files.single.path;
-      }
-    } catch (e) {
-      Get.snackbar('خطأ', 'حدث خطأ أثناء اختيار الملف', backgroundColor: Colors.red, colorText: Colors.white);
-    }
-  }
-
-  // إرسال العرض النهائي
-  Future<void> submitOffer() async {
     isLoading.value = true;
-    await Future.delayed(const Duration(seconds: 2));
+    
+    final data = {
+      'project_name': offerProjectNameController.text,
+      'duration': totalDurationController.text,
+      'cost': totalPriceController.text,
+      'start_date': startDateController.text,
+      'stages': projectStages.map((e) => {
+        'name': e.nameController.text,
+        'duration': e.durationController.text,
+      }).toList(),
+    };
+
+    final success = await _offerService.submitOffer(projectId, data);
     isLoading.value = false;
 
-    Get.snackbar(
-      'تم الإرسال',
-      'تم تقديم عرضك بنجاح للعميل.',
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-    );
-
-    Get.until((route) => Get.currentRoute == '/ProviderDashboardScreen' || route.isFirst);
+    if (success) {
+      Get.back();
+      Get.snackbar('نجاح', 'تم إرسال العرض بنجاح', backgroundColor: Colors.green, colorText: Colors.white);
+    } else {
+      Get.snackbar('خطأ', 'فشل في إرسال العرض', backgroundColor: Colors.redAccent, colorText: Colors.white);
+    }
   }
 
   @override
@@ -105,11 +73,17 @@ class SubmitOfferController extends GetxController {
     totalPriceController.dispose();
     startDateController.dispose();
     for (var stage in projectStages) {
-      stage.dispose();
+      stage.nameController.dispose();
+      stage.durationController.dispose();
     }
-    for (var attachment in offerAttachments) {
-      attachment.dispose();
+    for (var att in offerAttachments) {
+      att.dispose();
     }
     super.onClose();
   }
+}
+
+class StageItem {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController durationController = TextEditingController();
 }

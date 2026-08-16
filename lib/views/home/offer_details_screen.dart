@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/offer_details_controller.dart';
+import '../../models/offer_model.dart';
 
 class OfferDetailsScreen extends StatelessWidget {
-  OfferDetailsScreen({super.key});
+  final OfferModel offer;
+  OfferDetailsScreen({super.key, required this.offer});
 
-  final OfferDetailsController controller = Get.put(OfferDetailsController());
+  late final OfferDetailsController controller = Get.put(OfferDetailsController()..setOffer(offer));
 
   // الألوان الأساسية
   final Color navyColor = const Color(0xFF1A2A44);
@@ -99,12 +101,12 @@ class OfferDetailsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  controller.offerData['providerName'],
+                  controller.offer.value.providerName ?? "",
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  controller.offerData['specialty'],
+                  controller.offer.value.specialty ?? "",
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500),
                 ),
               ],
@@ -115,7 +117,7 @@ class OfferDetailsScreen extends StatelessWidget {
             decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
             child: Row(
               children: [
-                Text('${controller.offerData['rating']}', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                Text('${controller.offer.value.rating}', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(width: 4),
                 const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
               ],
@@ -152,7 +154,7 @@ class OfferDetailsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  controller.offerData['totalPrice'],
+                  controller.offer.value.amount ?? "${controller.offer.value.cost} ريال",
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: orangeColor),
                 ),
               ],
@@ -182,7 +184,7 @@ class OfferDetailsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  controller.offerData['duration'],
+                  "${controller.offer.value.duration} ${controller.offer.value.durationUnit}",
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor),
                 ),
               ],
@@ -203,7 +205,7 @@ class OfferDetailsScreen extends StatelessWidget {
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Text(
-        controller.offerData['workSummary'],
+        controller.offer.value.workSummary ?? "لا توجد تفاصيل إضافية.",
         style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade700, height: 1.6),
       ),
     );
@@ -211,7 +213,8 @@ class OfferDetailsScreen extends StatelessWidget {
 
   // قسم المرفقات (قائمة أفقية للصور والملفات)
   Widget _buildAttachmentsSection() {
-    final List attachments = controller.offerData['attachments'];
+    final List attachments = controller.offer.value.attachments ?? [];
+    if (attachments.isEmpty) return const Text('لا توجد مرفقات', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12));
     return SizedBox(
       height: 100, // ارتفاع بطاقة المرفق
       child: ListView.separated(

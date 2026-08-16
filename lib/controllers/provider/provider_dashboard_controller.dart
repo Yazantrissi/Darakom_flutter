@@ -1,63 +1,78 @@
 import 'package:get/get.dart';
+import '../../services/api_service.dart';
+import '../../services/profile_service.dart';
+import '../../core/api_constants.dart';
+import '../../models/project_model.dart';
+import '../../models/offer_model.dart';
 
 class ProviderDashboardController extends GetxController {
-  // التحكم في شريط التنقل السفلي لمزود الخدمة
+  final ApiService _apiService = Get.find<ApiService>();
+  final ProfileService _profileService = Get.find<ProfileService>();
+
   var currentIndex = 0.obs;
+  var isLoading = false.obs;
+  
+  var userName = "مزود الخدمة".obs;
+  var fullUserName = "اسم مزود الخدمة".obs;
+  var userEmail = "provider@example.com".obs;
+
+  var stats = {
+    'activeProjects': 0,
+    'pendingOffers': 0,
+    'totalEarnings': '0 ر.س',
+  }.obs;
+
+  var newOpportunities = <ProjectModel>[].obs;
+  var activeProjects = <ProjectModel>[].obs;
+  var myOffers = <OfferModel>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchDashboardData();
+    fetchUserProfile();
+  }
+
+  Future<void> fetchUserProfile() async {
+    final user = await _profileService.fetchProfile();
+    if (user != null) {
+      userName.value = user.name.split(' ')[0];
+      fullUserName.value = user.name;
+      userEmail.value = user.email;
+    }
+  }
+
+  Future<void> fetchDashboardData() async {
+    try {
+      isLoading.value = true;
+      final response = await _apiService.get(ApiConstants.providerDashboard);
+      
+      if (response.data['success']) {
+        final data = response.data['data'];
+        stats['activeProjects'] = data['stats']['activeProjects'] ?? 0;
+        stats['pendingOffers'] = data['stats']['pendingOffers'] ?? 0;
+        stats['totalEarnings'] = "${data['stats']['totalEarnings'] ?? 0} ر.س";
+
+        newOpportunities.value = (data['opportunities'] as List)
+            .map((e) => ProjectModel.fromJson(e))
+            .toList();
+            
+        activeProjects.value = (data['active_projects'] as List)
+            .map((e) => ProjectModel.fromJson(e))
+            .toList();
+            
+        myOffers.value = (data['recent_offers'] as List)
+            .map((e) => OfferModel.fromJson(e))
+            .toList();
+      }
+    } catch (e) {
+      print("Error fetching provider dashboard: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   void changePage(int index) {
     currentIndex.value = index;
   }
-
-  // إحصائيات سريعة للمزود
-  final Map<String, dynamic> stats = {
-    'activeProjects': 3,
-    'pendingOffers': 5,
-    'totalEarnings': '45,000 ر.س',
-  };
-
-  // قائمة الفرص الجديدة (المشاريع المطروحة من العملاء وتناسب تخصص المزود)
-  final List<Map<String, dynamic>> newOpportunities = [
-    {
-      'id': 201,
-      'projectName': 'بناء ملحق خارجي - حي الملقا',
-      'clientName': 'محمد العتيبي',
-      'publishDate': 'منذ ساعتين',
-      'budget': 'غير محدد',
-    },
-    {
-      'id': 202,
-      'projectName': 'تجديد واجهة عمارة سكنية',
-      'clientName': 'أحمد خالد',
-      'publishDate': 'منذ 5 ساعات',
-      'budget': '15,000 - 25,000 ر.س',
-    },
-  ];
-
-  // قائمة مشاريع المزود قيد التنفيذ
-  final List<Map<String, dynamic>> activeProjects = [
-    {
-      'id': 301,
-      'projectName': 'فيلا سكنية - حي الياسمين',
-      'progress': 0.65, // 65%
-      'nextMilestone': 'الانتهاء من أعمال العظم',
-    },
-  ];
-
-  // قائمة العروض التي قدمها المزود وحالتها
-  final List<Map<String, dynamic>> myOffers = [
-    {
-      'id': 401,
-      'projectName': 'تصميم داخلي لمكتب تجاري',
-      'status': 'قيد الانتظار',
-      'date': '2023-10-25',
-      'amount': '12,000 ر.س',
-    },
-    {
-      'id': 402,
-      'projectName': 'تأسيس سباكة وكهرباء - استراحة',
-      'status': 'مقبول',
-      'date': '2023-10-20',
-      'amount': '8,500 ر.س',
-    },
-  ];
 }

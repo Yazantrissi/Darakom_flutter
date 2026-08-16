@@ -1,45 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../models/project_model.dart';
 
 class MyProjectsController extends GetxController {
   // 1. قائمة المشاريع قيد الانتظار (الجديدة)
-  var pendingProjects = <Map<String, dynamic>>[
-    {
-      'id': 101,
-      'projectName': 'بناء ملحق خارجي - حي الملقا',
-      'description': 'أرغب في بناء ملحق خارجي بمساحة 20 متر مربع مع دورة مياه وتشطيب كامل.',
-      'area': '20',
-      'governorate': 'دمشق',
-      'address': 'حي الملقا - شارع الثلاثين',
-      'type': 'إنشاء',
-      'specialization': 'مقاول',
-      'publishDate': '2026-07-10',
-      'offersCount': 4,
-      'status': 'بانتظار اختيار مقاول',
-      'duration': 15,
-    },
-    {
-      'id': 102,
-      'projectName': 'تجديد واجهة عمارة سكنية',
-      'description': 'تجديد واجهة عمارة سكنية مكونة من 4 طوابق، تشمل الدهان وبعض الأعمال الحجرية.',
-      'area': '450',
-      'governorate': 'حلب',
-      'address': 'حي الحمدانية - رابع حي',
-      'type': 'تشطيب',
-      'specialization': 'دهان',
-      'publishDate': '2026-07-12',
-      'offersCount': 1,
-      'status': 'تلقي العروض',
-      'duration': 10,
-    },
+  var pendingProjects = <ProjectModel>[
+    ProjectModel(
+      id: 101,
+      title: 'بناء ملحق خارجي - حي الملقا',
+      description: 'أرغب في بناء ملحق خارجي بمساحة 20 متر مربع مع دورة مياه وتشطيب كامل.',
+      area: '20',
+      governorate: 'دمشق',
+      address: 'حي الملقا - شارع الثلاثين',
+      type: 'إنشاء',
+      specialization: 'مقاول',
+      publishDate: '2026-07-10',
+      offersCount: 4,
+      status: 'بانتظار اختيار مقاول',
+      duration: 15,
+    ),
+    ProjectModel(
+      id: 102,
+      title: 'تجديد واجهة عمارة سكنية',
+      description: 'تجديد واجهة عمارة سكنية مكونة من 4 طوابق، تشمل الدهان وبعض الأعمال الحجرية.',
+      area: '450',
+      governorate: 'حلب',
+      address: 'حي الحمدانية - رابع حي',
+      type: 'تشطيب',
+      specialization: 'دهان',
+      publishDate: '2026-07-12',
+      offersCount: 1,
+      status: 'تلقي العروض',
+      duration: 10,
+    ),
   ].obs;
 
   void deletePendingProject(int id) {
-    pendingProjects.removeWhere((p) => p['id'] == id);
+    pendingProjects.removeWhere((p) => p.id == id);
   }
 
-  void updatePendingProject(Map<String, dynamic> updatedProject) {
-    int index = pendingProjects.indexWhere((p) => p['id'] == updatedProject['id']);
+  void updatePendingProject(ProjectModel updatedProject) {
+    int index = pendingProjects.indexWhere((p) => p.id == updatedProject.id);
     if (index != -1) {
       pendingProjects[index] = updatedProject;
       pendingProjects.refresh();
@@ -47,33 +48,45 @@ class MyProjectsController extends GetxController {
   }
 
   // 2. قائمة المشاريع قيد الإنشاء
-  final List<Map<String, dynamic>> activeProjects = [
-    {
-      'projectName': 'فيلا سكنية - حي الياسمين',
-      'progress': 0.65, // 65%
-      'deliveryDate': '2026-11-01',
-      'providerName': 'مؤسسة البناء الحديث',
-    },
-    {
-      'projectName': 'مشروع التشطيب - المدينة',
-      'progress': 0.30, // 30%
-      'deliveryDate': '2026-06-01',
-      'providerName': 'مكتب الأفق الهندسي',
-    },
+  final List<ProjectModel> activeProjects = [
+    ProjectModel(
+      id: 201,
+      title: 'فيلا سكنية - حي الياسمين',
+      progressPercentage: 65,
+      endDate: '2026-11-01',
+      providerName: 'مؤسسة البناء الحديث',
+      description: '',
+      status: 'active',
+    ),
+    ProjectModel(
+      id: 202,
+      title: 'مشروع التشطيب - المدينة',
+      progressPercentage: 30,
+      endDate: '2026-06-01',
+      providerName: 'مكتب الأفق الهندسي',
+      description: '',
+      status: 'active',
+    ),
   ];
 
   // 3. قائمة المشاريع المنتهية
-  final List<Map<String, dynamic>> completedProjects = [
-    {
-      'projectName': 'تصميم داخلي - مكتب تجاري',
-      'completionDate': '2026-02-10',
-      'providerName': 'م. خالد الشمري',
-    },
-    {
-      'projectName': 'تأسيس شبكة كهرباء',
-      'completionDate': '2025-12-05',
-      'providerName': 'شركة الإنشاءات الحديثة',
-    },
+  final List<ProjectModel> completedProjects = [
+    ProjectModel(
+      id: 301,
+      title: 'تصميم داخلي - مكتب تجاري',
+      endDate: '2026-02-10',
+      providerName: 'م. خالد الشمري',
+      description: '',
+      status: 'completed',
+    ),
+    ProjectModel(
+      id: 302,
+      title: 'تأسيس شبكة كهرباء',
+      endDate: '2025-12-05',
+      providerName: 'شركة الإنشاءات الحديثة',
+      description: '',
+      status: 'completed',
+    ),
   ];
 
   // --- دوال التفاعل مع المشاريع المنتهية ---

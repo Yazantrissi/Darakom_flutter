@@ -1,40 +1,33 @@
 import 'package:get/get.dart';
+import '../../services/offer_service.dart';
+import '../../models/offer_model.dart';
 
 class MyOffersController extends GetxController {
-  // التبويبات (عروض عامة = 0 / عروض خاصة = 1)
+  final OfferService _offerService = Get.find<OfferService>();
+
   var currentTabIndex = 0.obs;
+  var isLoading = false.obs;
 
-  // قائمة العروض العامة (Mock Data)
-  final List<Map<String, dynamic>> publicOffers = [
-    {
-      'id': 5001,
-      'projectName': 'بناء فيلا سكنية - دمشق',
-      'status': 'قيد المراجعة',
-      'price': '65,000,000 ل.س',
-      'duration': '120 يوم',
-      'date': '2023-10-25',
-    },
-    {
-      'id': 5002,
-      'projectName': 'تجديد ديكور شقة - حلب',
-      'status': 'مرفوض',
-      'price': '14,000,000 ل.س',
-      'duration': '45 يوم',
-      'date': '2023-10-20',
-    },
-  ].obs;
+  var publicOffers = <OfferModel>[].obs;
+  var privateOffers = <OfferModel>[].obs;
 
-  // قائمة العروض الخاصة
-  final List<Map<String, dynamic>> privateOffers = [
-    {
-      'id': 6001,
-      'projectName': 'تأسيس شبكة كهرباء - ريف دمشق',
-      'status': 'مقبول',
-      'price': '8,500,000 ل.س',
-      'duration': '15 يوم',
-      'date': '2023-10-22',
-    },
-  ].obs;
+  @override
+  void onInit() {
+    super.onInit();
+    fetchOffers();
+  }
+
+  Future<void> fetchOffers() async {
+    isLoading.value = true;
+    final allOffers = await _offerService.fetchProviderOffers();
+    
+    // For now, assuming status or some other field distinguishes public/private if needed
+    // or just splitting for demo. In real backend, these might be separate endpoints.
+    publicOffers.value = allOffers; // Defaulting all to public for now
+    privateOffers.value = [];
+    
+    isLoading.value = false;
+  }
 
   void changeTab(int index) {
     currentTabIndex.value = index;
@@ -42,9 +35,9 @@ class MyOffersController extends GetxController {
 
   void deleteOffer(int id, bool isPublic) {
     if (isPublic) {
-      publicOffers.removeWhere((element) => element['id'] == id);
+      publicOffers.removeWhere((element) => element.id == id);
     } else {
-      privateOffers.removeWhere((element) => element['id'] == id);
+      privateOffers.removeWhere((element) => element.id == id);
     }
     Get.snackbar('تم الحذف', 'تم حذف العرض بنجاح', snackPosition: SnackPosition.BOTTOM);
   }

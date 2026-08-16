@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/provider/tender_market_controller.dart';
+import '../../models/project_model.dart';
 
 class TenderMarketScreen extends StatelessWidget {
   TenderMarketScreen({super.key});
@@ -118,7 +119,7 @@ class TenderMarketScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTenderCard(Map<String, dynamic> tender) {
+  Widget _buildTenderCard(ProjectModel tender) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -134,31 +135,31 @@ class TenderMarketScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  tender['projectName'],
+                  tender.title,
                   style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16, color: navyColor),
                 ),
               ),
-              if (tender['isUrgent'])
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                  child: const Text('مستعجل', style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
-                ),
+              // يمكنك إضافة خاصية isUrgent للموديل مستقبلاً إذا كانت موجودة في الـ API
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(color: Colors.red.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                child: const Text('مستعجل', style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 10, fontWeight: FontWeight.bold)),
+              ),
             ],
           ),
           const SizedBox(height: 12),
-          _buildInfoRow(Icons.person_outline, tender['clientName']),
+          _buildInfoRow(Icons.person_outline, tender.clientName ?? ""),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.location_on_outlined, tender['location']),
+          _buildInfoRow(Icons.location_on_outlined, tender.location ?? ""),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.payments_outlined, tender['budget'], color: Colors.green.shade700),
+          _buildInfoRow(Icons.payments_outlined, tender.budget ?? "", color: Colors.green.shade700),
           const Divider(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(tender['date'], style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12)),
+              Text(tender.publishDate ?? "", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12)),
               ElevatedButton(
-                onPressed: () => controller.viewTenderDetails(tender['id']),
+                onPressed: () => controller.viewTenderDetails(tender.id),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: navyColor,
                   foregroundColor: Colors.white,

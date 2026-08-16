@@ -112,7 +112,7 @@ class _ProviderHomeTab extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // 1. بطاقات الإحصائيات
-                _buildStatsSection(),
+                Obx(() => _buildStatsSection()),
                 const SizedBox(height: 32),
 
                 // 2. مشاريع جديدة
@@ -204,7 +204,10 @@ class _ProviderHomeTab extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('مرحباً بك،', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 14)),
-                      const Text('مؤسسة البناء الحديث', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                      Obx(() => Text(
+                        controller.fullUserName.value,
+                        style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                      )),
                     ],
                   ),
                 ),
@@ -267,163 +270,187 @@ class _ProviderHomeTab extends StatelessWidget {
   }
 
   Widget _buildOpportunitiesSection() {
-    return SizedBox(
-      height: 160,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: controller.newOpportunities.length,
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      if (controller.newOpportunities.isEmpty) {
+        return Center(child: Text('لا توجد فرص جديدة حالياً', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500)));
+      }
+      return SizedBox(
+        height: 160,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: controller.newOpportunities.length,
+          itemBuilder: (context, index) {
+            final opp = controller.newOpportunities[index];
+            return Container(
+              width: 280,
+              margin: const EdgeInsets.only(left: 16.0),
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(color: orangeColor.withOpacity(0.3)),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(color: orangeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                        child: Icon(Icons.new_releases_rounded, color: orangeColor, size: 16),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(opp.title, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15, color: navyColor), overflow: TextOverflow.ellipsis)),
+                    ],
+                  ),
+                  const Spacer(),
+                  Row(
+                    children: [
+                      Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
+                      const SizedBox(width: 4),
+                      Text(opp.clientName ?? "", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(opp.publishDate ?? "", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12)),
+                      Text(opp.budget ?? "", style: TextStyle(fontFamily: 'Tajawal', color: Colors.green.shade700, fontSize: 13, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    });
+  }
+
+  Widget _buildActiveProjectsSection() {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const SizedBox.shrink();
+      }
+      if (controller.activeProjects.isEmpty) {
+        return Center(child: Text('لا توجد مشاريع قيد التنفيذ حالياً', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500)));
+      }
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: controller.activeProjects.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          final opp = controller.newOpportunities[index];
+          final project = controller.activeProjects[index];
           return Container(
-            width: 280,
-            margin: const EdgeInsets.only(left: 16.0),
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(20.0),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16.0),
-              border: Border.all(color: orangeColor.withOpacity(0.3)),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(color: orangeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                      child: Icon(Icons.new_releases_rounded, color: orangeColor, size: 16),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(child: Text(opp['projectName'], style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15, color: navyColor), overflow: TextOverflow.ellipsis)),
-                  ],
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
-                    const SizedBox(width: 4),
-                    Text(opp['clientName'], style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(opp['publishDate'], style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12)),
-                    Text(opp['budget'], style: TextStyle(fontFamily: 'Tajawal', color: Colors.green.shade700, fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text(project.title, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
+                    Text('${project.progressPercentage.toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8.0),
+                  child: LinearProgressIndicator(value: project.progressPercentage / 100, backgroundColor: Colors.grey.shade200, valueColor: AlwaysStoppedAnimation<Color>(orangeColor), minHeight: 8),
+                ),
+                const SizedBox(height: 12),
+                Text('المرحلة القادمة: ${project.nextMilestone ?? ""}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
+              ],
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildOffersSection() {
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const SizedBox.shrink();
+      }
+      if (controller.myOffers.isEmpty) {
+        return Center(child: Text('لا توجد عروض مقدمة حالياً', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500)));
+      }
+      return ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: controller.myOffers.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final offer = controller.myOffers[index];
+          bool isAccepted = offer.status == 'مقبول' || offer.status == 'accepted';
+
+          return Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16.0),
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 5, offset: const Offset(0, 2))],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isAccepted ? Colors.green.withOpacity(0.1) : orangeColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    isAccepted ? Icons.check_circle_outline_rounded : Icons.hourglass_top_rounded,
+                    color: isAccepted ? Colors.green : orangeColor,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(offer.projectName ?? "", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 14, color: navyColor)),
+                      const SizedBox(height: 4),
+                      Text('القيمة: ${offer.amount ?? offer.cost}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade600)),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isAccepted ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        offer.status,
+                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: isAccepted ? Colors.green : Colors.grey.shade700, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(offer.date ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: Colors.grey.shade400)),
                   ],
                 ),
               ],
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildActiveProjectsSection() {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: controller.activeProjects.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final project = controller.activeProjects[index];
-        return Container(
-          padding: const EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.0),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(project['projectName'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
-                  Text('${(project['progress'] * 100).toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8.0),
-                child: LinearProgressIndicator(value: project['progress'], backgroundColor: Colors.grey.shade200, valueColor: AlwaysStoppedAnimation<Color>(orangeColor), minHeight: 8),
-              ),
-              const SizedBox(height: 12),
-              Text('المرحلة القادمة: ${project['nextMilestone']}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOffersSection() {
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: controller.myOffers.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final offer = controller.myOffers[index];
-        bool isAccepted = offer['status'] == 'مقبول';
-
-        return Container(
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16.0),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 5, offset: const Offset(0, 2))],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isAccepted ? Colors.green.withOpacity(0.1) : orangeColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  isAccepted ? Icons.check_circle_outline_rounded : Icons.hourglass_top_rounded,
-                  color: isAccepted ? Colors.green : orangeColor,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(offer['projectName'], style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 14, color: navyColor)),
-                    const SizedBox(height: 4),
-                    Text('القيمة: ${offer['amount']}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade600)),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: isAccepted ? Colors.green.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      offer['status'],
-                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: isAccepted ? Colors.green : Colors.grey.shade700, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(offer['date'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: Colors.grey.shade400)),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
+      );
+    });
   }
 }

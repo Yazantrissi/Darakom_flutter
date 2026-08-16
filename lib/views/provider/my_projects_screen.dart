@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/provider/my_projects_controller.dart';
+import '../../models/project_model.dart';
 
 class ProviderMyProjectsScreen extends StatelessWidget {
   ProviderMyProjectsScreen({super.key});
@@ -92,7 +93,7 @@ class ProviderMyProjectsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProjectCard(Map<String, dynamic> project) {
+  Widget _buildProjectCard(ProjectModel project) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))]),
@@ -102,23 +103,23 @@ class ProviderMyProjectsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(project['projectName'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
-              Text('${(project['progress'] * 100).toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
+              Text(project.title, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
+              Text('${project.progressPercentage.toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 8),
-          Text('العميل: ${project['clientName']}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 13)),
+          Text('العميل: ${project.clientName ?? ""}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 13)),
           const SizedBox(height: 16),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(value: project['progress'], backgroundColor: Colors.grey.shade200, valueColor: AlwaysStoppedAnimation<Color>(orangeColor), minHeight: 8),
+            child: LinearProgressIndicator(value: project.progressPercentage / 100, backgroundColor: Colors.grey.shade200, valueColor: AlwaysStoppedAnimation<Color>(orangeColor), minHeight: 8),
           ),
           const SizedBox(height: 20),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => controller.addCompletedStage(project['id']),
+                  onPressed: () => controller.addCompletedStage(project.id),
                   icon: const Icon(Icons.add_task_rounded, size: 16),
                   label: const Text('إضافة مرحلة منجزة', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(backgroundColor: orangeColor, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -127,7 +128,7 @@ class ProviderMyProjectsScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => controller.viewProjectTracking(project['id']),
+                  onPressed: () => controller.viewProjectTracking(project.id),
                   icon: const Icon(Icons.track_changes_rounded, size: 16),
                   label: const Text('عرض سير المشروع', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(backgroundColor: navyColor, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),

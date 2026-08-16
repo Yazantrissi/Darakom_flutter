@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/profile_controller.dart';
+import '../../models/province_model.dart';
 
 class ProfileScreen extends StatelessWidget {
   ProfileScreen({super.key});
@@ -18,102 +19,112 @@ class ProfileScreen extends StatelessWidget {
       textDirection: TextDirection.rtl, // الواجهة من اليمين لليسار
       child: Scaffold(
         backgroundColor: bgColor,
-        body: Column(
-          children: [
-            // 1. الهيدر الكحلي المنحني
-            _buildCustomHeader(),
+        body: Obx(() {
+          if (controller.isLoading.value && controller.fullUserName.value.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
+          return Column(
+            children: [
+              // 1. الهيدر الكحلي المنحني
+              _buildCustomHeader(),
 
-            // 2. محتوى الحقول القابل للتمرير
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // حقل الاسم الأول
-                    _buildEditableField(
-                      controller: controller.firstNameController,
-                      label: 'الاسم الأول',
-                    ),
-                    const SizedBox(height: 16),
+              // 2. محتوى الحقول القابل للتمرير
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // حقل الاسم الأول
+                      _buildEditableField(
+                        controller: controller.firstNameController,
+                        label: 'الاسم الأول',
+                      ),
+                      const SizedBox(height: 16),
 
-                    // حقل الاسم الأخير
-                    _buildEditableField(
-                      controller: controller.lastNameController,
-                      label: 'الاسم الأخير',
-                    ),
-                    const SizedBox(height: 16),
+                      // حقل الاسم الأخير
+                      _buildEditableField(
+                        controller: controller.lastNameController,
+                        label: 'الاسم الأخير',
+                      ),
+                      const SizedBox(height: 16),
 
-                    // حقل البريد الإلكتروني
-                    _buildEditableField(
-                      controller: controller.emailController,
-                      label: 'البريد الإلكتروني',
-                      isLtr: true,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 16),
+                      // حقل البريد الإلكتروني
+                      _buildEditableField(
+                        controller: controller.emailController,
+                        label: 'البريد الإلكتروني',
+                        isLtr: true,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 16),
 
-                    // حقل رقم الهاتف
-                    _buildEditableField(
-                      controller: controller.phoneController,
-                      label: 'رقم الهاتف',
-                      isLtr: true,
-                      keyboardType: TextInputType.phone,
-                    ),
-                    const SizedBox(height: 16),
+                      // حقل رقم الهاتف
+                      _buildEditableField(
+                        controller: controller.phoneController,
+                        label: 'رقم الهاتف',
+                        isLtr: true,
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: 16),
 
-                    // حقل العنوان
-                    _buildEditableField(
-                      controller: controller.addressController,
-                      label: 'العنوان',
-                    ),
-                    const SizedBox(height: 16),
+                      // حقل اختيار المحافظة
+                      _buildProvinceDropdown(),
+                      const SizedBox(height: 16),
 
-                    // حقل النبذة (Bio)
-                    _buildEditableField(
-                      controller: controller.bioController,
-                      label: 'Bio',
-                      maxLines: 4,
-                    ),
-                    const SizedBox(height: 32),
+                      // حقل العنوان
+                      _buildEditableField(
+                        controller: controller.addressController,
+                        label: 'العنوان',
+                      ),
+                      const SizedBox(height: 16),
 
-                    // زر حفظ التغييرات
-                    Obx(() => ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: orangeColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12.0),
+                      // حقل النبذة (Bio)
+                      _buildEditableField(
+                        controller: controller.bioController,
+                        label: 'Bio',
+                        maxLines: 4,
+                      ),
+                      const SizedBox(height: 32),
+
+                      // زر حفظ التغييرات
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: orangeColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        onPressed: controller.isLoading.value ? null : controller.saveChanges,
+                        child: controller.isLoading.value
+                            ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                            : const Text(
+                          'حفظ التغييرات',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      onPressed: controller.isLoading.value ? null : controller.saveChanges,
-                      child: controller.isLoading.value
-                          ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                          : const Text(
-                        'حفظ التغييرات',
-                        style: TextStyle(
-                          fontFamily: 'Tajawal',
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    )),
-                    const SizedBox(height: 24),
-                  ],
+                      const SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -197,12 +208,60 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 16),
 
           // اسم المستخدم
-          const Text(
-            'محمد العتيبي', // سيتم ربطها بالمتحكم لاحقاً
-            style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            controller.fullUserName.value.isEmpty ? 'جاري التحميل...' : controller.fullUserName.value,
+            style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ],
       ),
+    );
+  }
+
+  // تصميم حقل اختيار المحافظة
+  Widget _buildProvinceDropdown() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'المحافظة',
+          style: TextStyle(
+            fontFamily: 'Tajawal',
+            color: Colors.grey.shade600,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<ProvinceModel>(
+          value: controller.selectedProvince.value,
+          icon: Icon(Icons.keyboard_arrow_down, color: orangeColor, size: 20),
+          style: TextStyle(fontFamily: 'Tajawal', fontSize: 15, color: navyColor, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(color: Colors.grey.shade200),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(color: navyColor, width: 1.5),
+            ),
+          ),
+          items: controller.provinces.map((province) {
+            return DropdownMenuItem(
+              value: province,
+              child: Text(province.name),
+            );
+          }).toList(),
+          onChanged: (val) => controller.selectedProvince.value = val,
+        ),
+      ],
     );
   }
 

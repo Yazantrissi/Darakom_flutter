@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/client_offers_controller.dart';
 import '../../controllers/home/client_dashboard_controller.dart'; // استيراد متحكم لوحة التحكم
+import '../../models/offer_model.dart';
 import 'offer_details_screen.dart';
 
 class ClientOffersScreen extends StatelessWidget {
@@ -86,7 +87,7 @@ class ClientOffersScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOfferCard(Map<String, dynamic> offer) {
+  Widget _buildOfferCard(OfferModel offer) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -118,7 +119,7 @@ class ClientOffersScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    if (offer['badge'] != null)
+                    if (offer.badge != null)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
@@ -126,7 +127,7 @@ class ClientOffersScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          offer['badge'],
+                          offer.badge!,
                           style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 11, fontWeight: FontWeight.bold),
                         ),
                       )
@@ -135,9 +136,9 @@ class ClientOffersScreen extends StatelessWidget {
 
                     Row(
                       children: [
-                        Text('(${offer['reviewsCount']})', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
+                        Text('(${offer.reviewsCount ?? 0})', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
                         const SizedBox(width: 4),
-                        Text('${offer['rating']}', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontSize: 13, fontWeight: FontWeight.bold)),
+                        Text('${offer.rating ?? 0.0}', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontSize: 13, fontWeight: FontWeight.bold)),
                         const SizedBox(width: 4),
                         const Icon(Icons.star_rounded, color: Colors.orange, size: 18),
                       ],
@@ -145,15 +146,15 @@ class ClientOffersScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(offer['providerName'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor)),
+                Text(offer.providerName ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor)),
                 const SizedBox(height: 4),
-                Text(offer['role'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
+                Text(offer.role ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(offer['price'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: orangeColor)),
+                    Text(offer.amount ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: orangeColor)),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: orangeColor,
@@ -163,7 +164,7 @@ class ClientOffersScreen extends StatelessWidget {
                       ),
                       onPressed: () {
                         // الانتقال إلى شاشة تفاصيل العرض
-                        Get.to(() => OfferDetailsScreen());
+                        Get.to(() => OfferDetailsScreen(offer: offer));
                       },
                       child: const Text('عرض التفاصيل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
                     ),

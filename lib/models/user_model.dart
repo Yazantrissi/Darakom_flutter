@@ -13,6 +13,7 @@ class UserModel {
   final String? roleName;
   final String? syndicateNumber;
   final String? workArea;
+  final int? experienceYears;
   final String? bio;
   final String? address;
   final String? profilePicture;
@@ -33,6 +34,7 @@ class UserModel {
     this.roleName,
     this.syndicateNumber,
     this.workArea,
+    this.experienceYears,
     this.bio,
     this.address,
     this.profilePicture,
@@ -40,7 +42,7 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    // Helper to safely parse int from String if needed
+    // Helper to safely parse int from dynamic if needed
     int parseId(dynamic val) {
       if (val is int) return val;
       if (val is String) return int.tryParse(val) ?? 0;
@@ -62,6 +64,7 @@ class UserModel {
       roleName: json['role'] is Map ? json['role']['name']?.toString() : null,
       syndicateNumber: json['syndicate_number']?.toString(),
       workArea: json['work_area']?.toString(),
+      experienceYears: json['experience_years'] != null ? parseId(json['experience_years']) : null,
       bio: json['bio']?.toString(),
       address: json['address']?.toString(),
       profilePicture: json['profile_picture']?.toString(),
@@ -83,6 +86,7 @@ class UserModel {
       'role_id': roleId,
       'syndicate_number': syndicateNumber,
       'work_area': workArea,
+      'experience_years': experienceYears,
       'bio': bio,
       'address': address,
       'profile_picture': profilePicture,

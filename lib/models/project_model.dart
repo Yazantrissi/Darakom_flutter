@@ -12,7 +12,9 @@ class ProjectModel {
   final String? area;
   final String? governorate;
   final String? address;
-  final String? type;
+  final String? type; // General type
+  final String? work_type; // construction or finishing
+  final String? building_no;
   final String? specialization;
   final String? publishDate;
   final int? duration;
@@ -35,6 +37,8 @@ class ProjectModel {
     this.governorate,
     this.address,
     this.type,
+    this.work_type,
+    this.building_no,
     this.specialization,
     this.publishDate,
     this.duration,
@@ -59,6 +63,8 @@ class ProjectModel {
       governorate: json['governorate'],
       address: json['address'],
       type: json['type'],
+      work_type: json['work_type'] ?? json['workType'],
+      building_no: json['building_no']?.toString() ?? json['buildingNo']?.toString(),
       specialization: json['specialization'],
       publishDate: json['publishDate'],
       duration: json['duration'],
@@ -84,6 +90,8 @@ class ProjectModel {
       'governorate': governorate,
       'address': address,
       'type': type,
+      'work_type': work_type,
+      'building_no': building_no,
       'specialization': specialization,
       'publishDate': publishDate,
       'duration': duration,

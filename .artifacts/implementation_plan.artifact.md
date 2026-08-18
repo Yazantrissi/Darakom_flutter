@@ -1,35 +1,49 @@
-# Implementation Plan - Add Mobile Number to Registration
+# Implementation Plan - Backend File Upload Integration
 
-This plan outlines the steps to add a "Mobile Number" field to the registration process and connect it to the backend API.
+This plan details the steps to enable multipart file uploading across all relevant modules (Registration, Projects, Offers, and Stage Updates) using the Dio package.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> - A new mandatory "Mobile Number" field will be added to the registration screen.
-> - The field will appear immediately after the "Confirm Password" field.
-> - Data will be sent to the backend using the key `phone`.
+> - All file-related requests will be switched from JSON to `FormData`.
+> - The backend must be ready to handle `multipart/form-data` on the specified endpoints.
+> - We will use the `MultipartFile.fromFile` method to attach files to the requests.
 
 ## Proposed Changes
 
-### Controllers
+### 1. Infrastructure Layer
 
-#### [MODIFY] [register_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/auth/register_controller.dart)
-- Add `phoneController` to manage the mobile number input.
-- Update `_validateInput()` to ensure the phone number is not empty and matches a basic pattern if needed.
-- Include `'phone': phoneController.text` in the data map sent to the registration API.
-- Ensure `phoneController` is disposed in the `onClose` method.
+#### [MODIFY] [api_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/api_service.dart)
+- Update `post`, `put`, and `patch` to handle `dynamic data` (which can be either a Map or `FormData`).
+- Ensure headers are dynamically adjusted by Dio when `FormData` is passed.
 
-### Views
+### 2. Service Layer
 
-#### [MODIFY] [register_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/auth/register_screen.dart)
-- Insert a new `_buildTextField` for the "Mobile Number" after the password confirmation field.
-- Set the `keyboardType` to `TextInputType.phone` for a better user experience.
-- Use `Icons.phone_android_outlined` as the icon.
+#### [MODIFY] [project_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/project_service.dart)
+- Refactor `createProject` to convert the data Map and attachments to `FormData`.
+- Refactor `completeProjectStage` to support comments and file attachments via `FormData`.
+
+#### [MODIFY] [offer_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/offer_service.dart)
+- Refactor `submitOffer` to support multipart data for project stages and attachments.
+
+### 3. Controller Layer
+
+#### [MODIFY] [add_project_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/add_project_controller.dart)
+- Logic to collect `projectAttachments` and pass them to `ProjectService.createProject`.
+
+#### [MODIFY] [submit_offer_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/provider/submit_offer_controller.dart)
+- Logic to collect `offerAttachments` and pass them to `OfferService.submitOffer`.
+
+#### [MODIFY] [add_completed_stage_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/provider/add_completed_stage_controller.dart)
+- Logic to collect `attachments` and pass them to `ProjectService.completeProjectStage`.
 
 ## Verification Plan
 
 ### Manual Verification
-1. Navigate to the Registration screen.
-2. Verify the presence of the "Mobile Number" field after "Confirm Password".
-3. Test validation by leaving it empty (should show a warning).
-4. Perform a successful registration and verify (via console or backend) that the `phone` field is sent correctly.
+1.  **Project Creation**: Add a project with a PDF and an image; verify success.
+2.  **Offer Submission**: Submit an offer with attachments; verify success.
+3.  **Stage Completion**: Mark a stage as done with a photo; verify success.
+4.  **Registration**: Register as a provider with documentation; verify success.
+
+### Automated Tests
+- Run `flutter analyze` to ensure all `MultipartFile` and `FormData` references are correct.

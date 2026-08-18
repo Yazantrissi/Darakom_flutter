@@ -76,15 +76,20 @@ class AuthService extends GetxService {
       if (documents != null) {
         for (int i = 0; i < documents.length; i++) {
           final doc = documents[i];
-          if (doc['file_path'] != null) {
+          if (doc['file_bytes'] != null) {
+             formData.files.add(MapEntry(
+              "documents[$i][file]",
+              MultipartFile.fromBytes(doc['file_bytes'], filename: doc['file_name']),
+            ));
+          } else if (doc['file_path'] != null) {
             formData.files.add(MapEntry(
               "documents[$i][file]",
               await MultipartFile.fromFile(doc['file_path'], filename: doc['file_name']),
             ));
-            formData.fields.add(MapEntry("documents[$i][type]", doc['type_id'].toString()));
-            if (doc['description'] != null) {
-              formData.fields.add(MapEntry("documents[$i][description]", doc['description']));
-            }
+          }
+          formData.fields.add(MapEntry("documents[$i][type]", doc['type_id'].toString()));
+          if (doc['description'] != null) {
+            formData.fields.add(MapEntry("documents[$i][description]", doc['description']));
           }
         }
       }

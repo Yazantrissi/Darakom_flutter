@@ -119,7 +119,7 @@ class ProviderMyProjectsScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => controller.addCompletedStage(project.id),
+                  onPressed: () => controller.addCompletedStage(project),
                   icon: const Icon(Icons.add_task_rounded, size: 16),
                   label: const Text('إضافة مرحلة منجزة', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(backgroundColor: orangeColor, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
@@ -128,7 +128,7 @@ class ProviderMyProjectsScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => controller.viewProjectTracking(project.id),
+                  onPressed: () => controller.viewProjectTracking(project),
                   icon: const Icon(Icons.track_changes_rounded, size: 16),
                   label: const Text('عرض سير المشروع', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(backgroundColor: navyColor, foregroundColor: Colors.white, elevation: 0, padding: const EdgeInsets.symmetric(vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),

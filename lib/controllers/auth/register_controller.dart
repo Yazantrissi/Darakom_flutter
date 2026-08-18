@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/attachment_model.dart';
 import '../../models/province_model.dart';
@@ -21,7 +22,6 @@ class RegisterController extends GetxController {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController syndicateNumberController = TextEditingController();
-  final TextEditingController workAreaController = TextEditingController();
 
   // المتغيرات التفاعلية
   var isCustomerTab = true.obs;
@@ -76,7 +76,6 @@ class RegisterController extends GetxController {
   }
 
   Future<void> _fetchInitialData() async {
-    // تم تثبيت البيانات محلياً بناءً على طلب المستخدم لتجنب مشاكل الاتصال بالباك إند
     isLoading.value = false;
   }
 
@@ -105,18 +104,21 @@ class RegisterController extends GetxController {
   Future<void> pickRegisterAttachment(int index) async {
     if (documentTypes.isEmpty) return;
     
-    // Using simple document type selection for now
-    FilePickerResult? result;
-
     try {
-      result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
+        withData: kIsWeb,
       );
 
-      if (result != null && result.files.single.path != null) {
-        registerAttachments[index].fileName.value = result.files.single.name;
-        registerAttachments[index].filePath.value = result.files.single.path;
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        registerAttachments[index].fileName.value = file.name;
+        if (kIsWeb) {
+          registerAttachments[index].fileBytes.value = file.bytes;
+        } else {
+          registerAttachments[index].filePath.value = file.path;
+        }
       }
     } catch (e) {
       Get.snackbar('خطأ', 'حدث خطأ أثناء رفع الملف', backgroundColor: Colors.red, colorText: Colors.white);
@@ -141,17 +143,17 @@ class RegisterController extends GetxController {
 
     if (!isCustomerTab.value) {
       data['role_id'] = selectedRole.value?.id;
-      data['work_area'] = workAreaController.text;
-      data['experience_start'] = "2020-01-01"; // Placeholder, should be picked from UI
+      data['experience_start'] = "2020-01-01"; // Placeholder
     }
 
     List<Map<String, dynamic>> docs = [];
     for (var attr in registerAttachments) {
-      if (attr.filePath.value != null) {
+      if (attr.fileBytes.value != null || attr.filePath.value != null) {
         docs.add({
           'file_path': attr.filePath.value,
+          'file_bytes': attr.fileBytes.value,
           'file_name': attr.fileName.value,
-          'type_id': 1, // Placeholder, should be picked from UI
+          'type_id': 1, // Placeholder
           'description': attr.titleController.text,
         });
       }
@@ -204,10 +206,10 @@ class RegisterController extends GetxController {
     firstNameController.dispose();
     lastNameController.dispose();
     emailController.dispose();
+    phoneController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     syndicateNumberController.dispose();
-    workAreaController.dispose();
     for (var attachment in registerAttachments) {
       attachment.dispose();
     }

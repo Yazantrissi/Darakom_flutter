@@ -158,16 +158,34 @@ class TenderMarketScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(tender.publishDate ?? "", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12)),
-              ElevatedButton(
-                onPressed: () => controller.viewTenderDetails(tender.id),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: navyColor,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                ),
-                child: const Text('عرض التفاصيل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold)),
+              Row(
+                children: [
+                  if (controller.currentTabIndex.value == 1) // Only for private tenders
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: OutlinedButton(
+                        onPressed: () => controller.rejectTender(tender.id),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                          side: const BorderSide(color: Colors.redAccent),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        ),
+                        child: const Text('رفض', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ElevatedButton(
+                    onPressed: () => controller.viewTenderDetails(tender.id),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: navyColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    ),
+                    child: const Text('عرض التفاصيل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                ],
               ),
             ],
           ),

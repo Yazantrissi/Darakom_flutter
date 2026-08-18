@@ -21,6 +21,7 @@ class ApiConstants {
 
   // Client Specific
   static const String clientProjects = "/client/projects";
+  static const String clientOffers = "/client/offers";
   static const String clientComplaints = "/client/complaints";
   static const String clientRatings = "/client/my-ratings";
   static const String acceptOffer = "/client/projects/"; // /{project}/offers/{offer}/accept

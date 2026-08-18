@@ -16,7 +16,7 @@ class ProviderProfileController extends GetxController {
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
   final syndicateNumberController = TextEditingController();
-  final workAreaController = TextEditingController();
+  final experienceYearsController = TextEditingController();
   final bioController = TextEditingController();
   
   var selectedGovernorate = Rx<ProvinceModel?>(null);
@@ -93,7 +93,7 @@ class ProviderProfileController extends GetxController {
         emailController.text = user.email;
         phoneController.text = user.phone ?? "";
         syndicateNumberController.text = user.syndicateNumber ?? "";
-        workAreaController.text = user.workArea ?? "";
+        experienceYearsController.text = user.experienceYears?.toString() ?? "";
         bioController.text = user.bio ?? "";
         
         if (user.provinceId != null) {
@@ -139,7 +139,7 @@ class ProviderProfileController extends GetxController {
       'province_id': selectedGovernorate.value?.id,
       'role_id': selectedSpecialization.value?.id,
       'syndicate_number': syndicateNumberController.text,
-      'work_area': workAreaController.text,
+      'experience_years': experienceYearsController.text,
       'bio': bioController.text,
     };
 
@@ -222,7 +222,7 @@ class ProviderProfileController extends GetxController {
     emailController.dispose();
     phoneController.dispose();
     syndicateNumberController.dispose();
-    workAreaController.dispose();
+    experienceYearsController.dispose();
     bioController.dispose();
     super.onClose();
   }

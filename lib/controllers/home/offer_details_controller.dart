@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../models/offer_model.dart';
+import '../../services/offer_service.dart';
 
 class OfferDetailsController extends GetxController {
+  final OfferService _offerService = Get.find<OfferService>();
+  
   var isLoading = false.obs;
   var offer = OfferModel(id: 0, projectId: 0, status: '', cost: 0, duration: 0, durationUnit: '').obs;
 
@@ -12,23 +15,36 @@ class OfferDetailsController extends GetxController {
 
   // دالة قبول العرض
   Future<void> acceptOffer() async {
-    isLoading.value = true;
-    await Future.delayed(const Duration(seconds: 2)); // محاكاة التحميل
-    isLoading.value = false;
-
-    Get.snackbar(
-      'تم قبول العرض',
-      'تهانينا! تم قبول العرض وسيتم نقلك لتوقيع العقد وإتمام الإجراءات.',
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
-      margin: const EdgeInsets.all(16),
+    Get.defaultDialog(
+      title: 'قبول العرض',
+      middleText: 'هل أنت متأكد من رغبتك في قبول هذا العرض؟',
+      textConfirm: 'نعم، قبول',
+      textCancel: 'إلغاء',
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.green,
+      onConfirm: () async {
+        Get.back();
+        isLoading.value = true;
+        final success = await _offerService.acceptOffer(offer.value.projectId, offer.value.id);
+        isLoading.value = false;
+        
+        if (success) {
+          Get.snackbar(
+            'تم قبول العرض',
+            'تهانينا! تم قبول العرض بنجاح.',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+          Get.back(result: true); // العودة للشاشة السابقة مع إشارة للنجاح لتحديث القائمة
+        } else {
+          Get.snackbar('خطأ', 'فشل قبول العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+        }
+      },
     );
-    // مستقبلاً: الانتقال لشاشة توقيع العقد أو الدفع
   }
 
   // دالة رفض العرض
-  void rejectOffer() {
+  Future<void> rejectOffer() async {
     Get.defaultDialog(
       title: 'رفض العرض',
       titleStyle: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18, color: Colors.redAccent),
@@ -41,17 +57,23 @@ class OfferDetailsController extends GetxController {
       textCancel: 'تراجع',
       confirmTextColor: Colors.white,
       buttonColor: Colors.redAccent,
-      onConfirm: () {
-        Get.back(); // إغلاق النافذة
-        Get.back(); // العودة لشاشة العروض
-        Get.snackbar(
-          'تم الرفض',
-          'تم رفض العرض بنجاح وإشعار مزود الخدمة.',
-          backgroundColor: Colors.grey.shade800,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-          margin: const EdgeInsets.all(16),
-        );
+      onConfirm: () async {
+        Get.back();
+        isLoading.value = true;
+        final success = await _offerService.rejectOffer(offer.value.projectId, offer.value.id);
+        isLoading.value = false;
+        
+        if (success) {
+          Get.snackbar(
+            'تم الرفض',
+            'تم رفض العرض بنجاح.',
+            backgroundColor: Colors.grey.shade800,
+            colorText: Colors.white,
+          );
+          Get.back(result: true);
+        } else {
+          Get.snackbar('خطأ', 'فشل رفض العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+        }
       },
     );
   }

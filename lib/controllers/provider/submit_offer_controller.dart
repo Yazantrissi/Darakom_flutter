@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import '../../services/offer_service.dart';
 import '../../models/attachment_model.dart';
 
@@ -14,6 +16,12 @@ class SubmitOfferController extends GetxController {
   var isLoading = false.obs;
   var projectStages = <StageItem>[].obs;
   var offerAttachments = <AttachmentModel>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    addAttachment();
+  }
 
   void addStage() {
     projectStages.add(StageItem());
@@ -33,36 +41,68 @@ class SubmitOfferController extends GetxController {
   }
 
   Future<void> pickAttachment(int index) async {
-    // Logic for picking file using model
+    String? selectedType = offerAttachments[index].type.value;
+
+    if (selectedType == null) {
+      Get.snackbar('تنبيه', 'الرجاء اختيار نوع الملف أولاً', backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: selectedType == 'صور' ? FileType.image : FileType.any,
+        withData: kIsWeb,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        offerAttachments[index].fileName.value = file.name;
+        if (kIsWeb) {
+          offerAttachments[index].fileBytes.value = file.bytes;
+        } else {
+          offerAttachments[index].filePath.value = file.path;
+        }
+      }
+    } catch (e) {
+      print("Error picking file: $e");
+    }
   }
 
   Future<void> submitOffer(int projectId) async {
-    if (offerProjectNameController.text.isEmpty || totalPriceController.text.isEmpty) {
-      Get.snackbar('تنبيه', 'يرجى إكمال البيانات الأساسية');
+    if (totalPriceController.text.isEmpty || totalDurationController.text.isEmpty) {
+      Get.snackbar('تنبيه', 'يرجى إكمال البيانات الأساسية السعر والمدة');
       return;
     }
 
     isLoading.value = true;
     
-    final data = {
-      'project_name': offerProjectNameController.text,
-      'duration': totalDurationController.text,
-      'cost': totalPriceController.text,
-      'start_date': startDateController.text,
-      'stages': projectStages.map((e) => {
-        'name': e.nameController.text,
-        'duration': e.durationController.text,
-      }).toList(),
+    final Map<String, dynamic> data = {
+      'cost': double.tryParse(totalPriceController.text) ?? 0,
+      'duration': int.tryParse(totalDurationController.text) ?? 1,
+      'duration_unit': 'day', // Default to day, backend also accepts month, year
+      'provider_comment': offerProjectNameController.text, // Using this as a comment for now
+      'details': 'Submitted from mobile app',
     };
 
-    final success = await _offerService.submitOffer(projectId, data);
+    List<Map<String, dynamic>> attachments = [];
+    for (var attr in offerAttachments) {
+      if (attr.fileBytes.value != null || attr.filePath.value != null) {
+        attachments.add({
+          'file_path': attr.filePath.value,
+          'file_bytes': attr.fileBytes.value,
+          'file_name': attr.fileName.value,
+        });
+      }
+    }
+
+    final result = await _offerService.submitOfferDetailed(projectId, data, attachments: attachments);
     isLoading.value = false;
 
-    if (success) {
+    if (result['success']) {
       Get.back();
       Get.snackbar('نجاح', 'تم إرسال العرض بنجاح', backgroundColor: Colors.green, colorText: Colors.white);
     } else {
-      Get.snackbar('خطأ', 'فشل في إرسال العرض', backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar('خطأ', 'فشل في إرسال العرض: ${result['message']}', backgroundColor: Colors.redAccent, colorText: Colors.white);
     }
   }
 

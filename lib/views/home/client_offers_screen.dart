@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/client_offers_controller.dart';
-import '../../controllers/home/client_dashboard_controller.dart'; // استيراد متحكم لوحة التحكم
+import '../../controllers/home/client_dashboard_controller.dart';
 import '../../models/offer_model.dart';
 import 'offer_details_screen.dart';
 
@@ -23,16 +23,31 @@ class ClientOffersScreen extends StatelessWidget {
         body: Column(
           children: [
             _buildCustomHeader(),
+            _buildCustomTabBar(),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-                itemCount: controller.offers.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 24),
-                itemBuilder: (context, index) {
-                  final offer = controller.offers[index];
-                  return _buildOfferCard(offer);
-                },
-              ),
+              child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final currentOffers = controller.currentIndex.value == 0 
+                    ? controller.publicOffers 
+                    : controller.privateOffers;
+
+                if (currentOffers.isEmpty) {
+                  return _buildEmptyState();
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                  itemCount: currentOffers.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 20),
+                  itemBuilder: (context, index) {
+                    final offer = currentOffers[index];
+                    return _buildOfferCard(offer);
+                  },
+                );
+              }),
             ),
           ],
         ),
@@ -40,11 +55,9 @@ class ClientOffersScreen extends StatelessWidget {
     );
   }
 
-  // --- دوال بناء الواجهة --- //
-
   Widget _buildCustomHeader() {
     return Container(
-      padding: const EdgeInsets.only(top: 60, bottom: 24, left: 24, right: 24),
+      padding: const EdgeInsets.only(top: 60, bottom: 20, left: 24, right: 24),
       decoration: BoxDecoration(
         color: navyColor,
         borderRadius: const BorderRadius.only(
@@ -55,7 +68,6 @@ class ClientOffersScreen extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // زر العودة المعدل (ينتقل للتبويب 0 في الشريط السفلي)
           Container(
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
@@ -66,12 +78,10 @@ class ClientOffersScreen extends StatelessWidget {
               onPressed: () => Get.find<ClientDashboardController>().changePage(0),
             ),
           ),
-
           const Text(
             'العروض المتاحة',
             style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
-
           Container(
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
@@ -87,92 +97,161 @@ class ClientOffersScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildCustomTabBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      height: 45,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+      ),
+      child: Obx(() => Row(
+        children: [
+          _buildTabItem('عروض عامة', 0),
+          _buildTabItem('عروض خاصة', 1),
+        ],
+      )),
+    );
+  }
+
+  Widget _buildTabItem(String label, int index) {
+    bool isSelected = controller.currentIndex.value == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => controller.changeTab(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected ? orangeColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Tajawal',
+              color: isSelected ? Colors.white : Colors.grey.shade600,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildOfferCard(OfferModel offer) {
     return Container(
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20.0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 16, offset: const Offset(0, 8))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: navyColor.withOpacity(0.1),
+                    child: Icon(Icons.apartment_rounded, color: navyColor, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(offer.providerName ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
+                      Text(offer.role ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500)),
+                    ],
+                  ),
+                ],
+              ),
+              if (offer.badge != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(color: orangeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                  child: Text(offer.badge!, style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+                  const SizedBox(width: 4),
+                  Text('${offer.rating}', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: navyColor)),
+                  const SizedBox(width: 4),
+                  Text('(${offer.reviewsCount})', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12)),
+                ],
+              ),
+              Text(offer.amount ?? "${offer.cost} ريال", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: orangeColor)),
+            ],
+          ),
+          const Divider(height: 32),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => controller.acceptOffer(offer),
+                  child: const Text('قبول', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    side: const BorderSide(color: Colors.redAccent),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => controller.rejectOffer(offer),
+                  child: const Text('رفض', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: navyColor,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => Get.to(() => OfferDetailsScreen(offer: offer))?.then((val) {
+                    if (val == true) controller.fetchOffers();
+                  }),
+                  child: const Text('التفاصيل', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 12)),
+                ),
+              ),
+            ],
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20.0)),
-            child: Container(
-              height: 140,
-              color: Colors.grey.shade300,
-              child: const Icon(Icons.apartment_rounded, size: 50, color: Colors.white),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    if (offer.badge != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: orangeColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          offer.badge!,
-                          style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
-                      )
-                    else
-                      const SizedBox(),
+    );
+  }
 
-                    Row(
-                      children: [
-                        Text('(${offer.reviewsCount ?? 0})', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
-                        const SizedBox(width: 4),
-                        Text('${offer.rating ?? 0.0}', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontSize: 13, fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.star_rounded, color: Colors.orange, size: 18),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(offer.providerName ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor)),
-                const SizedBox(height: 4),
-                Text(offer.role ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(offer.amount ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: orangeColor)),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: orangeColor,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                      ),
-                      onPressed: () {
-                        // الانتقال إلى شاشة تفاصيل العرض
-                        Get.to(() => OfferDetailsScreen(offer: offer));
-                      },
-                      child: const Text('عرض التفاصيل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.assignment_late_outlined, size: 64, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text('لا توجد عروض حالياً في هذا القسم', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 16)),
         ],
       ),
     );

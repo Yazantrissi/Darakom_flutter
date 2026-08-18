@@ -398,7 +398,11 @@ class _HomeTab extends StatelessWidget {
         itemBuilder: (context, index) {
           final project = controller.activeProjects[index];
           return InkWell(
-            onTap: () => Get.to(() => ProjectTrackingScreen()),
+            onTap: () => Get.to(() => ProjectTrackingScreen(), arguments: {
+              'projectId': project.id,
+              'projectTitle': project.title,
+              'isProvider': false,
+            }),
             borderRadius: BorderRadius.circular(16.0),
             child: Container(
               padding: const EdgeInsets.all(20.0),

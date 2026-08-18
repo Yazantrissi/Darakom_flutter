@@ -13,7 +13,6 @@ class ApiService extends GetxService {
       receiveTimeout: const Duration(seconds: 10),
       headers: {
         'Accept': 'application/json',
-        'Content-Type': 'application/json',
       },
     ));
 
@@ -45,6 +44,10 @@ class ApiService extends GetxService {
 
   Future<Response> put(String path, {dynamic data}) async {
     return await _dio.put(path, data: data);
+  }
+
+  Future<Response> patch(String path, {dynamic data}) async {
+    return await _dio.patch(path, data: data);
   }
 
   Future<Response> delete(String path) async {

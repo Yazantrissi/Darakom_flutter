@@ -1,9 +1,12 @@
 import 'package:get/get.dart';
 import '../../models/project_model.dart';
+import '../../views/provider/add_completed_stage_screen.dart';
+import '../../views/tracking/project_tracking_screen.dart';
 
 class ProviderProjectsController extends GetxController {
   // التبويبات (مشاريع عامة = 0 / مشاريع خاصة = 1)
   var currentTabIndex = 0.obs;
+  var isLoading = false.obs;
 
   // قائمة المشاريع العامة (Mock Data)
   final List<ProjectModel> publicProjects = [
@@ -41,21 +44,22 @@ class ProviderProjectsController extends GetxController {
     currentTabIndex.value = index;
   }
 
-  void addCompletedStage(int projectId) {
-    // محاكاة إضافة مرحلة منجزة
-    Get.snackbar(
-      'تحديث المشروع',
-      'تم فتح واجهة إضافة مرحلة منجزة للمشروع رقم: $projectId',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  void addCompletedStage(ProjectModel project) {
+    Get.to(() => AddCompletedStageScreen(), arguments: {
+      'projectId': project.id,
+      'projectTitle': project.title,
+    })?.then((val) {
+      if (val == true) {
+        // Refresh project list if needed
+      }
+    });
   }
 
-  void viewProjectTracking(int projectId) {
-    // محاكاة عرض سير المشروع
-    Get.snackbar(
-      'سير المشروع',
-      'سيتم الانتقال لواجهة تتبع سير العمل للمشروع رقم: $projectId',
-      snackPosition: SnackPosition.BOTTOM,
-    );
+  void viewProjectTracking(ProjectModel project) {
+    Get.to(() => ProjectTrackingScreen(), arguments: {
+      'projectId': project.id,
+      'projectTitle': project.title,
+      'isProvider': true,
+    });
   }
 }

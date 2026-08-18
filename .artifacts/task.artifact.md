@@ -1,12 +1,14 @@
-# Task List - Add Mobile Number to Registration
+# Task List - Backend File Upload Integration
 
-- [ ] **Controller Updates**
-    - [x] Add `phoneController` to `RegisterController`.
-    - [x] Include `phone` in the registration data map.
-    - [x] Add validation for the phone number.
-    - [x] Ensure `phoneController` is disposed.
-- [ ] **View Updates**
-    - [x] Add the "Mobile Number" text field to `RegisterScreen`.
-    - [x] Set the keyboard type to `TextInputType.phone`.
+- [ ] **Infrastructure updates**
+    - [ ] Update `ApiService` to support dynamic `Content-Type` for `FormData`.
+- [ ] **Authentication (Registration)**
+    - [ ] Update `AuthService.register` to handle multipart documents.
+- [ ] **Project Management**
+    - [ ] Update `ProjectService.createProject` to handle multipart attachments.
+- [ ] **Bidding (Offer Submission)**
+    - [ ] Update `OfferService.submitOffer` to support multipart documents.
+- [ ] **Tracking (Stage Updates)**
+    - [ ] Update `ProjectService.completeProjectStage` to include multipart attachments.
 - [ ] **Verification**
-    - [ ] Manually verify the field appearance and functionality.
+    - [ ] Perform manual tests for each module.

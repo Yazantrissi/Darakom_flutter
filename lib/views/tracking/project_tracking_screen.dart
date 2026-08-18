@@ -50,8 +50,8 @@ class ProjectTrackingScreen extends StatelessWidget {
               _buildTimeline(),
               const SizedBox(height: 32),
 
-              // 4. --- الزر الجديد: تقديم شكوى ---
-              _buildComplaintButton(),
+              // 4. --- الأزرار السفلية (ديناميكية) ---
+              _buildActionButtons(),
 
               const SizedBox(height: 24),
             ],
@@ -74,13 +74,13 @@ class ProjectTrackingScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('فيلا سكنية - حي الياسمين', style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor)),
+          Text(controller.projectTitle, style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor)),
           const SizedBox(height: 8),
           Row(
             children: [
               Icon(Icons.engineering_outlined, size: 18, color: Colors.grey.shade500),
               const SizedBox(width: 8),
-              Text('المنفذ: مؤسسة البناء الحديث', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600)),
+              Text('المشروع رقم: #${controller.projectId}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600)),
             ],
           ),
           const SizedBox(height: 8),
@@ -88,7 +88,7 @@ class ProjectTrackingScreen extends StatelessWidget {
             children: [
               Icon(Icons.calendar_month_outlined, size: 18, color: Colors.grey.shade500),
               const SizedBox(width: 8),
-              Text('تاريخ التسليم: 2026-11-01', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600)),
+              Text('تحديث مستمر لسير العمل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600)),
             ],
           ),
         ],
@@ -214,26 +214,53 @@ class ProjectTrackingScreen extends StatelessWidget {
     );
   }
 
-  // تصميم الزر الجديد لتقديم الشكوى
-  Widget _buildComplaintButton() {
-    return OutlinedButton.icon(
-      onPressed: controller.showComplaintDialog, // استدعاء دالة الشكوى من المتحكم
-      icon: const Icon(Icons.report_problem_outlined, color: Colors.redAccent),
-      label: const Text(
-        'تقديم شكوى على سير العمل',
-        style: TextStyle(
-          fontFamily: 'Tajawal',
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.redAccent,
+  Widget _buildActionButtons() {
+    if (controller.isProvider) {
+      return Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: controller.addCompletedStage,
+              icon: const Icon(Icons.add_task_rounded, color: Colors.white),
+              label: const Text('إضافة مرحلة منجزة', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: orangeColor,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: controller.showComplaintDialog,
+              icon: const Icon(Icons.report_problem_outlined, color: Colors.redAccent),
+              label: const Text('تقديم شكوى', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(color: Colors.redAccent, width: 1.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      // Client View
+      return OutlinedButton.icon(
+        onPressed: controller.showComplaintDialog,
+        icon: const Icon(Icons.report_problem_outlined, color: Colors.redAccent),
+        label: const Text('تقديم شكوى على سير العمل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          side: const BorderSide(color: Colors.redAccent, width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+          backgroundColor: Colors.redAccent.withOpacity(0.05),
         ),
-      ),
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        side: const BorderSide(color: Colors.redAccent, width: 1.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-        backgroundColor: Colors.redAccent.withOpacity(0.05), // خلفية حمراء شفافة جداً
-      ),
-    );
+      );
+    }
   }
 }

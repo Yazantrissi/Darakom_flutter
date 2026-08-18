@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/add_project_controller.dart';
-import '../../widgets/custom_file_upload_section.dart'; // استيراد ويدجت رفع الملفات
+import '../../models/province_model.dart';
+import '../../models/role_model.dart';
+import '../../widgets/custom_file_upload_section.dart';
 
 class AddProjectScreen extends StatelessWidget {
   AddProjectScreen({super.key});
@@ -34,28 +36,30 @@ class AddProjectScreen extends StatelessWidget {
             borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
           ),
         ),
-        body: Column(
-          children: [
-            const SizedBox(height: 24),
-            // التبويبات العلوية
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: _buildCustomTabBar(),
-            ),
-            const SizedBox(height: 16),
-
-            // محتوى النموذج
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                child: Obx(() => controller.isConstructionTab.value
-                    ? _buildConstructionForm()
-                    : _buildFinishingForm()
+        body: Obx(() {
+          if (controller.isLoading.value && controller.provinces.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
+          return Column(
+            children: [
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: _buildCustomTabBar(),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                  child: controller.isConstructionTab.value
+                      ? _buildConstructionForm()
+                      : _buildFinishingForm(),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -128,13 +132,7 @@ class AddProjectScreen extends StatelessWidget {
         _buildSharedFields(),
         const SizedBox(height: 16),
 
-        _buildDropdown(
-          value: controller.selectedProvider.value,
-          items: controller.providers,
-          hint: 'اختر مزود الخدمة',
-          icon: Icons.engineering_outlined,
-          onChanged: (val) => controller.selectedProvider.value = val,
-        ),
+        _buildRoleDropdown(),
         const SizedBox(height: 24),
 
         _buildSectionTitle('مدة الطرح (بالأيام)'),
@@ -146,7 +144,6 @@ class AddProjectScreen extends StatelessWidget {
         )),
         const SizedBox(height: 24),
 
-        // --- المكون الجديد لرفع الملفات ---
         CustomFileUploadSection(
           attachments: controller.projectAttachments,
           onAdd: controller.addAttachment,
@@ -167,26 +164,14 @@ class AddProjectScreen extends StatelessWidget {
         _buildSharedFields(),
         const SizedBox(height: 16),
 
-        _buildDropdown(
-          value: controller.selectedCraftsman.value,
-          items: controller.craftsmen,
-          hint: 'اختر الحرفي المطلوب',
-          icon: Icons.handyman_outlined,
-          onChanged: (val) => controller.selectedCraftsman.value = val,
-        ),
+        _buildCraftsmanDropdown(),
         const SizedBox(height: 16),
 
-        _buildDropdown(
-          value: controller.tenderType.value,
-          items: ['عادي', 'مستعجل'],
-          hint: 'نوع الطرح',
-          icon: Icons.flash_on_rounded,
-          onChanged: controller.changeTenderType,
-        ),
+        _buildTenderTypeDropdown(),
         const SizedBox(height: 24),
 
         Obx(() {
-          bool isUrgent = controller.tenderType.value == 'مستعجل';
+          bool isUrgent = controller.tenderType.value == 'urgent';
           double maxVal = isUrgent ? 15.0 : 30.0;
           String unit = isUrgent ? 'ساعة' : 'يوم';
 
@@ -205,7 +190,6 @@ class AddProjectScreen extends StatelessWidget {
         }),
         const SizedBox(height: 24),
 
-        // --- المكون الجديد لرفع الملفات ---
         CustomFileUploadSection(
           attachments: controller.projectAttachments,
           onAdd: controller.addAttachment,
@@ -228,17 +212,57 @@ class AddProjectScreen extends StatelessWidget {
         const SizedBox(height: 16),
         _buildTextField(controller: controller.areaController, label: 'المساحة (متر مربع)', icon: Icons.straighten_outlined, isNumber: true),
         const SizedBox(height: 16),
-        _buildDropdown(
-          value: controller.selectedGovernorate.value,
-          items: controller.governorates,
-          hint: 'المحافظة',
-          icon: Icons.map_outlined,
-          onChanged: (val) => controller.selectedGovernorate.value = val,
-        ),
+        _buildProvinceDropdown(),
         const SizedBox(height: 16),
         _buildTextField(controller: controller.addressController, label: 'العنوان التفصيلي', icon: Icons.location_on_outlined),
+        const SizedBox(height: 16),
+        _buildTextField(controller: controller.buildingNoController, label: 'رقم البناء', icon: Icons.home_work_outlined),
       ],
     );
+  }
+
+  Widget _buildProvinceDropdown() {
+    return Obx(() => DropdownButtonFormField<ProvinceModel>(
+      value: controller.selectedProvince.value,
+      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+      style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontSize: 15),
+      decoration: _inputDecoration('المحافظة', Icons.map_outlined),
+      items: controller.provinces.map((p) => DropdownMenuItem(value: p, child: Text(p.name))).toList(),
+      onChanged: (val) => controller.selectedProvince.value = val,
+    ));
+  }
+
+  Widget _buildRoleDropdown() {
+    return Obx(() => DropdownButtonFormField<RoleModel>(
+      value: controller.selectedRole.value,
+      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+      style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontSize: 15),
+      decoration: _inputDecoration('نوع المشروع / التخصص المطلب', Icons.engineering_outlined),
+      items: controller.roles.map((r) => DropdownMenuItem(value: r, child: Text(r.name))).toList(),
+      onChanged: (val) => controller.selectedRole.value = val,
+    ));
+  }
+
+  Widget _buildCraftsmanDropdown() {
+    return Obx(() => DropdownButtonFormField<String>(
+      value: controller.selectedCraftsmanType.value,
+      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+      style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontSize: 15),
+      decoration: _inputDecoration('اختر الحرفي المطلوب', Icons.handyman_outlined),
+      items: controller.craftsmen.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+      onChanged: (val) => controller.selectedCraftsmanType.value = val,
+    ));
+  }
+
+  Widget _buildTenderTypeDropdown() {
+    return Obx(() => DropdownButtonFormField<String>(
+      value: controller.tenderType.value == 'urgent' ? 'مستعجل' : 'عادي',
+      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+      style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontSize: 15),
+      decoration: _inputDecoration('نوع الطرح', Icons.flash_on_rounded),
+      items: ['عادي', 'مستعجل'].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+      onChanged: controller.changeTenderType,
+    ));
   }
 
   Widget _buildSubmitButton() {
@@ -269,7 +293,12 @@ class AddProjectScreen extends StatelessWidget {
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       maxLines: maxLines,
       style: const TextStyle(fontFamily: 'Tajawal'),
-      decoration: InputDecoration(
+      decoration: _inputDecoration(label, icon),
+    );
+  }
+
+  InputDecoration _inputDecoration(String label, IconData icon) {
+    return InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14),
         prefixIcon: Icon(icon, color: Colors.grey.shade500),
@@ -279,29 +308,7 @@ class AddProjectScreen extends StatelessWidget {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade300)),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade200)),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: navyColor, width: 1.5)),
-      ),
-    );
-  }
-
-  Widget _buildDropdown({required String? value, required List<String> items, required String hint, required IconData icon, required Function(String?) onChanged}) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-      style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontSize: 15),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14),
-        prefixIcon: Icon(icon, color: Colors.grey.shade500),
-        filled: true,
-        fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade300)),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: Colors.grey.shade200)),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0), borderSide: BorderSide(color: navyColor, width: 1.5)),
-      ),
-      items: items.map((String val) => DropdownMenuItem(value: val, child: Text(val))).toList(),
-      onChanged: onChanged,
-    );
+      );
   }
 
   Widget _buildSlider({required double value, required double min, required double max, required String label, required Function(double) onChanged}) {

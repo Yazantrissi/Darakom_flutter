@@ -1,61 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import '../../models/attachment_model.dart';
 import '../../models/project_model.dart';
-import 'my_projects_controller.dart';
+import '../../models/province_model.dart';
+import '../../models/role_model.dart';
+import '../../services/project_service.dart';
+import '../../services/auth_service.dart';
 
 class AddProjectController extends GetxController {
-  // وضع التعديل
+  final ProjectService _projectService = Get.find<ProjectService>();
+  final AuthService _authService = Get.find<AuthService>();
+
   var isEditMode = false.obs;
   var editingProjectId = 0.obs;
 
-  // تبويبات نوع المشروع (إنشاء = true / تشطيب = false)
   var isConstructionTab = true.obs;
 
-  // الحقول المشتركة
   final TextEditingController projectNameController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController areaController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  final TextEditingController buildingNoController = TextEditingController(text: "1");
 
-  // المحافظات السورية
-  var selectedGovernorate = Rx<String?>(null);
-  final List<String> governorates = [
-    'دمشق', 'ريف دمشق', 'حلب', 'حمص', 'حماة', 'اللاذقية',
-    'طرطوس', 'إدلب', 'الرقة', 'دير الزور', 'الحسكة', 'درعا',
-    'السويداء', 'القنيطرة'
-  ];
+  var provinces = <ProvinceModel>[].obs;
+  var selectedProvince = Rx<ProvinceModel?>(null);
 
-  // --- قسم الإنشاء (Construction) ---
-  var selectedProvider = Rx<String?>(null);
-  final List<String> providers = [
-    'مكتب هندسي', 'مهندس مدني', 'مهندس معماري', 'استشاري', 'مقاول'
-  ];
-  var constructionDurationDays = 1.0.obs; // من 1 إلى 30 يوم
+  // construction providers / specializations
+  var roles = <RoleModel>[].obs;
+  var selectedRole = Rx<RoleModel?>(null);
 
-  // --- قسم التشطيب (Finishing) ---
-  var selectedCraftsman = Rx<String?>(null);
+  var constructionDurationDays = 1.0.obs;
+
+  var selectedCraftsmanType = Rx<String?>(null);
   final List<String> craftsmen = [
-    'كهرباء', 'سباكة', 'بلاط', 'تكييف', 'جبسنبورد', 'طاقة شمسية', 'دهان'
+    'electricity', 'plumbing', 'tiling', 'ac', 'gypsum', 'solar_energy', 'painting'
   ];
-  var tenderType = 'عادي'.obs; // نوع الطرح (عادي / مستعجل)
-  var finishingDuration = 1.0.obs; // المدة تعتمد على نوع الطرح
+  
+  var tenderType = 'normal'.obs; 
+  var finishingDuration = 1.0.obs;
 
-  // --- قسم رفع الملفات الديناميكي ---
   var projectAttachments = <AttachmentModel>[].obs;
-
   var isLoading = false.obs;
 
   @override
   void onInit() {
     super.onInit();
-    // التحقق إذا كان هناك بيانات مرسلة للتعديل
+    _fetchInitialData();
     if (Get.arguments != null && Get.arguments is ProjectModel) {
       initializeForEdit(Get.arguments as ProjectModel);
     } else {
-      // إضافة ملف واحد افتراضياً عند فتح الشاشة في حالة الإضافة الجديدة
       addAttachment();
+    }
+  }
+
+  Future<void> _fetchInitialData() async {
+    isLoading.value = true;
+    try {
+      final p = await _authService.fetchProvinces();
+      provinces.assignAll(p);
+      
+      final r = await _authService.fetchRoles();
+      roles.assignAll(r);
+    } catch (e) {
+      print("Error fetching initial data for project: $e");
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -65,120 +76,111 @@ class AddProjectController extends GetxController {
     
     projectNameController.text = project.title;
     descriptionController.text = project.description;
-    // area and address might need extra fields in ProjectModel
-    addressController.text = project.location ?? "";
-    selectedGovernorate.value = project.location; // Placeholder
+    addressController.text = project.address ?? "";
+    areaController.text = project.area ?? "";
+    buildingNoController.text = project.building_no ?? "1";
     
-    isConstructionTab.value = project.status != 'finishing'; // Logic depends on backend categories
+    isConstructionTab.value = project.work_type != 'finishing'; 
     
-    // Note: Mappings depend on how your backend stores project types and specializations
     addAttachment();
   }
 
-  // دوال تغيير الحالة للتبويبات
   void switchTab(bool isConstruction) {
     isConstructionTab.value = isConstruction;
   }
 
   void changeTenderType(String? type) {
     if (type != null) {
-      tenderType.value = type;
-      // تصفير المدة لتجنب أخطاء النطاق عند تغيير نوع الطرح
+      tenderType.value = type == 'مستعجل' ? 'urgent' : 'normal';
       finishingDuration.value = 1.0;
     }
   }
 
-  // --- دوال إدارة المرفقات ---
   void addAttachment() {
     projectAttachments.add(AttachmentModel());
   }
 
   void removeAttachment(int index) {
-    projectAttachments[index].dispose(); // تنظيف الذاكرة للملف المحذوف
+    projectAttachments[index].dispose(); 
     projectAttachments.removeAt(index);
   }
 
-  // دالة اختيار الملفات باستخدام file_picker
   Future<void> pickAttachment(int index) async {
     String? selectedType = projectAttachments[index].type.value;
 
     if (selectedType == null) {
-      Get.snackbar(
-        'تنبيه',
-        'الرجاء اختيار نوع الملف أولاً',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('تنبيه', 'الرجاء اختيار نوع الملف أولاً', backgroundColor: Colors.orange, colorText: Colors.white);
       return;
     }
 
-    FilePickerResult? result;
-
     try {
-      if (selectedType == 'صور') {
-        // فتح معرض الصور فقط
-        result = await FilePicker.platform.pickFiles(
-          type: FileType.image,
-        );
-      } else if (selectedType == 'ملفات') {
-        // فتح متصفح الملفات للمستندات فقط
-        result = await FilePicker.platform.pickFiles(
-          type: FileType.custom,
-          allowedExtensions: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt'],
-        );
-      }
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: selectedType == 'صور' ? FileType.image : FileType.any,
+        withData: kIsWeb,
+      );
 
-      // إذا قام المستخدم باختيار ملف ولم يقم بإلغاء العملية
-      if (result != null && result.files.single.path != null) {
-        projectAttachments[index].fileName.value = result.files.single.name;
-        projectAttachments[index].filePath.value = result.files.single.path;
+      if (result != null && result.files.isNotEmpty) {
+        final file = result.files.first;
+        projectAttachments[index].fileName.value = file.name;
+        if (kIsWeb) {
+          projectAttachments[index].fileBytes.value = file.bytes;
+        } else {
+          projectAttachments[index].filePath.value = file.path;
+        }
       }
     } catch (e) {
-      Get.snackbar(
-        'خطأ',
-        'حدث خطأ أثناء اختيار الملف',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      print("Error picking attachment: $e");
     }
   }
 
-  // إرسال المشروع
   Future<void> submitProject() async {
-    if (projectNameController.text.isEmpty) {
-      Get.snackbar('خطأ', 'يرجى إدخال اسم المشروع', backgroundColor: Colors.redAccent, colorText: Colors.white);
+    if (projectNameController.text.isEmpty || selectedProvince.value == null) {
+      Get.snackbar('تنبيه', 'يرجى إكمال البيانات الأساسية واختيار المحافظة', backgroundColor: Colors.orange, colorText: Colors.white);
       return;
     }
 
     isLoading.value = true;
-    await Future.delayed(const Duration(seconds: 1));
 
-    // Create updated ProjectModel
-    final updatedProject = ProjectModel(
-      id: isEditMode.value ? editingProjectId.value : DateTime.now().millisecondsSinceEpoch,
-      title: projectNameController.text,
-      description: descriptionController.text,
-      location: selectedGovernorate.value,
-      status: isEditMode.value ? (Get.arguments as ProjectModel).status : 'new',
-      progressPercentage: isEditMode.value ? (Get.arguments as ProjectModel).progressPercentage : 0.0,
-      offersCount: isEditMode.value ? (Get.arguments as ProjectModel).offersCount : 0,
-      startDate: isEditMode.value ? (Get.arguments as ProjectModel).startDate : DateTime.now().toString().split(' ')[0],
-    );
+    final Map<String, dynamic> data = {
+      'title': projectNameController.text,
+      'project_type_id': selectedRole.value?.id ?? 1, 
+      'province_id': selectedProvince.value?.id,
+      'work_type': isConstructionTab.value ? 'construction' : 'finishing',
+      'tender_type': tenderType.value,
+      'visibility': 'public',
+      'invitation_type': 'public',
+      'location_details': addressController.text.isEmpty ? "No details" : addressController.text,
+      'building_no': buildingNoController.text,
+      'description': descriptionController.text,
+      'area': int.tryParse(areaController.text) ?? 100,
+      'tender_duration': isConstructionTab.value ? constructionDurationDays.value.toInt() : finishingDuration.value.toInt(),
+      'tender_duration_unit': tenderType.value == 'urgent' ? 'hour' : 'day',
+    };
 
-    if (isEditMode.value) {
-      Get.find<MyProjectsController>().updatePendingProject(updatedProject);
-      Get.snackbar('تم بنجاح', 'تم تحديث المشروع بنجاح', backgroundColor: Colors.green, colorText: Colors.white);
-      
-      // العودة لصفحة التفاصيل مع البيانات الجديدة
-      Get.back(result: updatedProject);
-    } else {
-      // منطق الإضافة
-      Get.snackbar('تم بنجاح', 'تمت إضافة المشروع وطرحه في المنصة.', backgroundColor: Colors.green, colorText: Colors.white);
-      Get.back();
+    if (!isConstructionTab.value) {
+       data['craftsman_type'] = selectedCraftsmanType.value ?? 'painting';
     }
 
+    List<Map<String, dynamic>> attachments = [];
+    for (var attr in projectAttachments) {
+      if (attr.fileBytes.value != null || attr.filePath.value != null) {
+        attachments.add({
+          'file_path': attr.filePath.value,
+          'file_bytes': attr.fileBytes.value,
+          'file_name': attr.fileName.value,
+        });
+      }
+    }
+
+    final result = await _projectService.createProjectDetailed(data, attachments: attachments);
     isLoading.value = false;
+
+    if (result['success']) {
+      Get.snackbar('تم بنجاح', 'تم حفظ المشروع وتحديثه.', backgroundColor: Colors.green, colorText: Colors.white);
+      Get.back(result: true);
+    } else {
+      Get.snackbar('خطأ', 'فشل في إرسال البيانات: ${result['message']}', backgroundColor: Colors.redAccent, colorText: Colors.white);
+    }
   }
 
   @override
@@ -187,6 +189,7 @@ class AddProjectController extends GetxController {
     descriptionController.dispose();
     areaController.dispose();
     addressController.dispose();
+    buildingNoController.dispose();
     for (var attachment in projectAttachments) {
       attachment.dispose();
     }

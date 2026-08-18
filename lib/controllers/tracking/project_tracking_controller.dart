@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../views/provider/add_completed_stage_screen.dart';
 
 class ProjectTrackingController extends GetxController {
+  // Data from arguments
+  late final int projectId;
+  late final String projectTitle;
+  late final bool isProvider;
+
   // نسبة إنجاز المشروع الإجمالية (مثال 65%)
   var progress = 0.65.obs;
 
@@ -29,6 +35,16 @@ class ProjectTrackingController extends GetxController {
     },
   ];
 
+  @override
+  void onInit() {
+    super.onInit();
+    // Handling dynamic arguments
+    final args = Get.arguments ?? {};
+    projectId = args['projectId'] ?? 0;
+    projectTitle = args['projectTitle'] ?? "مشروع غير محدد";
+    isProvider = args['isProvider'] ?? false;
+  }
+
   // --- الدالة الجديدة لتقديم شكوى أثناء سير العمل ---
   void showComplaintDialog() {
     final TextEditingController complaintController = TextEditingController();
@@ -38,7 +54,7 @@ class ProjectTrackingController extends GetxController {
       content: Column(
         children: [
           const Text(
-            'هل تواجه مشكلة مع المقاول أو تأخير في سير العمل؟',
+            'هل تواجه مشكلة أو تأخير في سير العمل؟',
             style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13),
             textAlign: TextAlign.center,
           ),
@@ -81,5 +97,13 @@ class ProjectTrackingController extends GetxController {
         }
       },
     );
+  }
+
+  // دالة إضافة مرحلة منجزة (للمزود فقط)
+  void addCompletedStage() {
+    Get.to(() => AddCompletedStageScreen(), arguments: {
+      'projectId': projectId,
+      'projectTitle': projectTitle,
+    });
   }
 }

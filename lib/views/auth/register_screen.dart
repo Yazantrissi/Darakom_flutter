@@ -175,12 +175,7 @@ class RegisterScreen extends StatelessWidget {
                               onChanged: (val) => controller.changeRole(val),
                             ),
                             const SizedBox(height: 16),
-                            _buildTextField(
-                              controller: controller.workAreaController,
-                              hint: 'منطقة العمل (مثلاً: دمشق وريفها)',
-                              icon: Icons.map_outlined,
-                            ),
-                            const SizedBox(height: 16),
+                            
                             _buildTextField(
                               controller: controller.syndicateNumberController,
                               hint: 'الرقم النقابي / رقم التسجيل',

@@ -1,13 +1,18 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../views/provider/project_details_screen.dart';
 import '../../models/project_model.dart';
+import '../../services/project_service.dart';
 
 class TenderMarketController extends GetxController {
+  final ProjectService _projectService = Get.find<ProjectService>();
+
   // التحكم في التبويبات (عامة = 0 / خاصة = 1)
   var currentTabIndex = 0.obs;
+  var isLoading = false.obs;
 
-  // قائمة المناقصات العامة (Mock Data)
-  final List<ProjectModel> publicTenders = [
+  // قائمة المناقصات العامة (Mock Data for demo)
+  var publicTenders = <ProjectModel>[
     ProjectModel(
       id: 1001,
       title: 'بناء فيلا سكنية - دمشق',
@@ -28,10 +33,10 @@ class TenderMarketController extends GetxController {
       description: '',
       status: 'new',
     ),
-  ];
+  ].obs;
 
   // قائمة المناقصات الخاصة (الموجهة للمزود مباشرة)
-  final List<ProjectModel> privateTenders = [
+  var privateTenders = <ProjectModel>[
     ProjectModel(
       id: 2001,
       title: 'تأسيس شبكة كهرباء - ريف دمشق',
@@ -42,17 +47,38 @@ class TenderMarketController extends GetxController {
       description: '',
       status: 'private',
     ),
-  ];
+  ].obs;
 
   void changeTab(int index) {
     currentTabIndex.value = index;
   }
 
   void viewTenderDetails(int tenderId) {
-    // العثور على بيانات المناقصة من القائمة (لغرض العرض التجريبي)
     final tender = [...publicTenders, ...privateTenders].firstWhere((element) => element.id == tenderId);
-    
-    // الانتقال لواجهة تفاصيل المشروع مع تمرير البيانات
     Get.to(() => ProjectDetailsScreen(projectData: tender));
+  }
+
+  Future<void> rejectTender(int projectId) async {
+    Get.defaultDialog(
+      title: 'رفض المناقصة',
+      middleText: 'هل أنت متأكد من رغبتك في رفض هذه الدعوة؟',
+      textConfirm: 'نعم، رفض',
+      textCancel: 'إلغاء',
+      confirmTextColor: Colors.white,
+      buttonColor: Colors.redAccent,
+      onConfirm: () async {
+        Get.back();
+        isLoading.value = true;
+        final success = await _projectService.rejectInvitation(projectId);
+        isLoading.value = false;
+        
+        if (success) {
+          privateTenders.removeWhere((t) => t.id == projectId);
+          Get.snackbar('تم الرفض', 'تم رفض الدعوة بنجاح', backgroundColor: Colors.grey.shade800, colorText: Colors.white);
+        } else {
+          Get.snackbar('خطأ', 'فشل رفض الدعوة، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+        }
+      },
+    );
   }
 }

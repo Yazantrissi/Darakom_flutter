@@ -161,24 +161,32 @@ class AddProjectController extends GetxController {
        data['craftsman_type'] = selectedCraftsmanType.value ?? 'painting';
     }
 
-    List<Map<String, dynamic>> attachments = [];
-    for (var attr in projectAttachments) {
-      if (attr.fileBytes.value != null || attr.filePath.value != null) {
-        attachments.add({
-          'file_path': attr.filePath.value,
-          'file_bytes': attr.fileBytes.value,
-          'file_name': attr.fileName.value,
-        });
-      }
-    }
-
-    final result = await _projectService.createProjectDetailed(data, attachments: attachments);
-    isLoading.value = false;
+    // STEP 1: Create Project (No files in this request to avoid backend SQL error)
+    final result = await _projectService.createProjectDetailed(data);
 
     if (result['success']) {
+      final int projectId = result['data']['id'];
+
+      // STEP 2: Upload Files one by one to the specialized endpoint
+      for (var attr in projectAttachments) {
+        if (attr.fileBytes.value != null || attr.filePath.value != null) {
+          final typeId = attr.type.value == 'صور' ? 1 : 2; // Mapping from seeder
+          
+          await _projectService.uploadProjectDocument(projectId, {
+            'file_path': attr.filePath.value,
+            'file_bytes': attr.fileBytes.value,
+            'file_name': attr.fileName.value,
+            'type_id': typeId,
+            'title': attr.titleController.text,
+          });
+        }
+      }
+
+      isLoading.value = false;
       Get.snackbar('تم بنجاح', 'تم حفظ المشروع وتحديثه.', backgroundColor: Colors.green, colorText: Colors.white);
       Get.back(result: true);
     } else {
+      isLoading.value = false;
       Get.snackbar('خطأ', 'فشل في إرسال البيانات: ${result['message']}', backgroundColor: Colors.redAccent, colorText: Colors.white);
     }
   }

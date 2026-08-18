@@ -35,49 +35,51 @@ class ProjectService extends GetxService {
     return [];
   }
 
-  Future<bool> createProject(Map<String, dynamic> data, {List<Map<String, dynamic>>? attachments}) async {
-    final result = await createProjectDetailed(data, attachments: attachments);
-    return result['success'];
-  }
-
-  Future<Map<String, dynamic>> createProjectDetailed(Map<String, dynamic> data, {List<Map<String, dynamic>>? attachments}) async {
+  // First step: Create project without files
+  Future<Map<String, dynamic>> createProjectDetailed(Map<String, dynamic> data) async {
     try {
-      FormData formData = FormData.fromMap(data);
-
-      if (attachments != null) {
-        for (var attr in attachments) {
-          if (attr['file_bytes'] != null) {
-             formData.files.add(MapEntry(
-              "documents[]",
-              MultipartFile.fromBytes(attr['file_bytes'], filename: attr['file_name']),
-            ));
-          } else if (attr['file_path'] != null) {
-            formData.files.add(MapEntry(
-              "documents[]",
-              await MultipartFile.fromFile(attr['file_path'], filename: attr['file_name']),
-            ));
-          }
-        }
-      }
-
-      final response = await _apiService.post(ApiConstants.projects, data: formData);
+      final response = await _apiService.post(ApiConstants.projects, data: data);
       return {
         'success': response.data['success'] ?? false,
         'message': response.data['message'] ?? '',
+        'data': response.data['data'],
       };
     } on DioException catch (e) {
       print("Error creating project: ${e.response?.data}");
       return {
         'success': false,
         'message': e.response?.data['message'] ?? 'خطأ في الاتصال بالسيرفر',
-        'errors': e.response?.data['errors'],
       };
     } catch (e) {
-      print("Error creating project: $e");
-      return {
-        'success': false,
-        'message': 'حدث خطأ غير متوقع',
-      };
+      return {'success': false, 'message': 'حدث خطأ غير متوقع'};
+    }
+  }
+
+  // Second step: Upload documents one by one
+  Future<bool> uploadProjectDocument(int projectId, Map<String, dynamic> attr) async {
+    try {
+      FormData formData = FormData();
+      
+      if (attr['file_bytes'] != null) {
+        formData.files.add(MapEntry(
+          "file",
+          MultipartFile.fromBytes(attr['file_bytes'], filename: attr['file_name']),
+        ));
+      } else if (attr['file_path'] != null) {
+        formData.files.add(MapEntry(
+          "file",
+          await MultipartFile.fromFile(attr['file_path'], filename: attr['file_name']),
+        ));
+      }
+
+      formData.fields.add(MapEntry("document_type_id", attr['type_id'].toString()));
+      formData.fields.add(MapEntry("description", attr['title'] ?? "Project document"));
+
+      final response = await _apiService.post("client/projects/$projectId/documents", data: formData);
+      return response.data['success'] ?? false;
+    } catch (e) {
+      print("Error uploading document for project $projectId: $e");
+      return false;
     }
   }
 

@@ -1,14 +1,7 @@
-# Task List - Connecting Client's Main Interface to Backend
+# Task List - Integrating Client Offers with Backend
 
-- [ ] **Configuration & Service Layer**
-    - [ ] Add `clientDashboard` endpoint to `ApiConstants`.
-    - [ ] Add `fetchClientDashboard()` and `fetchClientProjects()` to `ProjectService`.
-- [ ] **Controller Layer**
-    - [ ] Update `ClientDashboardController` with live data fetching.
-    - [ ] Update `MyProjectsController` to remove mock data and fetch from API.
-- [ ] **UI Layer**
-    - [ ] Update `ClientDashboardScreen` to display real stats and project lists.
-    - [ ] Update `MyProjectsScreen` to handle loading states and display live projects.
-- [ ] **Verification**
-    - [ ] Run `flutter analyze`.
-    - [ ] Manually verify data synchronization.
+- [x] Update `OfferModel` to support nested provider and project data.
+- [x] Add specific offer endpoints to `ApiConstants`.
+- [x] Refactor `OfferService` to fetch public and private offers.
+- [x] Update `ClientOffersController` to use live data.
+- [ ] Verify integration with `flutter analyze`.

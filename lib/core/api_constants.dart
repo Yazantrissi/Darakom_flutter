@@ -23,6 +23,8 @@ class ApiConstants {
   static const String clientDashboard = "/client/dashboard";
   static const String clientProjects = "/client/projects";
   static const String clientOffers = "/client/offers";
+  static const String clientPublicOffers = "/client/offers/public";
+  static const String clientPrivateOffers = "/client/offers/private";
   static const String clientComplaints = "/client/complaints";
   static const String clientRatings = "/client/my-ratings";
   static const String acceptOffer = "/client/projects/"; // /{project}/offers/{offer}/accept

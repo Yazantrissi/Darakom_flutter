@@ -9,6 +9,7 @@ class OfferModel {
   final String? date;
   final String? amount;
   final String? providerName;
+  final String? providerAvatar;
   final String? role;
   final double? rating;
   final int? reviewsCount;
@@ -28,6 +29,7 @@ class OfferModel {
     this.date,
     this.amount,
     this.providerName,
+    this.providerAvatar,
     this.role,
     this.rating,
     this.reviewsCount,
@@ -38,24 +40,34 @@ class OfferModel {
   });
 
   factory OfferModel.fromJson(Map<String, dynamic> json) {
+    // Extracting nested provider info if available (Laravel format)
+    final provider = json['provider'] as Map<String, dynamic>?;
+    final project = json['project'] as Map<String, dynamic>?;
+
     return OfferModel(
       id: json['id'] ?? 0,
-      projectId: json['projectId'] ?? json['project_id'] ?? 0,
+      projectId: project?['id'] ?? json['project_id'] ?? 0,
       status: json['status'] ?? "",
-      cost: (json['cost'] ?? json['price'] ?? (json['amount'] != null ? double.tryParse(json['amount'].toString().replaceAll(RegExp(r'[^0-9.]'), '')) : 0) ?? 0).toDouble(),
-      duration: json['duration'] is int ? json['duration'] : (int.tryParse(json['duration']?.toString().split(' ')[0] ?? '0') ?? 0),
-      durationUnit: json['durationUnit'] ?? "يوم",
-      projectName: json['projectName'],
-      date: json['date'],
-      amount: json['amount'] ?? json['totalPrice'],
-      providerName: json['providerName'],
-      role: json['role'],
-      rating: (json['rating'] ?? 0.0).toDouble(),
-      reviewsCount: json['reviewsCount'],
+      cost: (json['cost'] ?? 0).toDouble(),
+      duration: json['duration'] ?? 0,
+      durationUnit: json['duration_unit'] ?? json['durationUnit'] ?? "يوم",
+      
+      projectName: project?['title'] ?? json['projectName'],
+      date: json['created_at'] ?? json['date'],
+      amount: json['cost'] != null ? "${json['cost']} ل.س" : json['amount'],
+      
+      providerName: provider?['name'] ?? json['providerName'],
+      providerAvatar: provider?['avatar'] ?? json['providerAvatar'],
+      role: provider?['role_name'] ?? json['role'],
+      rating: (provider?['average_rating'] ?? json['rating'] ?? 0.0).toDouble(),
+      reviewsCount: provider?['reviews_count'] ?? json['reviewsCount'] ?? 0,
+      
       badge: json['badge'],
-      specialty: json['specialty'],
-      workSummary: json['workSummary'],
-      attachments: json['attachments'] != null ? List<Map<String, dynamic>>.from(json['attachments']) : null,
+      specialty: provider?['role_name'] ?? json['specialty'],
+      workSummary: json['provider_comment'] ?? json['details'] ?? json['workSummary'],
+      attachments: json['documents'] != null 
+          ? List<Map<String, dynamic>>.from(json['documents']) 
+          : (json['attachments'] != null ? List<Map<String, dynamic>>.from(json['attachments']) : null),
     );
   }
 

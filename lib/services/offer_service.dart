@@ -35,21 +35,37 @@ class OfferService extends GetxService {
     return [];
   }
 
-  Future<List<OfferModel>> fetchClientOffers({bool isPrivate = false}) async {
+  Future<List<OfferModel>> fetchClientPublicOffers() async {
     try {
-      final response = await _apiService.get(
-        ApiConstants.clientOffers, 
-        queryParameters: {'is_private': isPrivate ? 1 : 0}
-      );
+      final response = await _apiService.get(ApiConstants.clientPublicOffers);
       if (response.data['success']) {
         return (response.data['data'] as List)
             .map((e) => OfferModel.fromJson(e))
             .toList();
       }
     } catch (e) {
-      print("Error fetching client offers: $e");
+      print("Error fetching public offers: $e");
     }
     return [];
+  }
+
+  Future<List<OfferModel>> fetchClientPrivateOffers() async {
+    try {
+      final response = await _apiService.get(ApiConstants.clientPrivateOffers);
+      if (response.data['success']) {
+        return (response.data['data'] as List)
+            .map((e) => OfferModel.fromJson(e))
+            .toList();
+      }
+    } catch (e) {
+      print("Error fetching private offers: $e");
+    }
+    return [];
+  }
+
+  Future<List<OfferModel>> fetchClientOffers({bool isPrivate = false}) async {
+     if (isPrivate) return fetchClientPrivateOffers();
+     return fetchClientPublicOffers();
   }
 
   Future<bool> submitOffer(int projectId, Map<String, dynamic> data, {List<Map<String, dynamic>>? attachments}) async {

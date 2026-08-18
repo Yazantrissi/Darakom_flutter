@@ -1,26 +1,47 @@
-# Implementation Plan - Fixing Document Type SQL Error
+# Implementation Plan - Integrating Client Offers with Backend
 
-The project submission is failing because the backend attempts to insert into the `documents` table without providing a required `document_type_id`. I will fix this in the backend controllers to ensure files are saved with the correct type reference.
+This plan focuses on finalizing the integration of the Client's Offer views with the Laravel backend.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> - This fix involves modifying the **Backend (Laravel)** code located at `C:\Users\Yazan\Desktop\Darakom-backend`.
-> - I will implement logic to automatically detect if a file is a PDF or an Image and assign the corresponding ID (1 for image, 2 for pdf) as defined in your database seeders.
+> - I will update the `OfferModel` to handle the backend's nested `provider` and `project` data structures.
+> - The app will now call specific endpoints for public and private offers: `/api/client/offers/public` and `/api/client/offers/private`.
 
 ## Proposed Changes
 
-### Backend (Laravel)
+### 1. Data Models
 
-#### [MODIFY] [ProjectController.php](file:///C:/Users/Yazan/Desktop/Darakom-backend/app/Http/Controllers/Project/ProjectController.php)
-- Update the `documents` upload loop to determine and include `document_type_id`.
+#### [MODIFY] [offer_model.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/models/offer_model.dart)
+- Update `fromJson` to correctly extract nested data from the backend response:
+    - `providerName` from `provider.name`.
+    - `specialty` from `provider.role_name`.
+    - `rating` from `provider.average_rating`.
+    - `projectName` from `project.title`.
 
-#### [MODIFY] [OfferController.php](file:///C:/Users/Yazan/Desktop/Darakom-backend/app/Http/Controllers/Project/OfferController.php)
-- Update the `documents` upload loop to determine and include `document_type_id`.
+### 2. Configuration & Services
+
+#### [MODIFY] [api_constants.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/core/api_constants.dart)
+- Add `publicOffers = "/client/offers/public"` and `privateOffers = "/client/offers/private"`.
+
+#### [MODIFY] [offer_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/offer_service.dart)
+- Refactor `fetchClientOffers` or add `fetchPublicOffers()` and `fetchPrivateOffers()` to use the specific endpoints.
+
+### 3. Controllers Layer
+
+#### [MODIFY] [client_offers_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/client_offers_controller.dart)
+- Update `fetchOffers()` to use the new service methods.
+- Ensure state management correctly handles the split between public and private bidding.
+
+### 4. UI Layer
+
+#### [MODIFY] [client_offers_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/client_offers_screen.dart)
+- Ensure the offer cards display real data (e.g., actual provider names and ratings).
 
 ## Verification Plan
 
 ### Manual Verification
-1. Open the Flutter app and attempt to "Add Project" with an attachment.
-2. Verify that the submission succeeds without the "document_type_id" SQL error.
-3. Check the backend `documents` table to ensure `document_type_id` is correctly set (1 or 2).
+1.  **Public Offers**: Open the "Public Offers" tab; verify you see bids on projects you posted for everyone.
+2.  **Private Offers**: Open the "Private Offers" tab; verify you see exclusive invitations.
+3.  **Actions**: Accept a public offer; verify it becomes "Active" in the dashboard.
+4.  **Consistency**: Verify that the price and duration shown in the list match what appears in the "Details" screen.

@@ -16,6 +16,12 @@ class ClientDashboardController extends GetxController {
   var fullUserName = "اسم العميل".obs;
   var userEmail = "email@example.com".obs;
 
+  // Stats
+  var totalProjects = 0.obs;
+  var inProgressCount = 0.obs;
+  var completedCount = 0.obs;
+  var pendingOffersCount = 0.obs;
+
   var pendingProjects = <ProjectModel>[].obs;
   var activeProjects = <ProjectModel>[].obs;
   var completedProjects = <ProjectModel>[].obs;
@@ -38,17 +44,38 @@ class ClientDashboardController extends GetxController {
 
   Future<void> fetchDashboardData() async {
     isLoading.value = true;
-    final allProjects = await _projectService.fetchClientProjects();
     
-    pendingProjects.value = allProjects.where((p) => p.status == 'new' || p.status == 'pending').toList();
-    activeProjects.value = allProjects.where((p) => p.status == 'active').toList();
-    completedProjects.value = allProjects.where((p) => p.status == 'completed').toList();
+    // Fetch stats and summary data
+    final dashboardData = await _projectService.fetchClientDashboard();
+    
+    if (dashboardData != null) {
+      final stats = dashboardData['stats'];
+      totalProjects.value = stats['total_projects'] ?? 0;
+      inProgressCount.value = stats['in_progress_count'] ?? 0;
+      completedCount.value = stats['completed_count'] ?? 0;
+      pendingOffersCount.value = stats['pending_offers'] ?? 0;
+
+      final projects = dashboardData['projects'];
+      
+      pendingProjects.value = (projects['pending'] as List)
+          .map((e) => ProjectModel.fromJson(e))
+          .toList();
+          
+      activeProjects.value = (projects['in_progress'] as List)
+          .map((e) => ProjectModel.fromJson(e))
+          .toList();
+          
+      completedProjects.value = (projects['completed'] as List)
+          .map((e) => ProjectModel.fromJson(e))
+          .toList();
+    }
     
     isLoading.value = false;
   }
 
   void changePage(int index) {
     currentIndex.value = index;
+    if (index == 0) fetchDashboardData();
   }
 
   void goToSearchProviders() {

@@ -1,41 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../models/project_model.dart';
+import '../../services/project_service.dart';
 
 class MyProjectsController extends GetxController {
-  // 1. قائمة المشاريع قيد الانتظار (الجديدة)
-  var pendingProjects = <ProjectModel>[
-    ProjectModel(
-      id: 101,
-      title: 'بناء ملحق خارجي - حي الملقا',
-      description: 'أرغب في بناء ملحق خارجي بمساحة 20 متر مربع مع دورة مياه وتشطيب كامل.',
-      area: '20',
-      governorate: 'دمشق',
-      address: 'حي الملقا - شارع الثلاثين',
-      type: 'إنشاء',
-      specialization: 'مقاول',
-      publishDate: '2026-07-10',
-      offersCount: 4,
-      status: 'بانتظار اختيار مقاول',
-      duration: 15,
-    ),
-    ProjectModel(
-      id: 102,
-      title: 'تجديد واجهة عمارة سكنية',
-      description: 'تجديد واجهة عمارة سكنية مكونة من 4 طوابق، تشمل الدهان وبعض الأعمال الحجرية.',
-      area: '450',
-      governorate: 'حلب',
-      address: 'حي الحمدانية - رابع حي',
-      type: 'تشطيب',
-      specialization: 'دهان',
-      publishDate: '2026-07-12',
-      offersCount: 1,
-      status: 'تلقي العروض',
-      duration: 10,
-    ),
-  ].obs;
+  final ProjectService _projectService = Get.find<ProjectService>();
+
+  var isLoading = false.obs;
+
+  // 1. قائمة المشاريع قيد الانتظار
+  var pendingProjects = <ProjectModel>[].obs;
+
+  // 2. قائمة المشاريع قيد الإنشاء
+  var activeProjects = <ProjectModel>[].obs;
+
+  // 3. قائمة المشاريع المنتهية
+  var completedProjects = <ProjectModel>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchMyProjects();
+  }
+
+  Future<void> fetchMyProjects() async {
+    isLoading.value = true;
+    try {
+      final allProjects = await _projectService.fetchClientProjects();
+      
+      // Splitting based on execution_status or status
+      pendingProjects.value = allProjects.where((p) => p.status == 'new' || p.status == 'pending').toList();
+      activeProjects.value = allProjects.where((p) => p.status == 'active').toList();
+      completedProjects.value = allProjects.where((p) => p.status == 'completed' || p.status == 'finished').toList();
+      
+    } catch (e) {
+      print("Error fetching my projects: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   void deletePendingProject(int id) {
+    // In a real app, call a delete API first
     pendingProjects.removeWhere((p) => p.id == id);
   }
 
@@ -47,51 +53,8 @@ class MyProjectsController extends GetxController {
     }
   }
 
-  // 2. قائمة المشاريع قيد الإنشاء
-  final List<ProjectModel> activeProjects = [
-    ProjectModel(
-      id: 201,
-      title: 'فيلا سكنية - حي الياسمين',
-      progressPercentage: 65,
-      endDate: '2026-11-01',
-      providerName: 'مؤسسة البناء الحديث',
-      description: '',
-      status: 'active',
-    ),
-    ProjectModel(
-      id: 202,
-      title: 'مشروع التشطيب - المدينة',
-      progressPercentage: 30,
-      endDate: '2026-06-01',
-      providerName: 'مكتب الأفق الهندسي',
-      description: '',
-      status: 'active',
-    ),
-  ];
-
-  // 3. قائمة المشاريع المنتهية
-  final List<ProjectModel> completedProjects = [
-    ProjectModel(
-      id: 301,
-      title: 'تصميم داخلي - مكتب تجاري',
-      endDate: '2026-02-10',
-      providerName: 'م. خالد الشمري',
-      description: '',
-      status: 'completed',
-    ),
-    ProjectModel(
-      id: 302,
-      title: 'تأسيس شبكة كهرباء',
-      endDate: '2025-12-05',
-      providerName: 'شركة الإنشاءات الحديثة',
-      description: '',
-      status: 'completed',
-    ),
-  ];
-
   // --- دوال التفاعل مع المشاريع المنتهية ---
 
-  // دالة فتح نافذة التقييم
   void showRatingDialog(String projectName) {
     Get.defaultDialog(
       title: 'تقييم المشروع',
@@ -100,7 +63,6 @@ class MyProjectsController extends GetxController {
         children: [
           Text('كيف كانت تجربتك في "$projectName"؟', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14), textAlign: TextAlign.center),
           const SizedBox(height: 16),
-          // نجوم التقييم الوهمية
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) => const Icon(Icons.star_rounded, color: Colors.amber, size: 36)),
@@ -127,7 +89,6 @@ class MyProjectsController extends GetxController {
     );
   }
 
-  // دالة فتح نافذة تقديم شكوى
   void showComplaintDialog(String projectName) {
     final TextEditingController complaintController = TextEditingController();
     Get.defaultDialog(

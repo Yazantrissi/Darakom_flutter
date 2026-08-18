@@ -21,6 +21,18 @@ class ProjectService extends GetxService {
     return [];
   }
 
+  Future<Map<String, dynamic>?> fetchClientDashboard() async {
+    try {
+      final response = await _apiService.get(ApiConstants.clientDashboard);
+      if (response.data['success']) {
+        return response.data['data'];
+      }
+    } catch (e) {
+      print("Error fetching client dashboard: $e");
+    }
+    return null;
+  }
+
   Future<List<ProjectModel>> fetchPublicTenders() async {
     try {
       final response = await _apiService.get(ApiConstants.publicTenders);

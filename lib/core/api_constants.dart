@@ -20,6 +20,7 @@ class ApiConstants {
   static const String projects = "/projects";
 
   // Client Specific
+  static const String clientDashboard = "/client/dashboard";
   static const String clientProjects = "/client/projects";
   static const String clientOffers = "/client/offers";
   static const String clientComplaints = "/client/complaints";

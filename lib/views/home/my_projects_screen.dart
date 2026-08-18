@@ -12,7 +12,6 @@ class MyProjectsScreen extends StatelessWidget {
 
   final MyProjectsController controller = Get.put(MyProjectsController());
 
-  // الألوان الأساسية المطابقة للهوية البصرية
   final Color navyColor = const Color(0xFF1A2A44);
   final Color orangeColor = const Color(0xFFF58A1E);
   final Color bgColor = const Color(0xFFF5F7FA);
@@ -20,25 +19,28 @@ class MyProjectsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl, // دعم الواجهة العربية
+      textDirection: TextDirection.rtl,
       child: DefaultTabController(
-        length: 3, // تم التحديث إلى 3 تبويبات
+        length: 3,
         child: Scaffold(
           backgroundColor: bgColor,
           body: Column(
             children: [
-              // 1. الهيدر الكحلي المنحني مع التبويبات الثلاثة
               _buildCustomHeader(),
-
-              // 2. محتوى التبويبات (قوائم المشاريع)
               Expanded(
-                child: TabBarView(
-                  children: [
-                    _buildPendingProjectsList(),   // 1. قيد الانتظار (جديد)
-                    _buildActiveProjectsList(),    // 2. قيد الإنشاء
-                    _buildCompletedProjectsList(), // 3. المنتهية (محدث بالأزرار)
-                  ],
-                ),
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  
+                  return TabBarView(
+                    children: [
+                      _buildPendingProjectsList(),
+                      _buildActiveProjectsList(),
+                      _buildCompletedProjectsList(),
+                    ],
+                  );
+                }),
               ),
             ],
           ),
@@ -46,8 +48,6 @@ class MyProjectsScreen extends StatelessWidget {
       ),
     );
   }
-
-  // --- دوال بناء عناصر الواجهة --- //
 
   Widget _buildCustomHeader() {
     return Container(
@@ -64,7 +64,6 @@ class MyProjectsScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // زر العودة المعدل (ينتقل للتبويب 0 في الشريط السفلي)
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.1),
@@ -79,12 +78,11 @@ class MyProjectsScreen extends StatelessWidget {
                 'مشاريعي',
                 style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 48), // لموازنة التوسيط
+              const SizedBox(width: 48),
             ],
           ),
           const SizedBox(height: 24),
 
-          // شريط التبويبات الثلاثي
           TabBar(
             indicatorColor: orangeColor,
             indicatorWeight: 3,
@@ -104,17 +102,17 @@ class MyProjectsScreen extends StatelessWidget {
   }
 
   Widget _buildPendingProjectsList() {
-    return Obx(() => ListView.separated(
+    if (controller.pendingProjects.isEmpty) {
+      return _buildEmptyState('لا توجد مشاريع قيد الانتظار');
+    }
+    return ListView.separated(
       padding: const EdgeInsets.all(24.0),
       itemCount: controller.pendingProjects.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final project = controller.pendingProjects[index];
         return InkWell(
-          onTap: () {
-            // الانتقال إلى شاشة تفاصيل المشروع
-            Get.to(() => ClientProjectDetailsScreen(project: project));
-          },
+          onTap: () => Get.to(() => ClientProjectDetailsScreen(project: project)),
           borderRadius: BorderRadius.circular(16.0),
           child: Container(
             padding: const EdgeInsets.all(20.0),
@@ -141,7 +139,7 @@ class MyProjectsScreen extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(color: orangeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                       child: Text(
-                        '${project.offersCount} عروض',
+                        '${project.offersCount ?? 0} عروض',
                         style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -163,7 +161,7 @@ class MyProjectsScreen extends StatelessWidget {
                         Icon(Icons.access_time_rounded, size: 16, color: Colors.grey.shade500),
                         const SizedBox(width: 6),
                         Text(
-                          'تاريخ الطرح: ${project.publishDate}',
+                          'تاريخ الطرح: ${project.publishDate ?? "غير محدد"}',
                           style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12),
                         ),
                       ],
@@ -185,11 +183,13 @@ class MyProjectsScreen extends StatelessWidget {
           ),
         );
       },
-    ));
+    );
   }
 
-  // 2. قائمة المشاريع قيد الإنشاء (تنتقل لتتبع المشروع)
   Widget _buildActiveProjectsList() {
+    if (controller.activeProjects.isEmpty) {
+      return _buildEmptyState('لا توجد مشاريع قيد الإنشاء');
+    }
     return ListView.separated(
       padding: const EdgeInsets.all(24.0),
       itemCount: controller.activeProjects.length,
@@ -221,7 +221,7 @@ class MyProjectsScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(project.providerName ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
+                Text(project.providerName ?? "قيد البحث", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
                 const SizedBox(height: 16),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
@@ -232,7 +232,7 @@ class MyProjectsScreen extends StatelessWidget {
                   children: [
                     Icon(Icons.calendar_month_outlined, size: 14, color: Colors.grey.shade500),
                     const SizedBox(width: 6),
-                    Text('تاريخ التسليم المتوقع: ${project.endDate}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
+                    Text('تاريخ التسليم المتوقع: ${project.endDate ?? "غير محدد"}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
                   ],
                 ),
               ],
@@ -243,8 +243,10 @@ class MyProjectsScreen extends StatelessWidget {
     );
   }
 
-  // 3. قائمة المشاريع المنتهية (محدثة بزري التقييم والشكوى)
   Widget _buildCompletedProjectsList() {
+    if (controller.completedProjects.isEmpty) {
+      return _buildEmptyState('لا توجد مشاريع منتهية');
+    }
     return ListView.separated(
       padding: const EdgeInsets.all(24.0),
       itemCount: controller.completedProjects.length,
@@ -285,17 +287,15 @@ class MyProjectsScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.check_circle_outline_rounded, size: 16, color: Colors.green.shade600),
                   const SizedBox(width: 6),
-                  Text('تم الانتهاء في: ${project.endDate}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
+                  Text('تم الانتهاء في: ${project.endDate ?? "غير محدد"}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
                 ],
               ),
               const SizedBox(height: 16),
               Divider(color: Colors.grey.shade100, height: 1),
               const SizedBox(height: 16),
 
-              // --- أزرار التقييم والشكوى (الجديدة) ---
               Row(
                 children: [
-                  // زر تقييم المشروع (برتقالي)
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () => controller.showRatingDialog(project.title),
@@ -310,7 +310,6 @@ class MyProjectsScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // زر تقديم شكوى (أحمر مفرغ)
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => controller.showComplaintDialog(project.title),
@@ -329,6 +328,19 @@ class MyProjectsScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildEmptyState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.assignment_late_outlined, size: 64, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          Text(message, style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 16)),
+        ],
+      ),
     );
   }
 }

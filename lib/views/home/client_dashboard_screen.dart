@@ -20,7 +20,6 @@ class ClientDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // قائمة الشاشات المربوطة بالشريط السفلي
     final List<Widget> pages = [
       _HomeTab(controller: controller, navyColor: navyColor, orangeColor: orangeColor), // 0: الرئيسية
       ClientOffersScreen(), // 1: العروض
@@ -100,9 +99,6 @@ class ClientDashboardScreen extends StatelessWidget {
   }
 }
 
-// ==========================================
-// محتوى الصفحة الرئيسية (Home Tab)
-// ==========================================
 class _HomeTab extends StatelessWidget {
   final ClientDashboardController controller;
   final Color navyColor;
@@ -116,50 +112,82 @@ class _HomeTab extends StatelessWidget {
       children: [
         _buildCustomHeader(context),
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildAddProjectButton(),
-                const SizedBox(height: 32),
+          child: RefreshIndicator(
+            onRefresh: controller.fetchDashboardData,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildAddProjectButton(),
+                  const SizedBox(height: 24),
+                  
+                  // الإحصائيات السريعة
+                  _buildStatsGrid(),
+                  const SizedBox(height: 32),
 
-                // --- قسم المشاريع قيد الانتظار ---
-                _buildSectionTitle(
-                    'مشاريع قيد الانتظار',
-                    actionText: 'عرض الكل',
-                    onAction: () => controller.changePage(2) // ينقلك لتبويب مشاريعي
-                ),
-                const SizedBox(height: 16),
-                _buildPendingProjectsSection(),
-                const SizedBox(height: 32),
+                  _buildSectionTitle(
+                      'مشاريع قيد الانتظار',
+                      actionText: 'عرض الكل',
+                      onAction: () => controller.changePage(2) 
+                  ),
+                  const SizedBox(height: 16),
+                  _buildPendingProjectsSection(),
+                  const SizedBox(height: 32),
 
-                // --- قسم المشاريع قيد الإنشاء ---
-                _buildSectionTitle(
-                    'مشاريع قيد الإنشاء',
-                    actionText: 'عرض الكل',
-                    onAction: () => controller.changePage(2) // ينقلك لتبويب مشاريعي
-                ),
-                const SizedBox(height: 16),
-                _buildActiveProjectsSection(),
-                const SizedBox(height: 32),
+                  _buildSectionTitle(
+                      'مشاريع قيد الإنشاء',
+                      actionText: 'عرض الكل',
+                      onAction: () => controller.changePage(2)
+                  ),
+                  const SizedBox(height: 16),
+                  _buildActiveProjectsSection(),
+                  const SizedBox(height: 32),
 
-                // --- قسم المشاريع المنتهية ---
-                _buildSectionTitle(
-                    'المشاريع المنتهية',
-                    actionText: 'عرض الكل',
-                    actionColor: Colors.grey.shade500,
-                    onAction: () => controller.changePage(2)
-                ),
-                const SizedBox(height: 16),
-                _buildCompletedProjectsSection(),
-
-                const SizedBox(height: 100),
-              ],
+                  const SizedBox(height: 100),
+                ],
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatsGrid() {
+    return Obx(() => Row(
+      children: [
+        _buildStatCard('إجمالي المشاريع', controller.totalProjects.value.toString(), Icons.assignment_outlined, Colors.blue),
+        const SizedBox(width: 12),
+        _buildStatCard('عروض معلقة', controller.pendingOffersCount.value.toString(), Icons.layers_outlined, Colors.orange),
+      ],
+    ));
+  }
+
+  Widget _buildStatCard(String title, String count, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(height: 12),
+            Text(count, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(title, style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade600)),
+          ],
+        ),
+      ),
     );
   }
 
@@ -178,12 +206,10 @@ class _HomeTab extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // تجميع زر الإشعارات وزر البحث معاً
               Row(
                 children: [
-                  // زر البحث الجديد
                   GestureDetector(
-                    onTap: controller.goToSearchProviders, // استدعاء دالة البحث
+                    onTap: controller.goToSearchProviders,
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
@@ -191,7 +217,6 @@ class _HomeTab extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // زر الإشعارات
                   GestureDetector(
                     onTap: () => Get.to(() => NotificationsScreen()),
                     child: Container(
@@ -203,7 +228,6 @@ class _HomeTab extends StatelessWidget {
                 ],
               ),
 
-              // الشعار واسم التطبيق
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
@@ -216,7 +240,6 @@ class _HomeTab extends StatelessWidget {
                 ),
               ),
 
-              // القائمة الجانبية
               Builder(
                 builder: (context) => GestureDetector(
                   onTap: () => Scaffold.of(context).openDrawer(),
@@ -300,7 +323,6 @@ class _HomeTab extends StatelessWidget {
     );
   }
 
-  // المشاريع قيد الانتظار (أفقي)
   Widget _buildPendingProjectsSection() {
     return Obx(() {
       if (controller.isLoading.value) {
@@ -310,16 +332,16 @@ class _HomeTab extends StatelessWidget {
         return Center(child: Text('لا توجد مشاريع قيد الانتظار', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500)));
       }
       return SizedBox(
-        height: 140, // ارتفاع الكرت
+        height: 140, 
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: controller.pendingProjects.length,
           itemBuilder: (context, index) {
             final project = controller.pendingProjects[index];
             return GestureDetector(
-              onTap: () => controller.changePage(1), // الإنتقال لصفحة العروض عند الضغط
+              onTap: () => controller.changePage(1), 
               child: Container(
-                width: 280, // عرض الكرت
+                width: 280, 
                 margin: const EdgeInsets.only(left: 16.0),
                 padding: const EdgeInsets.all(16.0),
                 decoration: BoxDecoration(
@@ -381,7 +403,6 @@ class _HomeTab extends StatelessWidget {
     });
   }
 
-  // المشاريع قيد الإنشاء
   Widget _buildActiveProjectsSection() {
     return Obx(() {
       if (controller.isLoading.value) {
@@ -418,7 +439,7 @@ class _HomeTab extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(project.title, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
-                      Text('${project.progressPercentage}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
+                      Text('${project.progressPercentage.toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -445,12 +466,5 @@ class _HomeTab extends StatelessWidget {
         },
       );
     });
-  }
-
-  // المشاريع المنتهية
-  Widget _buildCompletedProjectsSection() {
-    return Center(
-      child: Text('يمكنك استعراض المشاريع المنتهية من تبويب "مشاريعي"', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500)),
-    );
   }
 }

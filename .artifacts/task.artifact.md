@@ -1,14 +1,14 @@
-# Task List - Backend File Upload Integration
+# Task List - Connecting Client's Main Interface to Backend
 
-- [ ] **Infrastructure updates**
-    - [ ] Update `ApiService` to support dynamic `Content-Type` for `FormData`.
-- [ ] **Authentication (Registration)**
-    - [ ] Update `AuthService.register` to handle multipart documents.
-- [ ] **Project Management**
-    - [ ] Update `ProjectService.createProject` to handle multipart attachments.
-- [ ] **Bidding (Offer Submission)**
-    - [ ] Update `OfferService.submitOffer` to support multipart documents.
-- [ ] **Tracking (Stage Updates)**
-    - [ ] Update `ProjectService.completeProjectStage` to include multipart attachments.
+- [ ] **Configuration & Service Layer**
+    - [ ] Add `clientDashboard` endpoint to `ApiConstants`.
+    - [ ] Add `fetchClientDashboard()` and `fetchClientProjects()` to `ProjectService`.
+- [ ] **Controller Layer**
+    - [ ] Update `ClientDashboardController` with live data fetching.
+    - [ ] Update `MyProjectsController` to remove mock data and fetch from API.
+- [ ] **UI Layer**
+    - [ ] Update `ClientDashboardScreen` to display real stats and project lists.
+    - [ ] Update `MyProjectsScreen` to handle loading states and display live projects.
 - [ ] **Verification**
-    - [ ] Perform manual tests for each module.
+    - [ ] Run `flutter analyze`.
+    - [ ] Manually verify data synchronization.

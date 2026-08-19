@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/profile_controller.dart';
@@ -141,21 +143,52 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 32),
+          
+          // الصورة الشخصية التفاعلية
           Stack(
             clipBehavior: Clip.none,
             children: [
-              Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  color: navyColor,
-                  borderRadius: BorderRadius.circular(24.0),
-                  border: Border.all(color: orangeColor, width: 2.5),
-                ),
-                child: const Center(
-                  child: Icon(Icons.person_outline_rounded, color: Colors.white, size: 50),
-                ),
-              ),
+              Obx(() {
+                Widget imageWidget;
+                
+                if (kIsWeb && controller.pickedImageBytes.value != null) {
+                  imageWidget = ClipRRect(
+                    borderRadius: BorderRadius.circular(24.0),
+                    child: Image.memory(controller.pickedImageBytes.value!, width: 90, height: 90, fit: BoxFit.cover),
+                  );
+                } else if (!kIsWeb && controller.pickedImagePath.value.isNotEmpty) {
+                  imageWidget = ClipRRect(
+                    borderRadius: BorderRadius.circular(24.0),
+                    child: Image.file(File(controller.pickedImagePath.value), width: 90, height: 90, fit: BoxFit.cover),
+                  );
+                } else if (controller.profileImageUrl.value.isNotEmpty) {
+                  imageWidget = ClipRRect(
+                    borderRadius: BorderRadius.circular(24.0),
+                    child: Image.network(
+                      controller.profileImageUrl.value, 
+                      width: 90, height: 90, fit: BoxFit.cover,
+                      errorBuilder: (ctx, _, __) => const Icon(Icons.person_outline_rounded, color: Colors.white, size: 50),
+                    ),
+                  );
+                } else {
+                  imageWidget = const Center(
+                    child: Icon(Icons.person_outline_rounded, color: Colors.white, size: 50),
+                  );
+                }
+
+                return Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: navyColor,
+                    borderRadius: BorderRadius.circular(24.0),
+                    border: Border.all(color: orangeColor, width: 2.5),
+                  ),
+                  child: imageWidget,
+                );
+              }),
+              
+              // أيقونة القلم الدائرية
               Positioned(
                 bottom: -4,
                 left: -4,

@@ -1,40 +1,33 @@
-# Implementation Plan - Finalizing Client-Side Backend Integration
+# Implementation Plan - Profile Picture Picking for Client
 
-This plan focuses on ensuring that *every* client-side interface is fully synchronized with the backend, covering detail views, account management, and dynamic settings.
-
-## User Review Required
-
-> [!IMPORTANT]
-> - **Logout Unification**: I will update the `SettingsScreen` logout logic to use the centralized `AuthService.logout()` method, ensuring the session is invalidated on both the client and server.
-> - **Offer Accuracy**: The `OfferDetailsScreen` will now fetch live data from the server instead of relying solely on the data passed from the list, ensuring price and status are always up-to-date.
+This plan outlines the steps to allow the client to pick a profile picture from their gallery and display it immediately in the Profile screen.
 
 ## Proposed Changes
 
-### 1. Account & Settings
+### 1. Controller Layer
 
-#### [MODIFY] [settings_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/settings_controller.dart)
-- Update `logout()` to call `AuthService.logout()` instead of manually clearing preferences. This ensures the token is revoked on the Laravel server.
+#### [MODIFY] [profile_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/profile_controller.dart)
+- Add `Rx<Uint8List?> pickedImageBytes` to store image data for Web support.
+- Add `RxString pickedImagePath` to store the local path for Mobile support.
+- Update `editProfilePicture()`:
+    - Use `ImagePicker` to select an image from the gallery.
+    - Update `pickedImageBytes` and `pickedImagePath` based on the platform.
+- Update `saveChanges()` to include the image in the `updateProfile` request (if persistence is intended now, otherwise just UI display).
 
-### 2. Bidding & Offers
+### 2. View Layer
 
-#### [MODIFY] [offer_details_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/offer_details_controller.dart)
-- Implement `refreshOfferDetails()`: Calls `GET /api/client/projects/{project}/offers/{offer}`.
-- Trigger this refresh on `onInit` to ensure the user sees the absolute latest version of the offer.
-
-### 3. Service Layer Refinement
-
-#### [MODIFY] [offer_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/offer_service.dart)
-- Add `fetchOfferDetails(int projectId, int offerId)` to support the updated details controller.
-
-### 4. Search & UI Consistency
-
-#### [MODIFY] [search_providers_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/search_providers_screen.dart)
-- Ensure the "ID" and "Rating" fields are correctly mapped from the `UserModel` returned by the backend.
+#### [MODIFY] [profile_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/profile_screen.dart)
+- Update the profile image container in `_buildCustomHeader()`:
+    - Wrap with `Obx`.
+    - Check if `pickedImageBytes` or `pickedImagePath` has data.
+    - Display the selected image using `Image.memory()` or `Image.file()`.
+    - Fallback to the existing profile icon if no image is selected.
 
 ## Verification Plan
 
 ### Manual Verification
-1.  **Offer Details**: Open an offer, verify the loading spinner appears, and check that all details (price, duration, comments) are pulled live.
-2.  **Settings Logout**: Log out from the Settings screen and verify that the backend session is destroyed.
-3.  **Search Reliability**: Perform multiple searches for different provider types and verify data consistency.
-4.  **Overall Check**: Navigate through all drawer items (Favorites, Ratings, Complaints) and verify live data in each.
+1.  Open the Profile screen.
+2.  Tap the edit icon or the profile picture area.
+3.  Select an image from the gallery.
+4.  Verify that the selected image replaces the default person icon in the UI immediately.
+5.  Check that the UI remains responsive and the loading overlay still works.

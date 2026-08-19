@@ -1,40 +1,55 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../models/rating_model.dart';
+import '../../services/interaction_service.dart';
 
 class RatingsController extends GetxController {
+  final InteractionService _interactionService = Get.find<InteractionService>();
+
+  var isLoading = false.obs;
+
   // 1. تقييمات قدمتها (العميل يقيم مزود الخدمة)
-  final List<RatingModel> givenRatings = [
-    RatingModel(
-      providerName: 'مؤسسة البناء الحديث',
-      projectName: 'بناء ملحق خارجي - حي الملقا',
-      rating: 5.0,
-      comment: 'عمل احترافي جداً والتزام تام بالمواعيد المتفق عليها. أنصح بالتعامل معهم بشدة.',
-      date: '2026-06-15',
-    ),
-    RatingModel(
-      providerName: 'مكتب الأفق الهندسي',
-      projectName: 'تصميم داخلي - مكتب تجاري',
-      rating: 4.0,
-      comment: 'التصميم كان رائعاً ومطابقاً للتوقعات، لكن كان هناك تأخير بسيط في تسليم التعديلات النهائية.',
-      date: '2026-02-20',
-    ),
-  ];
+  var givenRatings = <RatingModel>[].obs;
 
   // 2. تقييمات حصلت عليها (مزود الخدمة يقيم العميل)
-  final List<RatingModel> receivedRatings = [
-    RatingModel(
-      reviewerName: 'م. خالد الشمري',
-      projectName: 'تصميم داخلي - مكتب تجاري',
-      rating: 5.0,
-      comment: 'عميل راقي جداً في التعامل، متطلباته واضحة وملتزم بالدفعات في وقتها. سعدت بالعمل معه.',
-      date: '2026-02-22',
-    ),
-    RatingModel(
-      reviewerName: 'شركة الإنشاءات الحديثة',
-      projectName: 'تأسيس شبكة كهرباء',
-      rating: 4.5,
-      comment: 'تجربة عمل ممتازة وتواصل سلس طوال فترة المشروع.',
-      date: '2025-12-10',
-    ),
-  ];
+  var receivedRatings = <RatingModel>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchRatings();
+  }
+
+  Future<void> fetchRatings() async {
+    try {
+      isLoading.value = true;
+      final ratings = await _interactionService.fetchClientRatings();
+      
+      // Categorizing based on a type or logic if available in backend
+      // Assuming for now the API returns all client-related ratings
+      givenRatings.value = ratings.where((r) => r.type == 'given' || r.reviewerName == null).toList();
+      receivedRatings.value = ratings.where((r) => r.type == 'received' || r.providerName == null).toList();
+      
+    } catch (e) {
+      print("Error in fetchRatings: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> submitRating(int projectId, double rating, String comment) async {
+    isLoading.value = true;
+    final success = await _interactionService.submitRating(projectId, {
+      'rating': rating,
+      'comment': comment,
+    });
+    isLoading.value = false;
+
+    if (success) {
+      Get.snackbar('تم بنجاح', 'شكراً لك على تقييمك!', backgroundColor: Colors.green, colorText: Colors.white);
+      fetchRatings();
+    } else {
+      Get.snackbar('خطأ', 'فشل إرسال التقييم، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+    }
+  }
 }

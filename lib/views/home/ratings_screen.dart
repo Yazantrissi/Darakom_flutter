@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/ratings_controller.dart';
-import '../../models/rating_model.dart';
 
 class RatingsScreen extends StatelessWidget {
   RatingsScreen({super.key});
 
   final RatingsController controller = Get.put(RatingsController());
 
-  // الألوان الأساسية
   final Color navyColor = const Color(0xFF1A2A44);
   final Color orangeColor = const Color(0xFFF58A1E);
   final Color bgColor = const Color(0xFFF5F7FA);
@@ -18,22 +16,25 @@ class RatingsScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: DefaultTabController(
-        length: 2, // عدد التبويبات
+        length: 2,
         child: Scaffold(
           backgroundColor: bgColor,
           body: Column(
             children: [
-              // 1. الهيدر الكحلي المنحني مع التبويبات
               _buildCustomHeader(),
-
-              // 2. محتوى التبويبات
               Expanded(
-                child: TabBarView(
-                  children: [
-                    _buildGivenRatingsList(),   // التقييمات التي قدمتها
-                    _buildReceivedRatingsList(),// التقييمات التي حصلت عليها
-                  ],
-                ),
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  
+                  return TabBarView(
+                    children: [
+                      _buildGivenRatingsList(),
+                      _buildReceivedRatingsList(),
+                    ],
+                  );
+                }),
               ),
             ],
           ),
@@ -41,8 +42,6 @@ class RatingsScreen extends StatelessWidget {
       ),
     );
   }
-
-  // --- دوال بناء الواجهة --- //
 
   Widget _buildCustomHeader() {
     return Container(
@@ -73,7 +72,7 @@ class RatingsScreen extends StatelessWidget {
                 'التقييمات',
                 style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 48), // للتوسيط
+              const SizedBox(width: 48),
             ],
           ),
           const SizedBox(height: 24),
@@ -105,7 +104,7 @@ class RatingsScreen extends StatelessWidget {
       itemBuilder: (context, index) {
         final rating = controller.givenRatings[index];
         return _buildRatingCard(
-          personName: rating.providerName ?? "",
+          personName: rating.toUserName ?? "مزود خدمة",
           personTitle: 'مزود الخدمة',
           projectName: rating.projectName,
           ratingValue: rating.rating,
@@ -116,7 +115,6 @@ class RatingsScreen extends StatelessWidget {
     );
   }
 
-  // 2. قائمة التقييمات التي حصل عليها العميل
   Widget _buildReceivedRatingsList() {
     if (controller.receivedRatings.isEmpty) return _buildEmptyState('لم تحصل على أي تقييمات بعد');
 
@@ -127,7 +125,7 @@ class RatingsScreen extends StatelessWidget {
       itemBuilder: (context, index) {
         final rating = controller.receivedRatings[index];
         return _buildRatingCard(
-          personName: rating.reviewerName ?? "",
+          personName: rating.reviewerName ?? "عميل",
           personTitle: 'المُقيِّم',
           projectName: rating.projectName,
           ratingValue: rating.rating,
@@ -138,7 +136,6 @@ class RatingsScreen extends StatelessWidget {
     );
   }
 
-  // تصميم كرت التقييم الموحد
   Widget _buildRatingCard({
     required String personName,
     required String personTitle,
@@ -157,7 +154,6 @@ class RatingsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // رأس الكرت: الاسم والتقييم
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +176,6 @@ class RatingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // اسم المشروع (داخل حاوية رمادية فاتحة لتمييزه)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -204,7 +199,6 @@ class RatingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // التعليق
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -222,7 +216,6 @@ class RatingsScreen extends StatelessWidget {
           Divider(color: Colors.grey.shade100, height: 1),
           const SizedBox(height: 12),
 
-          // التاريخ
           Row(
             children: [
               Icon(Icons.date_range_outlined, size: 14, color: Colors.grey.shade400),
@@ -238,7 +231,6 @@ class RatingsScreen extends StatelessWidget {
     );
   }
 
-  // دالة مساعدة لرسم النجوم
   Widget _buildStars(double rating) {
     int fullStars = rating.floor();
     bool hasHalfStar = (rating - fullStars) >= 0.5;
@@ -256,7 +248,6 @@ class RatingsScreen extends StatelessWidget {
     );
   }
 
-  // دالة في حال كانت القائمة فارغة
   Widget _buildEmptyState(String message) {
     return Center(
       child: Column(

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/complaints_controller.dart';
+import '../../models/complaint_model.dart';
 
 class ComplaintsScreen extends StatelessWidget {
   ComplaintsScreen({super.key});
 
   final ComplaintsController controller = Get.put(ComplaintsController());
 
-  // الألوان الأساسية للهوية البصرية
   final Color navyColor = const Color(0xFF1A2A44);
   final Color orangeColor = const Color(0xFFF58A1E);
   final Color bgColor = const Color(0xFFF5F7FA);
@@ -15,25 +15,28 @@ class ComplaintsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl, // دعم الواجهة العربية
+      textDirection: TextDirection.rtl,
       child: DefaultTabController(
-        length: 3, // عدد التبويبات الثلاثة
+        length: 3,
         child: Scaffold(
           backgroundColor: bgColor,
           body: Column(
             children: [
-              // الهيدر الكحلي المنحني
               _buildCustomHeader(),
-
-              // محتوى التبويبات (قوائم الشكاوي)
               Expanded(
-                child: TabBarView(
-                  children: [
-                    _buildComplaintsList(controller.pendingComplaints, 'pending'),
-                    _buildComplaintsList(controller.resolvedComplaints, 'resolved'),
-                    _buildComplaintsList(controller.rejectedComplaints, 'rejected'),
-                  ],
-                ),
+                child: Obx(() {
+                  if (controller.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  
+                  return TabBarView(
+                    children: [
+                      _buildComplaintsList(controller.pendingComplaints, 'pending'),
+                      _buildComplaintsList(controller.resolvedComplaints, 'resolved'),
+                      _buildComplaintsList(controller.rejectedComplaints, 'rejected'),
+                    ],
+                  );
+                }),
               ),
             ],
           ),
@@ -41,8 +44,6 @@ class ComplaintsScreen extends StatelessWidget {
       ),
     );
   }
-
-  // --- دوال بناء الواجهة --- //
 
   Widget _buildCustomHeader() {
     return Container(
@@ -66,19 +67,18 @@ class ComplaintsScreen extends StatelessWidget {
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 20),
-                  onPressed: () => Get.back(), // للعودة
+                  onPressed: () => Get.back(),
                 ),
               ),
               const Text(
                 'سجل الشكاوي',
                 style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 48), // معادلة المساحة للتوسيط
+              const SizedBox(width: 48),
             ],
           ),
           const SizedBox(height: 24),
 
-          // التبويبات الثلاثة
           TabBar(
             indicatorColor: orangeColor,
             indicatorWeight: 3,
@@ -97,7 +97,7 @@ class ComplaintsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildComplaintsList(List<Map<String, dynamic>> complaintsList, String type) {
+  Widget _buildComplaintsList(List<ComplaintModel> complaintsList, String type) {
     if (complaintsList.isEmpty) {
       return Center(
         child: Column(
@@ -121,12 +121,11 @@ class ComplaintsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildComplaintCard(Map<String, dynamic> complaint, String type) {
+  Widget _buildComplaintCard(ComplaintModel complaint, String type) {
     Color statusColor;
     String statusText;
     IconData statusIcon;
 
-    // تحديد اللون والنص حسب نوع القائمة
     if (type == 'pending') {
       statusColor = orangeColor;
       statusText = 'قيد المراجعة';
@@ -146,18 +145,17 @@ class ComplaintsScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(color: statusColor.withOpacity(0.3), width: 1.2), // حدود خفيفة بلون الحالة
+        border: Border.all(color: statusColor.withOpacity(0.3), width: 1.2),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // رأس الكرت (رقم الشكوى وحالتها)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'رقم الشكوى: ${complaint['complaintId']}',
+                'رقم الشكوى: ${complaint.complaintCode}',
                 style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey.shade500),
               ),
               Container(
@@ -175,14 +173,13 @@ class ComplaintsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // الجهة المشتكى عليها
           Row(
             children: [
               Icon(Icons.gavel_rounded, size: 18, color: navyColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'المشتكى عليه: ${complaint['defendant']}',
+                  'المشتكى عليه: ${complaint.defendantName}',
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 15, fontWeight: FontWeight.bold, color: navyColor),
                 ),
               ),
@@ -190,14 +187,13 @@ class ComplaintsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // المشروع المرتبط
           Row(
             children: [
               Icon(Icons.assignment_outlined, size: 18, color: Colors.grey.shade600),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'المشروع: ${complaint['projectName']}',
+                  'المشروع: ${complaint.projectName}',
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade700),
                 ),
               ),
@@ -207,41 +203,29 @@ class ComplaintsScreen extends StatelessWidget {
           Divider(color: Colors.grey.shade100, height: 1),
           const SizedBox(height: 12),
 
-          // وصف المشكلة
           Text('تفاصيل المشكلة:', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: navyColor)),
           const SizedBox(height: 4),
           Text(
-            complaint['description'],
+            complaint.description,
             style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade600, height: 1.5),
           ),
 
-          // عرض سبب الرفض أو طريقة الحل إن وجدت
-          if (type == 'resolved' && complaint['resolution'] != null) ...[
+          if (type == 'resolved' && complaint.resolution != null) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
-              child: Text('النتيجة: ${complaint['resolution']}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.green.shade800, fontWeight: FontWeight.bold)),
-            ),
-          ],
-
-          if (type == 'rejected' && complaint['rejectionReason'] != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8)),
-              child: Text('سبب الرفض: ${complaint['rejectionReason']}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.red.shade800, fontWeight: FontWeight.bold)),
+              child: Text('النتيجة: ${complaint.resolution}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.green.shade800, fontWeight: FontWeight.bold)),
             ),
           ],
 
           const SizedBox(height: 16),
 
-          // تاريخ الشكوى
           Row(
             children: [
               Icon(Icons.date_range_outlined, size: 14, color: Colors.grey.shade400),
               const SizedBox(width: 4),
-              Text('تاريخ التقديم: ${complaint['date']}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500)),
+              Text('تاريخ التقديم: ${complaint.date}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500)),
             ],
           ),
         ],

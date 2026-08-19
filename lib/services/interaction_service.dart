@@ -22,9 +22,15 @@ class InteractionService extends GetxService {
     return [];
   }
 
-  Future<bool> submitComplaint(Map<String, dynamic> data) async {
+  Future<bool> submitComplaint(int projectId, String text) async {
     try {
-      final response = await _apiService.post(ApiConstants.clientComplaints, data: data);
+      final response = await _apiService.post(
+        ApiConstants.clientComplaints, 
+        data: {
+          'text': text,
+          'project_id': projectId,
+        }
+      );
       return response.data['success'];
     } catch (e) {
       print("Error submitting complaint: $e");
@@ -44,6 +50,23 @@ class InteractionService extends GetxService {
       print("Error fetching ratings: $e");
     }
     return [];
+  }
+
+  Future<bool> submitRating(int projectId, Map<String, dynamic> data) async {
+    try {
+      // Backend expects 'rate' and 'comment'
+      final response = await _apiService.post(
+        "client/projects/$projectId/ratings", 
+        data: {
+          'rate': data['rating'],
+          'comment': data['comment'],
+        }
+      );
+      return response.data['success'];
+    } catch (e) {
+      print("Error submitting rating: $e");
+      return false;
+    }
   }
 
   Future<List<UserModel>> fetchFavorites() async {

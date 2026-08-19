@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../views/provider/add_completed_stage_screen.dart';
+import '../../services/interaction_service.dart';
 
 class ProjectTrackingController extends GetxController {
+  final InteractionService _interactionService = Get.find<InteractionService>();
+
   // Data from arguments
   late final int projectId;
   late final String projectTitle;
@@ -38,14 +41,12 @@ class ProjectTrackingController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    // Handling dynamic arguments
     final args = Get.arguments ?? {};
     projectId = args['projectId'] ?? 0;
     projectTitle = args['projectTitle'] ?? "مشروع غير محدد";
     isProvider = args['isProvider'] ?? false;
   }
 
-  // --- الدالة الجديدة لتقديم شكوى أثناء سير العمل ---
   void showComplaintDialog() {
     final TextEditingController complaintController = TextEditingController();
     Get.defaultDialog(
@@ -75,31 +76,24 @@ class ProjectTrackingController extends GetxController {
       textCancel: 'تراجع',
       confirmTextColor: Colors.white,
       buttonColor: Colors.redAccent,
-      onConfirm: () {
+      onConfirm: () async {
         if (complaintController.text.isNotEmpty) {
-          Get.back(); // إغلاق النافذة
-          Get.snackbar(
-            'تم الاستلام',
-            'تم رفع الشكوى للإدارة وسيتم التدخل بأسرع وقت لحل المشكلة.',
-            backgroundColor: Colors.redAccent,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
-            margin: const EdgeInsets.all(16),
-          );
+          Get.back();
+          final success = await _interactionService.submitComplaint(projectId, complaintController.text);
+          if (success) {
+            Get.snackbar('تم الإرسال', 'تم رفع الشكوى للإدارة وسيتم التواصل معك قريباً', 
+              backgroundColor: Colors.green, colorText: Colors.white);
+          } else {
+            Get.snackbar('خطأ', 'فشل إرسال الشكوى، حاول مرة أخرى', 
+              backgroundColor: Colors.redAccent, colorText: Colors.white);
+          }
         } else {
-          Get.snackbar(
-            'تنبيه',
-            'يرجى كتابة تفاصيل الشكوى أولاً',
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
-          );
+          Get.snackbar('تنبيه', 'يرجى كتابة تفاصيل الشكوى أولاً', backgroundColor: Colors.orange, colorText: Colors.white);
         }
       },
     );
   }
 
-  // دالة إضافة مرحلة منجزة (للمزود فقط)
   void addCompletedStage() {
     Get.to(() => AddCompletedStageScreen(), arguments: {
       'projectId': projectId,

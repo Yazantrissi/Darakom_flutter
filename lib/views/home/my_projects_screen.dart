@@ -298,7 +298,7 @@ class MyProjectsScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => controller.showRatingDialog(project.title),
+                      onPressed: () => controller.showRatingDialog(project),
                       icon: const Icon(Icons.star_outline_rounded, size: 18, color: Colors.white),
                       label: const Text('تقييم', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                       style: ElevatedButton.styleFrom(
@@ -312,7 +312,7 @@ class MyProjectsScreen extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => controller.showComplaintDialog(project.title),
+                      onPressed: () => controller.showComplaintDialog(project),
                       icon: const Icon(Icons.report_problem_outlined, size: 18, color: Colors.redAccent),
                       label: const Text('شكوى', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.redAccent)),
                       style: OutlinedButton.styleFrom(

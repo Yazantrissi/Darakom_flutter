@@ -1,38 +1,58 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../models/complaint_model.dart';
+import '../../services/interaction_service.dart';
 
 class ComplaintsController extends GetxController {
+  final InteractionService _interactionService = Get.find<InteractionService>();
+
+  var isLoading = false.obs;
+
   // 1. الشكاوي قيد المراجعة
-  final List<Map<String, dynamic>> pendingComplaints = [
-    {
-      'complaintId': '#CMP-1042',
-      'defendant': 'مؤسسة البناء الحديث',
-      'projectName': 'فيلا سكنية - حي الياسمين',
-      'description': 'تأخير غير مبرر في تسليم المرحلة الثانية من العظم (الهيكل) وعدم الرد على الاتصالات خلال الأسبوع الماضي.',
-      'date': '2026-07-10',
-    },
-  ];
+  var pendingComplaints = <ComplaintModel>[].obs;
 
   // 2. الشكاوي التي تم حلها
-  final List<Map<String, dynamic>> resolvedComplaints = [
-    {
-      'complaintId': '#CMP-0985',
-      'defendant': 'شركة الإنشاءات الحديثة',
-      'projectName': 'تأسيس شبكة كهرباء',
-      'description': 'استخدام مواد تسليك غير مطابقة للمواصفات المتفق عليها في ملحق العقد.',
-      'date': '2025-11-20',
-      'resolution': 'تم إلزام المقاول بتغيير المواد على حسابه الخاص، وتم التسليم بنجاح.',
-    },
-  ];
+  var resolvedComplaints = <ComplaintModel>[].obs;
 
   // 3. الشكاوي المرفوضة
-  final List<Map<String, dynamic>> rejectedComplaints = [
-    {
-      'complaintId': '#CMP-0810',
-      'defendant': 'م. خالد الشمري',
-      'projectName': 'تصميم داخلي - مكتب تجاري',
-      'description': 'عدم الرضا عن التصميم النهائي بالرغم من اعتمادي المسبق للمخطط ثنائي الأبعاد.',
-      'date': '2025-08-05',
-      'rejectionReason': 'تم رفض الشكوى نظراً لوجود اعتماد وتوقيع رسمي من قبلكم على كافة المخططات قبل البدء بالتنفيذ.',
-    },
-  ];
+  var rejectedComplaints = <ComplaintModel>[].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchComplaints();
+  }
+
+  Future<void> fetchComplaints() async {
+    try {
+      isLoading.value = true;
+      final complaints = await _interactionService.fetchClientComplaints();
+      
+      pendingComplaints.value = complaints.where((c) => c.status == 'pending').toList();
+      resolvedComplaints.value = complaints.where((c) => c.status == 'resolved').toList();
+      rejectedComplaints.value = complaints.where((c) => c.status == 'rejected').toList();
+      
+    } catch (e) {
+      print("Error in fetchComplaints: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> submitNewComplaint(int projectId, String description) async {
+    if (description.isEmpty) return;
+    
+    isLoading.value = true;
+    final success = await _interactionService.submitComplaint(projectId, description);
+    isLoading.value = false;
+
+    if (success) {
+      Get.snackbar('تم الإرسال', 'تم رفع الشكوى للإدارة وسيتم التواصل معك قريباً', 
+        backgroundColor: Colors.green, colorText: Colors.white);
+      fetchComplaints();
+    } else {
+      Get.snackbar('خطأ', 'فشل إرسال الشكوى، حاول مرة أخرى', 
+        backgroundColor: Colors.redAccent, colorText: Colors.white);
+    }
+  }
 }

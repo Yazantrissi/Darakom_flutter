@@ -43,4 +43,10 @@ class ApiConstants {
   // Interactions
   static const String favorites = "/favorites";
   static const String toggleFavorite = "/favorites/toggle";
+
+  // Notifications
+  static const String notifications = "/notifications";
+  static const String unreadNotifications = "/notifications/unread";
+  static const String markNotificationRead = "/notifications"; // /{id}/read
+  static const String markAllNotificationsRead = "/notifications/read-all";
 }

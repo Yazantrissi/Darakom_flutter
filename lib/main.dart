@@ -6,6 +6,7 @@ import 'services/project_service.dart';
 import 'services/offer_service.dart';
 import 'services/interaction_service.dart';
 import 'services/profile_service.dart';
+import 'services/notification_service.dart';
 import 'views/splash/splash_screen.dart';
 
 void main() async {
@@ -18,6 +19,7 @@ void main() async {
   Get.put(OfferService());
   Get.put(InteractionService());
   Get.put(ProfileService());
+  Get.put(NotificationService());
   
   runApp(const MyApp());
 }

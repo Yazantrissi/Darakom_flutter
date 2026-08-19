@@ -1,17 +1,16 @@
-# Task List - Connecting Ratings and Complaints to Backend
+# Task List - Connecting Notifications to Backend
 
-- [ ] **Data Models**
-    - [ ] Update `RatingModel` to handle nested provider and project data.
-    - [ ] Update `ComplaintModel` to include defendant and resolution details.
-- [ ] **Service Layer**
-    - [ ] Refine `InteractionService` to call `/client/my-ratings` and `/client/complaints`.
-    - [ ] Add `submitRating` and `submitComplaint` methods.
-- [ ] **Controller Layer**
-    - [ ] Update `RatingsController` with live data fetching and categorization.
-    - [ ] Update `ComplaintsController` with live data fetching and categorization.
-- [ ] **UI Layer**
-    - [ ] Update `RatingsScreen` with `Obx` and loading states.
-    - [ ] Update `ComplaintsScreen` with `Obx` and real submission logic.
-- [ ] **Verification**
+- [x] **Configuration**
+    - [x] Update `ApiConstants` with notification endpoints.
+- [x] **Data Models**
+    - [x] Create `NotificationModel` in `lib/models/notification_model.dart`.
+- [x] **Service Layer**
+    - [x] Create `NotificationService` in `lib/services/notification_service.dart`.
+    - [x] Register `NotificationService` in `lib/main.dart`.
+- [x] **Controller Layer**
+    - [x] Update `NotificationsController` to use `NotificationService`.
+- [x] **View Layer**
+    - [x] Update `NotificationsScreen` to display live data.
+- [/] **Verification**
     - [ ] Run `flutter analyze`.
-    - [ ] Verify live data display and submission.
+    - [ ] Manually verify data loading and "Mark as Read" functionality.

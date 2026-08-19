@@ -1,37 +1,35 @@
-# Walkthrough - Backend Integration & Bug Fixes
+# Walkthrough - Notification Backend Integration
 
-I have resolved the project submission failure and fully aligned the frontend with the Laravel backend logic, including enhanced file upload support.
+I have successfully connected the notifications module to the Laravel backend, providing real-time updates and interactive management.
 
-## Key Fixes & Improvements
+## Key Integration Features
 
-### 1. Project Submission Alignment
-- **Issue**: Submission was failing because the backend requires specific IDs (`project_type_id`, `province_id`) and fields like `work_type` and `tender_duration_unit`.
-- **Solution**:
-    - Updated `AddProjectController` to fetch real **Provinces** and **Roles** from the backend upon initialization.
-    - Mapped the UI selections to their respective database IDs before sending.
-    - Added the missing **Building Number** field to the form.
-    - Integrated detailed error reporting; if the server rejects the request (e.g., validation error), the app now shows the exact reason in the snackbar.
+### 1. Dynamic Notification Feed
+- **Service**: Implemented `NotificationService` to handle `GET /api/notifications`.
+- **Model**: Created `NotificationModel` to map backend data, including nested information and read status.
+- **UI**: The screen now displays live notifications with appropriate icons and colors based on the type (e.g., green for accepted bids, red for urgent projects).
 
-### 2. Robust File Uploads
-- **Universal Support**: Refactored `ProjectService` and `OfferService` to support both Mobile (file paths) and Web (file bytes) uploads using `FormData`.
-- **Key Unification**: Unified the file keys to `documents[]` to match the backend `OfferController` and `ProjectController` logic.
+### 2. Status Management
+- **Mark as Read**: Tapping an unread notification or clicking "Mark all as read" sends a `PATCH` request to the server, updating the database status in real-time.
+- **Dismissible Deletion**: Users can swipe left on any notification to permanently remove it from their feed via the `DELETE /api/notifications/{id}` endpoint.
 
-### 3. Profile Enhancements
-- **Client Profile**: Added the **Province** dropdown and linked it to the backend for both reading and updating.
-- **Provider Profile**: Replaced "Work Area" with **Experience Years** as requested, ensuring it's numeric and persisted to the server.
-- **Sidebar Sync**: Names and emails in the sidebar now refresh instantly when the profile is updated.
+### 3. User Experience Enhancements
+- **Pull-to-Refresh**: Easily check for new updates by swiping down on the notifications list.
+- **Visual Cues**: Unread notifications are highlighted with an orange indicator and a slight background tint to distinguish them from read ones.
+- **Time Formatting**: Timestamps are automatically converted to friendly formats like "since 5 minutes" or "since 2 hours".
 
-## Technical Details
+## Technical Summary
 
-| Component | Logic Update |
+| File | Change Description |
 | :--- | :--- |
-| **ApiService** | Removed static JSON content-type to allow Dio to manage multipart boundaries. |
-| **ProjectService** | Added `createProjectDetailed` for granular error handling. |
-| **RegisterController** | Refined the registration flow to ensure all mandatory backend fields are present. |
+| [api_constants.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/core/api_constants.dart) | Added all required notification endpoints. |
+| [notification_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/notification_service.dart) | Created to handle API communication. |
+| [notifications_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/notifications_controller.dart) | Replaced mock data with live service calls and state management. |
+| [notifications_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/notifications_screen.dart) | Updated UI to bind with the new reactive controller and model. |
 
-## Verification Summary
-- **Analysis**: Ran `flutter analyze` and verified 0 critical errors.
-- **Flow**: Confirmed that data-dependent dropdowns (Provinces/Roles) load before allowing submission.
+## Verification Results
+- **Analysis**: `flutter analyze` passed with no critical errors in the new files.
+- **Sync**: Verified that marking a notification as read correctly decrements the unread count.
 
 > [!TIP]
-> Make sure your Laravel server is running and the database has at least one province and one role for the dropdowns to populate correctly.
+> Ensure your backend is configured to broadcast notifications to the database for the user type 'client' or 'provider' to see them appear in the list.

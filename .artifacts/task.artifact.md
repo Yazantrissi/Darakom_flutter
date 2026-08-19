@@ -1,16 +1,13 @@
-# Task List - Connecting Notifications to Backend
+# Task List - Connecting Project Tracking to Backend
 
-- [x] **Configuration**
-    - [x] Update `ApiConstants` with notification endpoints.
-- [x] **Data Models**
-    - [x] Create `NotificationModel` in `lib/models/notification_model.dart`.
-- [x] **Service Layer**
-    - [x] Create `NotificationService` in `lib/services/notification_service.dart`.
-    - [x] Register `NotificationService` in `lib/main.dart`.
-- [x] **Controller Layer**
-    - [x] Update `NotificationsController` to use `NotificationService`.
-- [x] **View Layer**
-    - [x] Update `NotificationsScreen` to display live data.
-- [/] **Verification**
+- [ ] **Data Models**
+    - [ ] Create `ProjectStepModel` in `lib/models/project_step_model.dart`.
+- [ ] **Service Layer**
+    - [ ] Add `fetchProjectSteps` to `ProjectService`.
+- [ ] **Controller Layer**
+    - [ ] Update `ProjectTrackingController` to fetch real steps and overall project progress.
+- [ ] **UI Layer**
+    - [ ] Bind `ProjectTrackingScreen` to live data and handle loading states.
+- [ ] **Verification**
     - [ ] Run `flutter analyze`.
-    - [ ] Manually verify data loading and "Mark as Read" functionality.
+    - [ ] Verify timeline reflects backend milestones.

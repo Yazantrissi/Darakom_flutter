@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response, FormData, MultipartFile;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 import '../core/api_constants.dart';
 import '../models/user_model.dart';
@@ -103,6 +104,20 @@ class AuthService extends GetxService {
       print("Registration error: $e");
     }
     return null;
+  }
+
+  Future<bool> logout() async {
+    try {
+      final response = await _apiService.post(ApiConstants.logout);
+      if (response.data['success']) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+        return true;
+      }
+    } catch (e) {
+      print("Logout error: $e");
+    }
+    return false;
   }
 
   Future<bool> forgotPassword(String email) async {

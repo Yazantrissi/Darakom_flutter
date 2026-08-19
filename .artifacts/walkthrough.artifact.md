@@ -1,35 +1,33 @@
-# Walkthrough - Notification Backend Integration
+# Walkthrough - Project Tracking Backend Integration
 
-I have successfully connected the notifications module to the Laravel backend, providing real-time updates and interactive management.
+I have fully connected the Project Tracking (Timeline) screen with the Laravel backend, ensuring that both Clients and Providers see real-time progress.
 
-## Key Integration Features
+## Key Features Added
 
-### 1. Dynamic Notification Feed
-- **Service**: Implemented `NotificationService` to handle `GET /api/notifications`.
-- **Model**: Created `NotificationModel` to map backend data, including nested information and read status.
-- **UI**: The screen now displays live notifications with appropriate icons and colors based on the type (e.g., green for accepted bids, red for urgent projects).
+### 1. Dynamic Project Steps
+- **Model**: Created `ProjectStepModel` to map backend milestones.
+- **Service**: Updated `ProjectService` to fetch steps from `/api/client/projects/{id}/steps` or `/api/provider/projects/{id}/steps`.
+- **UI**: The timeline now dynamically renders steps based on the database, automatically marking them as completed (green) or pending (grey).
 
-### 2. Status Management
-- **Mark as Read**: Tapping an unread notification or clicking "Mark all as read" sends a `PATCH` request to the server, updating the database status in real-time.
-- **Dismissible Deletion**: Users can swipe left on any notification to permanently remove it from their feed via the `DELETE /api/notifications/{id}` endpoint.
+### 2. Live Progress Synchronization
+- The overall progress bar at the top of the tracking screen now accurately reflects the `progress_percentage` field from the backend `Project` model.
+- Providers can trigger a refresh after adding a completed stage, ensuring the UI stays in sync.
 
-### 3. User Experience Enhancements
-- **Pull-to-Refresh**: Easily check for new updates by swiping down on the notifications list.
-- **Visual Cues**: Unread notifications are highlighted with an orange indicator and a slight background tint to distinguish them from read ones.
-- **Time Formatting**: Timestamps are automatically converted to friendly formats like "since 5 minutes" or "since 2 hours".
+### 3. Unified User Experience
+- **Common Logic**: Both user roles use the same tracking screen, but with role-specific actions (e.g., Providers see "Add Completed Stage", while Clients only see "Submit Complaint").
+- **Pull-to-Refresh**: Added a standard refresh indicator to allow manual data updates.
 
 ## Technical Summary
 
-| File | Change Description |
+| Component | Logic Update |
 | :--- | :--- |
-| [api_constants.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/core/api_constants.dart) | Added all required notification endpoints. |
-| [notification_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/notification_service.dart) | Created to handle API communication. |
-| [notifications_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/notifications_controller.dart) | Replaced mock data with live service calls and state management. |
-| [notifications_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/notifications_screen.dart) | Updated UI to bind with the new reactive controller and model. |
+| **ProjectStepModel** | Handles `id`, `title`, `progress_percent`, and `status`. |
+| **ProjectTrackingController** | Orchestrates dual API calls (Project details + Project steps) to populate the view. |
+| **ProjectService** | Centralized step fetching with role-based routing. |
 
 ## Verification Results
-- **Analysis**: `flutter analyze` passed with no critical errors in the new files.
-- **Sync**: Verified that marking a notification as read correctly decrements the unread count.
+- **Visuals**: Confirmed that the timeline icons and connecting lines change color correctly based on step status.
+- **Data Flow**: Verified that navigation arguments (projectId, isProvider) are correctly handled.
 
 > [!TIP]
-> Ensure your backend is configured to broadcast notifications to the database for the user type 'client' or 'provider' to see them appear in the list.
+> Providers should add steps to the project via the backend or specialized UI to see them appear in this timeline.

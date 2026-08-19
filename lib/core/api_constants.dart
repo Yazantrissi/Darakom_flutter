@@ -40,6 +40,9 @@ class ApiConstants {
   static const String providerRatings = "/provider/ratings";
   static const String providerInvitations = "/provider/invitations";
 
+  // Profiles
+  static const String profiles = "/profiles";
+
   // Interactions
   static const String favorites = "/favorites";
   static const String toggleFavorite = "/favorites/toggle";

@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/search_providers_controller.dart';
+import '../../models/user_model.dart';
 
 class SearchProvidersScreen extends StatelessWidget {
-  SearchProvidersScreen({super.key});
-
-  final SearchProvidersController controller = Get.put(SearchProvidersController());
-
-  // الألوان الأساسية للهوية
-  final Color navyColor = const Color(0xFF1A2A44);
-  final Color orangeColor = const Color(0xFFF58A1E);
-  final Color bgColor = const Color(0xFFF5F7FA);
+  const SearchProvidersScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final SearchProvidersController controller = Get.put(SearchProvidersController());
+
+    final Color navyColor = const Color(0xFF1A2A44);
+    final Color orangeColor = const Color(0xFFF58A1E);
+    final Color bgColor = const Color(0xFFF5F7FA);
+
     return Directionality(
-      textDirection: TextDirection.rtl, // الواجهة من اليمين لليسار
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: bgColor,
         appBar: AppBar(
@@ -30,7 +30,6 @@ class SearchProvidersScreen extends StatelessWidget {
         ),
         body: Column(
           children: [
-            // 1. شريط البحث العلوي
             Container(
               padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
@@ -53,9 +52,12 @@ class SearchProvidersScreen extends StatelessWidget {
               ),
             ),
 
-            // 2. نتائج البحث
             Expanded(
               child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
                 if (controller.searchResults.isEmpty) {
                   return Center(
                     child: Column(
@@ -75,7 +77,7 @@ class SearchProvidersScreen extends StatelessWidget {
                   separatorBuilder: (context, index) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final provider = controller.searchResults[index];
-                    return _buildProviderCard(provider);
+                    return _buildProviderCard(provider, navyColor, orangeColor, bgColor);
                   },
                 );
               }),
@@ -86,8 +88,7 @@ class SearchProvidersScreen extends StatelessWidget {
     );
   }
 
-  // بطاقة عرض تفاصيل المزود في نتائج البحث
-  Widget _buildProviderCard(Map<String, dynamic> provider) {
+  Widget _buildProviderCard(UserModel provider, Color navyColor, Color orangeColor, Color bgColor) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -99,7 +100,6 @@ class SearchProvidersScreen extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // أيقونة المزود
           Container(
             width: 50,
             height: 50,
@@ -112,7 +112,6 @@ class SearchProvidersScreen extends StatelessWidget {
           ),
           const SizedBox(width: 16),
 
-          // التفاصيل
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,25 +121,25 @@ class SearchProvidersScreen extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        provider['name'],
+                        provider.name,
                         style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Text(
-                      'ID: ${provider['id']}',
+                      'ID: ${provider.id}',
                       style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: orangeColor, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(provider['specialty'], style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
+                Text(provider.roleName ?? provider.type, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
                 const SizedBox(height: 12),
                 Row(
                   children: [
                     const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
                     const SizedBox(width: 4),
-                    Text('${provider['rating']}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: navyColor)),
+                    const Text('0.0', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1A2A44))),
                   ],
                 ),
               ],

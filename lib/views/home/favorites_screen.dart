@@ -4,37 +4,53 @@ import '../../controllers/home/favorites_controller.dart';
 import '../../models/user_model.dart';
 
 class FavoritesScreen extends StatelessWidget {
-  FavoritesScreen({super.key});
-
-  final FavoritesController controller = Get.put(FavoritesController());
-
-  // ألوان الهوية البصرية
-  final Color navyColor = const Color(0xFF1A2A44);
-  final Color orangeColor = const Color(0xFFF58A1E);
-  final Color bgColor = const Color(0xFFF5F7FA);
+  const FavoritesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final FavoritesController controller = Get.put(FavoritesController());
+
+    final Color navyColor = const Color(0xFF1A2A44);
+    final Color orangeColor = const Color(0xFFF58A1E);
+    final Color bgColor = const Color(0xFFF5F7FA);
+
     return Directionality(
-      textDirection: TextDirection.rtl, // دعم الواجهة العربية
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: bgColor,
         body: Column(
           children: [
-            // 1. الهيدر الكحلي المنحني (يتناسب مع باقي الشاشات)
-            _buildCustomHeader(),
-
-            // 2. قائمة المزودين المفضلين
+            _buildCustomHeader(navyColor, orangeColor),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.all(24.0),
-                itemCount: controller.favoriteProviders.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 16),
-                itemBuilder: (context, index) {
-                  final provider = controller.favoriteProviders[index];
-                  return _buildProviderCard(provider);
-                },
-              ),
+              child: Obx(() {
+                if (controller.isLoading.value && controller.favoriteProviders.isEmpty) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (controller.favoriteProviders.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.favorite_border_rounded, size: 64, color: Colors.grey.shade300),
+                        const SizedBox(height: 16),
+                        Text('لا يوجد مزودين في المفضلة حالياً', 
+                          style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 16)),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.all(24.0),
+                  itemCount: controller.favoriteProviders.length,
+                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final provider = controller.favoriteProviders[index];
+                    return _buildProviderCard(provider, controller, navyColor, orangeColor, bgColor);
+                  },
+                );
+              }),
             ),
           ],
         ),
@@ -42,9 +58,7 @@ class FavoritesScreen extends StatelessWidget {
     );
   }
 
-  // --- دوال بناء الواجهة --- //
-
-  Widget _buildCustomHeader() {
+  Widget _buildCustomHeader(Color navyColor, Color orangeColor) {
     return Container(
       padding: const EdgeInsets.only(top: 60, bottom: 24, left: 24, right: 24),
       decoration: BoxDecoration(
@@ -64,47 +78,34 @@ class FavoritesScreen extends StatelessWidget {
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 20),
-              onPressed: () => Get.back(), // العودة للخلف (للقائمة الجانبية أو الرئيسية)
+              onPressed: () => Get.back(),
             ),
           ),
           const Text(
             'المفضلة',
-            style: TextStyle(
-              fontFamily: 'Tajawal',
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(width: 48), // لموازنة التوسيط
+          const SizedBox(width: 48),
         ],
       ),
     );
   }
 
-  Widget _buildProviderCard(UserModel provider) {
+  Widget _buildProviderCard(UserModel provider, FavoritesController controller, Color navyColor, Color orangeColor, Color bgColor) {
     return Container(
       padding: const EdgeInsets.all(20.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // القسم العلوي: الاسم والتقييم
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // صورة المزود (أيقونة افتراضية)
               Container(
                 width: 50,
                 height: 50,
@@ -116,8 +117,6 @@ class FavoritesScreen extends StatelessWidget {
                 child: Icon(Icons.engineering_rounded, color: navyColor, size: 28),
               ),
               const SizedBox(width: 16),
-
-              // بيانات المزود
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,59 +127,25 @@ class FavoritesScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      provider.type,
+                      provider.roleName ?? provider.type,
                       style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500),
                     ),
                   ],
                 ),
               ),
-
-              // التقييم النجمي
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Text('0.0', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontWeight: FontWeight.bold, fontSize: 13)),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
-                  ],
-                ),
+              IconButton(
+                icon: const Icon(Icons.favorite_rounded, color: Colors.redAccent),
+                onPressed: () => controller.removeFavorite(provider.id),
               ),
             ],
           ),
-
           const SizedBox(height: 16),
           Divider(color: Colors.grey.shade100, height: 1),
-          const SizedBox(height: 16),
-
-          // رقم المشاريع المنتهية
-          Row(
-            children: [
-              const Icon(Icons.check_circle_outline_rounded, size: 18, color: Color(0xFF43A047)), // Green 600
-              const SizedBox(width: 8),
-              Text(
-                'المشاريع المنتهية بنجاح: ',
-                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade600),
-              ),
-              const Text(
-                '0 مشروع',
-                style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF2E7D32)), // Green 700
-              ),
-            ],
-          ),
-
           const SizedBox(height: 20),
-
-          // الأزرار: تقديم عرض وعرض الملف
           Row(
             children: [
-              // زر تقديم عرض مباشر (برتقالي)
               Expanded(
-                flex: 3, // أخذ مساحة أكبر قليلاً
+                flex: 3,
                 child: ElevatedButton.icon(
                   onPressed: () => controller.sendDirectOffer(provider.name),
                   icon: const Icon(Icons.send_rounded, size: 16, color: Colors.white),
@@ -194,8 +159,6 @@ class FavoritesScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-
-              // زر عرض الملف الشخصي (مفرغ كحلي)
               Expanded(
                 flex: 2,
                 child: OutlinedButton(

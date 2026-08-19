@@ -92,4 +92,17 @@ class InteractionService extends GetxService {
       return false;
     }
   }
+
+  Future<List<UserModel>> searchProviders(String query) async {
+    try {
+      final response = await _apiService.get(ApiConstants.profiles, queryParameters: {'search': query});
+      if (response.data['success']) {
+        final List list = response.data['data']['data'] ?? []; // Handling paginated response
+        return list.map((e) => UserModel.fromJson(e)).toList();
+      }
+    } catch (e) {
+      print("Error searching providers: $e");
+    }
+    return [];
+  }
 }

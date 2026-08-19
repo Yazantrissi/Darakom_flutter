@@ -1,49 +1,47 @@
-# Implementation Plan - Finalizing Client Backend Integration (Search, Favorites, and Logout)
+# Implementation Plan - Connecting Project Tracking to Backend
 
-This plan focuses on completing the backend synchronization for the remaining Client-side features: Provider Search, Favorites management, and the Logout process.
+This plan outlines the integration of the Project Tracking screen with the Laravel backend for both Client and Provider views.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> - **Logout**: This will now call `POST /api/logout` to revoke the token on the server and clear `SharedPreferences`.
-> - **Search**: Since there is no general public search endpoint in the backend yet, I will utilize the `AuthService.fetchRoles()` and category-related routes to help the user find providers, or point to a placeholder if a specific search endpoint is needed.
-> - **Favorites**: I will add `Obx` to the Favorites screen to ensure it updates instantly when a provider is removed.
+> - I will replace the hardcoded `milestones` in `ProjectTrackingController` with real data fetched from the API.
+> - I will create a `ProjectStepModel` to handle the data structure for project steps/milestones.
+> - The UI will be updated to display the real progress percentage and step details (title, date, status).
 
 ## Proposed Changes
 
-### 1. Service Layer
+### 1. Data Models
 
-#### [MODIFY] [auth_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/auth_service.dart)
-- Implement `logout()`: Sends a request to the server and clears local storage.
+#### [NEW] [project_step_model.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/models/project_step_model.dart)
+- Define a model for project steps including fields: `id`, `title`, `description`, `date`, `progressPercent`, and `status`.
 
-#### [MODIFY] [interaction_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/interaction_service.dart)
-- Ensure `toggleFavorite` refreshes the local state or returns success properly.
+### 2. Service Layer
 
-### 2. Controller Layer
+#### [MODIFY] [project_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/project_service.dart)
+- Add `fetchProjectSteps(int projectId, {required bool isProvider})`:
+    - If `isProvider`, call `GET /api/provider/projects/{project}/steps`.
+    - If `!isProvider` (Client), call `GET /api/client/projects/{project}/steps`.
 
-#### [MODIFY] [search_providers_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/search_providers_controller.dart)
-- Replace `allProviders` mock list with an empty list.
-- Implement `fetchProviders()` or update `onSearch` to trigger an API call (e.g., fetching by roles/categories).
+### 3. Controller Layer
 
-#### [MODIFY] [favorites_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/favorites_controller.dart)
-- Add a `removeFavorite(int providerId)` method that calls `InteractionService.toggleFavorite` and updates the list locally.
+#### [MODIFY] [project_tracking_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/tracking/project_tracking_controller.dart)
+- Remove hardcoded `milestones`.
+- Add `RxList<ProjectStepModel> steps = <ProjectStepModel>[].obs`.
+- Implement `loadTrackingData()` to fetch both project details (for progress and summary) and project steps.
+- Update `onInit` to trigger data fetching.
 
-### 3. UI Layer
+### 4. UI Layer
 
-#### [MODIFY] [custom_drawer.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/custom_drawer.dart)
-- Update the "Logout" item to call the `AuthController.logout()` method.
-
-#### [MODIFY] [favorites_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/favorites_screen.dart)
-- Wrap the list with `Obx`.
-- Add an "Unfavorite" icon/button to each provider card.
-
-#### [MODIFY] [search_providers_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/search_providers_screen.dart)
-- Bind the search result list to live data.
-- Add a loading indicator for searches.
+#### [MODIFY] [project_tracking_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/tracking/project_tracking_screen.dart)
+- Bind the timeline list to `controller.steps`.
+- Update the step card to use `ProjectStepModel` fields.
+- Show a loading indicator during data retrieval.
 
 ## Verification Plan
 
 ### Manual Verification
-1.  **Real Logout**: Log out and verify that the token is cleared and you cannot navigate back to the dashboard without logging in.
-2.  **Favorites Sync**: Remove a provider from the favorites list and verify they disappear immediately.
-3.  **Live Search**: Type a name in the search bar and verify that results (even if filtered from a role-based list) are reactive.
+1.  **Open Tracking**: Navigate to "Project Tracking" from an active project.
+2.  **Verify Steps**: Ensure the steps shown match the milestones defined during the bid/offer process in the backend.
+3.  **Status Check**: Verify that completed steps have a checkmark and green color, while pending ones are grey.
+4.  **Progress Sync**: Confirm the top progress bar matches the project's overall progress percentage from the API.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/client_dashboard_controller.dart';
+import '../../controllers/auth/auth_controller.dart';
 import '../auth/login_screen.dart';
 import 'profile_screen.dart'; // استيراد شاشة البروفايل
 import '../tracking/project_tracking_screen.dart'; // استيراد شاشة متابعة المشروع
@@ -124,7 +125,7 @@ class CustomDrawer extends StatelessWidget {
               title: 'تسجيل الخروج',
               color: Colors.redAccent,
               onTap: () {
-                Get.offAll(() => LoginScreen()); // العودة لتسجيل الدخول
+                Get.find<AuthController>().logout();
               },
             ),
             const SizedBox(height: 16),

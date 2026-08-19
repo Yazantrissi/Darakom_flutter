@@ -1,50 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../services/interaction_service.dart';
+import '../../models/user_model.dart';
+import 'dart:async';
 
 class SearchProvidersController extends GetxController {
+  final InteractionService _interactionService = Get.find<InteractionService>();
   final TextEditingController searchController = TextEditingController();
 
-  // قائمة وهمية لجميع مزودي الخدمة في المنصة
-  final List<Map<String, dynamic>> allProviders = [
-    {'id': '1001', 'name': 'مؤسسة البناء الحديث', 'specialty': 'مقاولات عامة', 'rating': 4.9},
-    {'id': '1002', 'name': 'مكتب الأفق الهندسي', 'specialty': 'تصميم وإشراف هندسي', 'rating': 4.8},
-    {'id': '1003', 'name': 'م. خالد الشمري', 'specialty': 'تصميم داخلي', 'rating': 4.7},
-    {'id': '1004', 'name': 'شركة الإنشاءات الحديثة', 'specialty': 'مقاولات عامة', 'rating': 4.5},
-    {'id': '1005', 'name': 'مؤسسة السباك المحترف', 'specialty': 'سباكة', 'rating': 4.2},
-  ];
-
-  // القائمة التفاعلية التي ستعرض النتائج المفلترة
-  var searchResults = <Map<String, dynamic>>[].obs;
+  var searchResults = <UserModel>[].obs;
+  var isLoading = false.obs;
+  Timer? _debounce;
 
   @override
   void onInit() {
     super.onInit();
-    // عرض جميع المزودين كحالة افتراضية عند فتح الشاشة
-    searchResults.assignAll(allProviders);
+    // Initial fetch (empty search)
+    onSearch("");
   }
 
-  // دالة البحث (تعمل عند كتابة أي حرف)
   void onSearch(String query) {
-    if (query.isEmpty) {
-      searchResults.assignAll(allProviders);
-      return;
-    }
-
-    // فلترة القائمة بناءً على الاسم أو الـ ID
-    var filteredList = allProviders.where((provider) {
-      final nameLower = provider['name'].toString().toLowerCase();
-      final idLower = provider['id'].toString().toLowerCase();
-      final searchLower = query.toLowerCase();
-
-      return nameLower.contains(searchLower) || idLower.contains(searchLower);
-    }).toList();
-
-    searchResults.assignAll(filteredList);
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () async {
+      isLoading.value = true;
+      try {
+        final results = await _interactionService.searchProviders(query);
+        searchResults.assignAll(results);
+      } catch (e) {
+        print("Search error: $e");
+      } finally {
+        isLoading.value = false;
+      }
+    });
   }
 
   @override
   void onClose() {
     searchController.dispose();
+    _debounce?.cancel();
     super.onClose();
   }
 }

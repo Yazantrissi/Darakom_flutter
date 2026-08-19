@@ -2,41 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../views/provider/add_completed_stage_screen.dart';
 import '../../services/interaction_service.dart';
+import '../../services/project_service.dart';
+import '../../models/project_step_model.dart';
 
 class ProjectTrackingController extends GetxController {
   final InteractionService _interactionService = Get.find<InteractionService>();
+  final ProjectService _projectService = Get.find<ProjectService>();
 
   // Data from arguments
   late final int projectId;
   late final String projectTitle;
   late final bool isProvider;
 
-  // نسبة إنجاز المشروع الإجمالية (مثال 65%)
-  var progress = 0.65.obs;
-
-  // مراحل سير العمل (Timeline)
-  final List<Map<String, dynamic>> milestones = [
-    {
-      'title': 'توقيع العقد واستلام الدفعة الأولى',
-      'isCompleted': true,
-      'date': '2026-05-01',
-    },
-    {
-      'title': 'الانتهاء من أعمال العظم (الهيكل)',
-      'isCompleted': true,
-      'date': '2026-06-15',
-    },
-    {
-      'title': 'أعمال السباكة والكهرباء والتكييف',
-      'isCompleted': false,
-      'date': '2026-08-01',
-    },
-    {
-      'title': 'التشطيب النهائي والتسليم',
-      'isCompleted': false,
-      'date': '2026-11-01',
-    },
-  ];
+  var progress = 0.0.obs;
+  var steps = <ProjectStepModel>[].obs;
+  var isLoading = false.obs;
 
   @override
   void onInit() {
@@ -45,6 +25,31 @@ class ProjectTrackingController extends GetxController {
     projectId = args['projectId'] ?? 0;
     projectTitle = args['projectTitle'] ?? "مشروع غير محدد";
     isProvider = args['isProvider'] ?? false;
+    
+    loadTrackingData();
+  }
+
+  Future<void> loadTrackingData() async {
+    if (projectId == 0) return;
+    
+    try {
+      isLoading.value = true;
+      
+      // 1. Load project details for overall progress
+      final project = await _projectService.fetchProjectDetails(projectId);
+      if (project != null) {
+        progress.value = project.progressPercentage / 100.0;
+      }
+
+      // 2. Load milestones/steps
+      final stepsData = await _projectService.fetchProjectSteps(projectId, isProvider: isProvider);
+      steps.assignAll(stepsData.map((e) => ProjectStepModel.fromJson(e)).toList());
+      
+    } catch (e) {
+      print("Error loading tracking data: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void showComplaintDialog() {
@@ -98,6 +103,8 @@ class ProjectTrackingController extends GetxController {
     Get.to(() => AddCompletedStageScreen(), arguments: {
       'projectId': projectId,
       'projectTitle': projectTitle,
+    })?.then((value) {
+      if (value == true) loadTrackingData();
     });
   }
 }

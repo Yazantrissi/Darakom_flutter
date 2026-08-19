@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../services/interaction_service.dart';
 import '../../models/user_model.dart';
@@ -16,8 +17,23 @@ class FavoritesController extends GetxController {
 
   Future<void> fetchFavorites() async {
     isLoading.value = true;
-    favoriteProviders.value = await _interactionService.fetchFavorites();
-    isLoading.value = false;
+    try {
+      final list = await _interactionService.fetchFavorites();
+      favoriteProviders.assignAll(list);
+    } catch (e) {
+      print("Error fetching favorites: $e");
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> removeFavorite(int providerId) async {
+    final success = await _interactionService.toggleFavorite(providerId);
+    if (success) {
+      favoriteProviders.removeWhere((p) => p.id == providerId);
+      Get.snackbar('تم', 'تمت إزالة المزود من المفضلة', 
+        backgroundColor: Colors.black87, colorText: Colors.white, snackPosition: SnackPosition.BOTTOM);
+    }
   }
 
   void sendDirectOffer(String providerName) {

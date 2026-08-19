@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/tracking/project_tracking_controller.dart';
+import '../../models/project_step_model.dart';
 
 class ProjectTrackingScreen extends StatelessWidget {
   ProjectTrackingScreen({super.key});
 
   final ProjectTrackingController controller = Get.put(ProjectTrackingController());
 
-  // الألوان الأساسية
   final Color navyColor = const Color(0xFF1A2A44);
   final Color orangeColor = const Color(0xFFF58A1E);
   final Color bgColor = const Color(0xFFF5F7FA);
@@ -15,7 +15,7 @@ class ProjectTrackingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl, // واجهة عربية
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: bgColor,
         appBar: AppBar(
@@ -31,37 +31,37 @@ class ProjectTrackingScreen extends StatelessWidget {
             borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
           ),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // 1. بطاقة ملخص المشروع
-              _buildProjectSummary(),
-              const SizedBox(height: 24),
+        body: Obx(() {
+          if (controller.isLoading.value && controller.steps.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-              // 2. بطاقة شريط الإنجاز العام
-              _buildProgressSection(),
-              const SizedBox(height: 32),
-
-              // 3. قسم المراحل (Timeline)
-              Text('المراحل (Timeline)', style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor)),
-              const SizedBox(height: 16),
-              _buildTimeline(),
-              const SizedBox(height: 32),
-
-              // 4. --- الأزرار السفلية (ديناميكية) ---
-              _buildActionButtons(),
-
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
+          return RefreshIndicator(
+            onRefresh: controller.loadTrackingData,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildProjectSummary(),
+                  const SizedBox(height: 24),
+                  _buildProgressSection(),
+                  const SizedBox(height: 32),
+                  Text('المراحل (Timeline)', style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor)),
+                  const SizedBox(height: 16),
+                  _buildTimeline(),
+                  const SizedBox(height: 32),
+                  _buildActionButtons(),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
-
-  // --- دوال مساعدة لبناء واجهة الشاشة --- //
 
   Widget _buildProjectSummary() {
     return Container(
@@ -81,14 +81,6 @@ class ProjectTrackingScreen extends StatelessWidget {
               Icon(Icons.engineering_outlined, size: 18, color: Colors.grey.shade500),
               const SizedBox(width: 8),
               Text('المشروع رقم: #${controller.projectId}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600)),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.calendar_month_outlined, size: 18, color: Colors.grey.shade500),
-              const SizedBox(width: 8),
-              Text('تحديث مستمر لسير العمل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600)),
             ],
           ),
         ],
@@ -111,11 +103,11 @@ class ProjectTrackingScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('نسبة الإنجاز الإجمالية', style: TextStyle(fontFamily: 'Tajawal', fontSize: 15, fontWeight: FontWeight.bold, color: navyColor)),
-              Obx(() => Text('${(controller.progress.value * 100).toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 18, fontWeight: FontWeight.bold))),
+              Text('${(controller.progress.value * 100).toInt()}%', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 16),
-          Obx(() => ClipRRect(
+          ClipRRect(
             borderRadius: BorderRadius.circular(8.0),
             child: LinearProgressIndicator(
               value: controller.progress.value,
@@ -123,38 +115,46 @@ class ProjectTrackingScreen extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(orangeColor),
               minHeight: 10,
             ),
-          )),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildTimeline() {
+    if (controller.steps.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0),
+          child: Text('لا توجد مراحل محددة لهذا المشروع بعد', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500)),
+        ),
+      );
+    }
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: controller.milestones.length,
+      itemCount: controller.steps.length,
       itemBuilder: (context, index) {
-        final milestone = controller.milestones[index];
-        bool isLast = index == controller.milestones.length - 1;
+        final step = controller.steps[index];
+        bool isLast = index == controller.steps.length - 1;
 
         return IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // العامود الخاص بالخط والدوائر
               Column(
                 children: [
                   Container(
                     width: 24,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: milestone['isCompleted'] ? Colors.green : Colors.grey.shade300,
+                      color: step.isCompleted ? Colors.green : Colors.grey.shade300,
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 2),
                       boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 4)],
                     ),
-                    child: milestone['isCompleted']
+                    child: step.isCompleted
                         ? const Icon(Icons.check_rounded, color: Colors.white, size: 14)
                         : null,
                   ),
@@ -162,13 +162,12 @@ class ProjectTrackingScreen extends StatelessWidget {
                     Expanded(
                       child: Container(
                         width: 2,
-                        color: milestone['isCompleted'] ? Colors.green : Colors.grey.shade300,
+                        color: step.isCompleted ? Colors.green : Colors.grey.shade300,
                       ),
                     ),
                 ],
               ),
               const SizedBox(width: 16),
-              // بطاقة تفاصيل المرحلة
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 24.0),
@@ -177,27 +176,38 @@ class ProjectTrackingScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: milestone['isCompleted'] ? Colors.green.withOpacity(0.3) : Colors.grey.shade200),
+                      border: Border.all(color: step.isCompleted ? Colors.green.withOpacity(0.3) : Colors.grey.shade200),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          milestone['title'],
-                          style: TextStyle(
-                            fontFamily: 'Tajawal',
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: milestone['isCompleted'] ? navyColor : Colors.grey.shade600,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              step.title,
+                              style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: step.isCompleted ? navyColor : Colors.grey.shade600,
+                              ),
+                            ),
+                            if (step.progressPercent > 0 && !step.isCompleted)
+                              Text('%${step.progressPercent}', style: TextStyle(fontSize: 12, color: orangeColor, fontWeight: FontWeight.bold)),
+                          ],
                         ),
+                        if (step.description != null) ...[
+                          const SizedBox(height: 4),
+                          Text(step.description!, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                        ],
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.date_range_outlined, size: 14, color: Colors.grey.shade500),
+                            Icon(Icons.date_range_outlined, size: 14, color: Colors.grey.shade400),
                             const SizedBox(width: 4),
                             Text(
-                              milestone['date'],
+                              step.date ?? "---",
                               style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500),
                             ),
                           ],
@@ -249,7 +259,6 @@ class ProjectTrackingScreen extends StatelessWidget {
         ],
       );
     } else {
-      // Client View
       return OutlinedButton.icon(
         onPressed: controller.showComplaintDialog,
         icon: const Icon(Icons.report_problem_outlined, color: Colors.redAccent),

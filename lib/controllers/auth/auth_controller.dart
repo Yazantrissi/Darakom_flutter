@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../services/auth_service.dart';
+import '../../views/auth/login_screen.dart';
 import '../../views/home/client_dashboard_screen.dart';
 import '../../views/provider/provider_dashboard_screen.dart';
 
@@ -45,6 +46,21 @@ class AuthController extends GetxController {
     } else {
       Get.snackbar('خطأ', 'فشل تسجيل الدخول، يرجى التأكد من البيانات',
           backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  }
+
+  Future<void> logout() async {
+    isLoading.value = true;
+    final success = await _authService.logout();
+    isLoading.value = false;
+    
+    if (success) {
+      Get.offAll(() => LoginScreen());
+    } else {
+      // Even if server fails, clear local and go to login
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      Get.offAll(() => LoginScreen());
     }
   }
 

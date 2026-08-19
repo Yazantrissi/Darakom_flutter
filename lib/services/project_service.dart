@@ -95,6 +95,19 @@ class ProjectService extends GetxService {
     }
   }
 
+  Future<List<dynamic>> fetchProjectSteps(int projectId, {required bool isProvider}) async {
+    try {
+      final prefix = isProvider ? "provider" : "client";
+      final response = await _apiService.get("$prefix/projects/$projectId/steps");
+      if (response.data['success']) {
+        return response.data['data'] as List;
+      }
+    } catch (e) {
+      print("Error fetching project steps: $e");
+    }
+    return [];
+  }
+
   Future<ProjectModel?> fetchProjectDetails(int id) async {
     try {
       final response = await _apiService.get("${ApiConstants.projects}/$id");

@@ -11,6 +11,23 @@ class OfferDetailsController extends GetxController {
 
   void setOffer(OfferModel offerData) {
     offer.value = offerData;
+    refreshOfferDetails();
+  }
+
+  Future<void> refreshOfferDetails() async {
+    if (offer.value.id == 0 || offer.value.projectId == 0) return;
+    
+    isLoading.value = true;
+    try {
+      final updatedOffer = await _offerService.fetchOfferDetails(offer.value.projectId, offer.value.id);
+      if (updatedOffer != null) {
+        offer.value = updatedOffer;
+      }
+    } catch (e) {
+      print("Error refreshing offer details: $e");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   // دالة قبول العرض

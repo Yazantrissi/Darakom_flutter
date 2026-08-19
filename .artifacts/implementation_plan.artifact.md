@@ -1,47 +1,40 @@
-# Implementation Plan - Connecting Project Tracking to Backend
+# Implementation Plan - Finalizing Client-Side Backend Integration
 
-This plan outlines the integration of the Project Tracking screen with the Laravel backend for both Client and Provider views.
+This plan focuses on ensuring that *every* client-side interface is fully synchronized with the backend, covering detail views, account management, and dynamic settings.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> - I will replace the hardcoded `milestones` in `ProjectTrackingController` with real data fetched from the API.
-> - I will create a `ProjectStepModel` to handle the data structure for project steps/milestones.
-> - The UI will be updated to display the real progress percentage and step details (title, date, status).
+> - **Logout Unification**: I will update the `SettingsScreen` logout logic to use the centralized `AuthService.logout()` method, ensuring the session is invalidated on both the client and server.
+> - **Offer Accuracy**: The `OfferDetailsScreen` will now fetch live data from the server instead of relying solely on the data passed from the list, ensuring price and status are always up-to-date.
 
 ## Proposed Changes
 
-### 1. Data Models
+### 1. Account & Settings
 
-#### [NEW] [project_step_model.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/models/project_step_model.dart)
-- Define a model for project steps including fields: `id`, `title`, `description`, `date`, `progressPercent`, and `status`.
+#### [MODIFY] [settings_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/settings_controller.dart)
+- Update `logout()` to call `AuthService.logout()` instead of manually clearing preferences. This ensures the token is revoked on the Laravel server.
 
-### 2. Service Layer
+### 2. Bidding & Offers
 
-#### [MODIFY] [project_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/project_service.dart)
-- Add `fetchProjectSteps(int projectId, {required bool isProvider})`:
-    - If `isProvider`, call `GET /api/provider/projects/{project}/steps`.
-    - If `!isProvider` (Client), call `GET /api/client/projects/{project}/steps`.
+#### [MODIFY] [offer_details_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/offer_details_controller.dart)
+- Implement `refreshOfferDetails()`: Calls `GET /api/client/projects/{project}/offers/{offer}`.
+- Trigger this refresh on `onInit` to ensure the user sees the absolute latest version of the offer.
 
-### 3. Controller Layer
+### 3. Service Layer Refinement
 
-#### [MODIFY] [project_tracking_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/tracking/project_tracking_controller.dart)
-- Remove hardcoded `milestones`.
-- Add `RxList<ProjectStepModel> steps = <ProjectStepModel>[].obs`.
-- Implement `loadTrackingData()` to fetch both project details (for progress and summary) and project steps.
-- Update `onInit` to trigger data fetching.
+#### [MODIFY] [offer_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/offer_service.dart)
+- Add `fetchOfferDetails(int projectId, int offerId)` to support the updated details controller.
 
-### 4. UI Layer
+### 4. Search & UI Consistency
 
-#### [MODIFY] [project_tracking_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/tracking/project_tracking_screen.dart)
-- Bind the timeline list to `controller.steps`.
-- Update the step card to use `ProjectStepModel` fields.
-- Show a loading indicator during data retrieval.
+#### [MODIFY] [search_providers_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/search_providers_screen.dart)
+- Ensure the "ID" and "Rating" fields are correctly mapped from the `UserModel` returned by the backend.
 
 ## Verification Plan
 
 ### Manual Verification
-1.  **Open Tracking**: Navigate to "Project Tracking" from an active project.
-2.  **Verify Steps**: Ensure the steps shown match the milestones defined during the bid/offer process in the backend.
-3.  **Status Check**: Verify that completed steps have a checkmark and green color, while pending ones are grey.
-4.  **Progress Sync**: Confirm the top progress bar matches the project's overall progress percentage from the API.
+1.  **Offer Details**: Open an offer, verify the loading spinner appears, and check that all details (price, duration, comments) are pulled live.
+2.  **Settings Logout**: Log out from the Settings screen and verify that the backend session is destroyed.
+3.  **Search Reliability**: Perform multiple searches for different provider types and verify data consistency.
+4.  **Overall Check**: Navigate through all drawer items (Favorites, Ratings, Complaints) and verify live data in each.

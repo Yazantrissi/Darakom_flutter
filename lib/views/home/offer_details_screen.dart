@@ -33,41 +33,48 @@ class OfferDetailsScreen extends StatelessWidget {
             borderRadius: BorderRadius.only(bottomLeft: Radius.circular(24), bottomRight: Radius.circular(24)),
           ),
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // 1. بطاقة بيانات المقاول
-                    _buildProviderInfo(),
-                    const SizedBox(height: 24),
+        body: Obx(() {
+          if (controller.isLoading.value && controller.offer.value.id == 0) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                    // 2. بطاقة السعر والمدة
-                    _buildPriceAndDuration(),
-                    const SizedBox(height: 24),
+          return Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 1. بطاقة بيانات المقاول
+                      _buildProviderInfo(),
+                      const SizedBox(height: 24),
 
-                    // 3. نبذة عن العمل
-                    Text('نبذة عن العمل والتفاصيل:', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
-                    const SizedBox(height: 12),
-                    _buildWorkSummary(),
-                    const SizedBox(height: 24),
+                      // 2. بطاقة السعر والمدة
+                      _buildPriceAndDuration(),
+                      const SizedBox(height: 24),
 
-                    // 4. الملفات والصور المرفقة
-                    Text('الملفات والصور المرفقة:', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
-                    const SizedBox(height: 12),
-                    _buildAttachmentsSection(),
-                  ],
+                      // 3. نبذة عن العمل
+                      Text('نبذة عن العمل والتفاصيل:', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
+                      const SizedBox(height: 12),
+                      _buildWorkSummary(),
+                      const SizedBox(height: 24),
+
+                      // 4. الملفات والصور المرفقة
+                      Text('الملفات والصور المرفقة:', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
+                      const SizedBox(height: 12),
+                      _buildAttachmentsSection(),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // 5. الأزرار السفلية (القبول والرفض)
-            _buildActionButtons(),
-          ],
-        ),
+              // 5. الأزرار السفلية (القبول والرفض)
+              if (controller.offer.value.status == 'pending')
+                _buildActionButtons(),
+            ],
+          );
+        }),
       ),
     );
   }
@@ -76,6 +83,7 @@ class OfferDetailsScreen extends StatelessWidget {
 
   // بطاقة المقاول
   Widget _buildProviderInfo() {
+    final o = controller.offer.value;
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -101,12 +109,12 @@ class OfferDetailsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  controller.offer.value.providerName ?? "",
+                  o.providerName ?? "",
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  controller.offer.value.specialty ?? "",
+                  o.specialty ?? "",
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500),
                 ),
               ],
@@ -117,7 +125,7 @@ class OfferDetailsScreen extends StatelessWidget {
             decoration: BoxDecoration(color: Colors.amber.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
             child: Row(
               children: [
-                Text('${controller.offer.value.rating}', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontWeight: FontWeight.bold, fontSize: 13)),
+                Text('${o.rating}', style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontWeight: FontWeight.bold, fontSize: 13)),
                 const SizedBox(width: 4),
                 const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
               ],
@@ -130,6 +138,7 @@ class OfferDetailsScreen extends StatelessWidget {
 
   // بطاقة السعر والمدة (مقسمة نصفين)
   Widget _buildPriceAndDuration() {
+    final o = controller.offer.value;
     return Row(
       children: [
         // السعر
@@ -154,7 +163,7 @@ class OfferDetailsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  controller.offer.value.amount ?? "${controller.offer.value.cost} ريال",
+                  o.amount ?? "${o.cost} ل.س",
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: orangeColor),
                 ),
               ],
@@ -184,7 +193,7 @@ class OfferDetailsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "${controller.offer.value.duration} ${controller.offer.value.durationUnit}",
+                  "${o.duration} ${o.durationUnit}",
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor),
                 ),
               ],
@@ -223,7 +232,8 @@ class OfferDetailsScreen extends StatelessWidget {
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final file = attachments[index];
-          bool isImage = file['type'] == 'image';
+          // Determine if it's an image based on path or explicit type from model mapping
+          bool isImage = file['file_type'] == 'image' || file['type'] == 'image';
 
           return Container(
             width: 100,
@@ -244,7 +254,7 @@ class OfferDetailsScreen extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: Text(
-                    file['name'],
+                    file['description'] ?? 'ملحق',
                     style: TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: Colors.grey.shade700),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

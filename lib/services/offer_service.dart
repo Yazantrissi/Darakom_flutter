@@ -139,4 +139,16 @@ class OfferService extends GetxService {
       return false;
     }
   }
+
+  Future<OfferModel?> fetchOfferDetails(int projectId, int offerId) async {
+    try {
+      final response = await _apiService.get("client/projects/$projectId/offers/$offerId");
+      if (response.data['success']) {
+        return OfferModel.fromJson(response.data['data']);
+      }
+    } catch (e) {
+      print("Error fetching offer details: $e");
+    }
+    return null;
+  }
 }

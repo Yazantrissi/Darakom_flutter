@@ -1,8 +1,9 @@
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../views/auth/login_screen.dart';
+import '../../services/auth_service.dart';
 
 class SettingsController extends GetxController {
+  final AuthService _authService = Get.find<AuthService>();
+
   // متغير تفاعلي لحالة الإشعارات (مفعلة افتراضياً)
   var isNotificationsEnabled = true.obs;
 
@@ -11,10 +12,7 @@ class SettingsController extends GetxController {
   }
 
   Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('user_type');
-
-    Get.offAll(() => LoginScreen());
+    // Calling the centralized logout logic that clears prefs and revokes token on server
+    await _authService.logout();
   }
 }

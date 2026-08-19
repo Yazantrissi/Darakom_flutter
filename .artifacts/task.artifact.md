@@ -1,13 +1,14 @@
-# Task List - Connecting Project Tracking to Backend
+# Task List - Finalizing Client Backend Integration
 
-- [ ] **Data Models**
-    - [ ] Create `ProjectStepModel` in `lib/models/project_step_model.dart`.
 - [ ] **Service Layer**
-    - [ ] Add `fetchProjectSteps` to `ProjectService`.
+    - [ ] Add `fetchOfferDetails(int projectId, int offerId)` to `OfferService`.
 - [ ] **Controller Layer**
-    - [ ] Update `ProjectTrackingController` to fetch real steps and overall project progress.
+    - [ ] Update `OfferDetailsController` to fetch live data on initialization.
+    - [ ] Update `SettingsController` to use `AuthService.logout()` for a complete session termination.
 - [ ] **UI Layer**
-    - [ ] Bind `ProjectTrackingScreen` to live data and handle loading states.
+    - [ ] Update `OfferDetailsScreen` to show a loading state while fetching data.
+    - [ ] Ensure `SearchProvidersScreen` correctly displays backend `id` and `average_rating`.
 - [ ] **Verification**
     - [ ] Run `flutter analyze`.
-    - [ ] Verify timeline reflects backend milestones.
+    - [ ] Verify Logout from both Drawer and Settings.
+    - [ ] Verify live updates in Offer Details.

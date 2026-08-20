@@ -28,39 +28,13 @@ class RegisterController extends GetxController {
   var isPasswordHidden = true.obs;
   var isConfirmPasswordHidden = true.obs;
   var isLoading = false.obs;
+  var isInitialLoading = false.obs; // For fetching initial data
   var isPrivacyAccepted = false.obs;
 
-  // قوائم البيانات
-  var provinces = <ProvinceModel>[
-    ProvinceModel(id: 1, name: 'دمشق'),
-    ProvinceModel(id: 2, name: 'حلب'),
-    ProvinceModel(id: 3, name: 'ريف دمشق'),
-    ProvinceModel(id: 4, name: 'درعا'),
-    ProvinceModel(id: 5, name: 'السويداء'),
-    ProvinceModel(id: 6, name: 'القنيطرة'),
-    ProvinceModel(id: 7, name: 'اللاذقية'),
-    ProvinceModel(id: 8, name: 'طرطوس'),
-    ProvinceModel(id: 9, name: 'إدلب'),
-    ProvinceModel(id: 10, name: 'حماة'),
-    ProvinceModel(id: 11, name: 'الحسكة'),
-    ProvinceModel(id: 12, name: 'الرقة'),
-    ProvinceModel(id: 13, name: 'دير الزور'),
-    ProvinceModel(id: 14, name: 'حمص'),
-  ].obs;
-
-  var roles = <RoleModel>[
-    RoleModel(id: 1, name: 'مقاول'),
-    RoleModel(id: 2, name: 'مهندس معماري'),
-    RoleModel(id: 3, name: 'مهندس مدني'),
-    RoleModel(id: 4, name: 'مهندس مدني استشاري'),
-    RoleModel(id: 5, name: 'المكاتب الهندسية'),
-    RoleModel(id: 6, name: 'حرفي'),
-  ].obs;
-
-  var documentTypes = <DocumentTypeModel>[
-    DocumentTypeModel(id: 1, name: 'image'),
-    DocumentTypeModel(id: 2, name: 'pdf'),
-  ].obs;
+  // قوائم البيانات (Empty initially, fetched from API)
+  var provinces = <ProvinceModel>[].obs;
+  var roles = <RoleModel>[].obs;
+  var documentTypes = <DocumentTypeModel>[].obs;
 
   Rx<ProvinceModel?> selectedProvince = Rx<ProvinceModel?>(null);
   Rx<RoleModel?> selectedRole = Rx<RoleModel?>(null);
@@ -76,7 +50,22 @@ class RegisterController extends GetxController {
   }
 
   Future<void> _fetchInitialData() async {
-    isLoading.value = false;
+    isInitialLoading.value = true;
+    try {
+      final pList = await _authService.fetchProvinces();
+      provinces.assignAll(pList);
+      
+      final rList = await _authService.fetchRoles();
+      roles.assignAll(rList);
+      
+      final dtList = await _authService.fetchDocumentTypes();
+      documentTypes.assignAll(dtList);
+      
+    } catch (e) {
+      print("Error fetching initial data: $e");
+    } finally {
+      isInitialLoading.value = false;
+    }
   }
 
   void switchTab(bool isCustomer) {
@@ -143,17 +132,21 @@ class RegisterController extends GetxController {
 
     if (!isCustomerTab.value) {
       data['role_id'] = selectedRole.value?.id;
-      data['experience_start'] = "2020-01-01"; // Placeholder
+      data['experience_start'] = "2020-01-01"; // Placeholder or add UI field
+      data['syndicate_number'] = syndicateNumberController.text;
     }
 
     List<Map<String, dynamic>> docs = [];
     for (var attr in registerAttachments) {
       if (attr.fileBytes.value != null || attr.filePath.value != null) {
+        // Use the first document type as default if none selected (or map to image/pdf based on extension)
+        final defaultTypeId = documentTypes.isNotEmpty ? documentTypes.first.id : 1;
+        
         docs.add({
           'file_path': attr.filePath.value,
           'file_bytes': attr.fileBytes.value,
           'file_name': attr.fileName.value,
-          'type_id': 1, // Placeholder
+          'type_id': defaultTypeId, 
           'description': attr.titleController.text,
         });
       }
@@ -177,7 +170,7 @@ class RegisterController extends GetxController {
         Get.offAll(() => ClientDashboardScreen());
       }
     } else {
-      Get.snackbar('خطأ', 'حدث خطأ أثناء إنشاء الحساب', backgroundColor: Colors.red, colorText: Colors.white);
+      Get.snackbar('خطأ', 'فشل إنشاء الحساب، يرجى التحقق من البيانات', backgroundColor: Colors.red, colorText: Colors.white);
     }
   }
 
@@ -189,6 +182,10 @@ class RegisterController extends GetxController {
     if (selectedProvince.value == null) {
       Get.snackbar('تنبيه', 'يرجى اختيار المحافظة', backgroundColor: Colors.orange, colorText: Colors.white);
       return false;
+    }
+    if (!isCustomerTab.value && selectedRole.value == null) {
+       Get.snackbar('تنبيه', 'يرجى اختيار التخصص', backgroundColor: Colors.orange, colorText: Colors.white);
+       return false;
     }
     if (passwordController.text != confirmPasswordController.text) {
       Get.snackbar('تنبيه', 'كلمات المرور غير متطابقة', backgroundColor: Colors.orange, colorText: Colors.white);

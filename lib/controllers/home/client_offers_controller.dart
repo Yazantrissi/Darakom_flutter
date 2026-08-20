@@ -6,6 +6,9 @@ import '../../services/offer_service.dart';
 class ClientOffersController extends GetxController {
   final OfferService _offerService = Get.find<OfferService>();
 
+  final int? projectId;
+  ClientOffersController({this.projectId});
+
   var currentIndex = 0.obs;
   var isLoading = false.obs;
   
@@ -22,12 +25,21 @@ class ClientOffersController extends GetxController {
     try {
       isLoading.value = true;
       
-      // Using the specific backend endpoints
-      final public = await _offerService.fetchClientPublicOffers();
-      final private = await _offerService.fetchClientPrivateOffers();
-      
-      publicOffers.assignAll(public);
-      privateOffers.assignAll(private);
+      if (projectId != null && projectId != 0) {
+        // Fetching offers for a specific project
+        final projectOffers = await _offerService.fetchProjectOffers(projectId!);
+        // For a single project, we can put all in public or split by some logic
+        // For now, let's just populate publicOffers for display consistency
+        publicOffers.assignAll(projectOffers);
+        privateOffers.clear();
+      } else {
+        // Fetching all general public and private offers
+        final public = await _offerService.fetchClientPublicOffers();
+        final private = await _offerService.fetchClientPrivateOffers();
+        
+        publicOffers.assignAll(public);
+        privateOffers.assignAll(private);
+      }
       
     } catch (e) {
       print("Error fetching client offers: $e");

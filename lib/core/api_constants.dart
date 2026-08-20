@@ -15,6 +15,7 @@ class ApiConstants {
   static const String provinces = "/provinces";
   static const String roles = "/roles";
   static const String documentTypes = "/document-types";
+  static const String serviceCategories = "/service-categories";
 
   // Projects (General)
   static const String projects = "/projects";
@@ -29,6 +30,7 @@ class ApiConstants {
   static const String clientRatings = "/client/my-ratings";
   static const String acceptOffer = "/client/projects/"; // /{project}/offers/{offer}/accept
   static const String rejectOffer = "/client/projects/"; // /{project}/offers/{offer}/reject
+  static const String inviteProvider = "/client/projects"; // /{project}/invitations
 
   // Provider Specific
   static const String providerDashboard = "/provider/dashboard";

@@ -3,6 +3,7 @@ import 'package:get/get.dart' hide Response, FormData, MultipartFile;
 import 'api_service.dart';
 import '../core/api_constants.dart';
 import '../models/project_model.dart';
+import '../models/project_report_model.dart';
 
 class ProjectService extends GetxService {
   final ApiService _apiService = Get.find<ApiService>();
@@ -118,6 +119,42 @@ class ProjectService extends GetxService {
       print("Error fetching project details: $e");
     }
     return null;
+  }
+
+  Future<bool> deleteProject(int id) async {
+    try {
+      final response = await _apiService.delete("${ApiConstants.projects}/$id");
+      return response.data['success'] ?? false;
+    } catch (e) {
+      print("Error deleting project: $e");
+      return false;
+    }
+  }
+
+  Future<List<ProjectReportModel>> fetchProjectReports(int projectId) async {
+    try {
+      final response = await _apiService.get("client/projects/$projectId/reports");
+      if (response.data['success']) {
+        final List list = response.data['data'] ?? [];
+        return list.map((e) => ProjectReportModel.fromJson(e)).toList();
+      }
+    } catch (e) {
+      print("Error fetching reports: $e");
+    }
+    return [];
+  }
+
+  Future<List<Map<String, dynamic>>> fetchProjectDocuments(int projectId) async {
+    try {
+      final response = await _apiService.get("client/projects/$projectId/documents");
+      if (response.data['success']) {
+        final List list = response.data['data'] ?? [];
+        return list.map((e) => e as Map<String, dynamic>).toList();
+      }
+    } catch (e) {
+      print("Error fetching documents: $e");
+    }
+    return [];
   }
 
   Future<bool> rejectInvitation(int projectId) async {

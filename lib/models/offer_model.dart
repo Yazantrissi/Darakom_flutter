@@ -40,9 +40,18 @@ class OfferModel {
   });
 
   factory OfferModel.fromJson(Map<String, dynamic> json) {
-    // Extracting nested provider info if available (Laravel format)
+    // Extracting nested provider and project info based on Laravel backend structure
     final provider = json['provider'] as Map<String, dynamic>?;
     final project = json['project'] as Map<String, dynamic>?;
+    
+    // Handling provider user nested structure if it's there (common in Laravel with() relations)
+    final providerUser = provider?['user'] as Map<String, dynamic>?;
+    final providerRole = provider?['role'] as Map<String, dynamic>?;
+
+    String? name = provider?['name'] ?? providerUser?['full_name'];
+    String? avatar = provider?['avatar'] ?? providerUser?['avatar'];
+    String? roleName = provider?['role_name'] ?? providerRole?['name'] ?? "مزود خدمة";
+    double avgRating = (provider?['average_rating'] ?? json['rating'] ?? 0.0).toDouble();
 
     return OfferModel(
       id: json['id'] ?? 0,
@@ -53,17 +62,17 @@ class OfferModel {
       durationUnit: json['duration_unit'] ?? json['durationUnit'] ?? "يوم",
       
       projectName: project?['title'] ?? json['projectName'],
-      date: json['created_at'] ?? json['date'],
+      date: json['created_at']?.split('T')[0] ?? json['date'],
       amount: json['cost'] != null ? "${json['cost']} ل.س" : json['amount'],
       
-      providerName: provider?['name'] ?? json['providerName'],
-      providerAvatar: provider?['avatar'] ?? json['providerAvatar'],
-      role: provider?['role_name'] ?? json['role'],
-      rating: (provider?['average_rating'] ?? json['rating'] ?? 0.0).toDouble(),
+      providerName: name,
+      providerAvatar: avatar,
+      role: roleName,
+      rating: avgRating,
       reviewsCount: provider?['reviews_count'] ?? json['reviewsCount'] ?? 0,
       
       badge: json['badge'],
-      specialty: provider?['role_name'] ?? json['specialty'],
+      specialty: roleName,
       workSummary: json['provider_comment'] ?? json['details'] ?? json['workSummary'],
       attachments: json['documents'] != null 
           ? List<Map<String, dynamic>>.from(json['documents']) 

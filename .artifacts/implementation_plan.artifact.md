@@ -1,33 +1,34 @@
-# Implementation Plan - Profile Picture Picking for Client
+# Implementation Plan - Dynamic Roles and Provinces for Registration
 
-This plan outlines the steps to allow the client to pick a profile picture from their gallery and display it immediately in the Profile screen.
+This plan outlines the steps to replace hardcoded roles and provinces in the `RegisterScreen` with dynamic data fetched from the Laravel backend.
 
 ## Proposed Changes
 
 ### 1. Controller Layer
 
-#### [MODIFY] [profile_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/profile_controller.dart)
-- Add `Rx<Uint8List?> pickedImageBytes` to store image data for Web support.
-- Add `RxString pickedImagePath` to store the local path for Mobile support.
-- Update `editProfilePicture()`:
-    - Use `ImagePicker` to select an image from the gallery.
-    - Update `pickedImageBytes` and `pickedImagePath` based on the platform.
-- Update `saveChanges()` to include the image in the `updateProfile` request (if persistence is intended now, otherwise just UI display).
+#### [MODIFY] [register_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/auth/register_controller.dart)
+- Update `_fetchInitialData()` to call:
+    - `_authService.fetchProvinces()`
+    - `_authService.fetchRoles()`
+    - `_authService.fetchDocumentTypes()`
+- Clear the hardcoded initial values for `provinces`, `roles`, and `documentTypes`.
+- Update the `register()` method to use the selected `RoleModel` ID correctly.
+- Update the document upload logic to use the first available `DocumentTypeModel` ID if no specific type is selected by the user.
 
 ### 2. View Layer
 
-#### [MODIFY] [profile_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/home/profile_screen.dart)
-- Update the profile image container in `_buildCustomHeader()`:
-    - Wrap with `Obx`.
-    - Check if `pickedImageBytes` or `pickedImagePath` has data.
-    - Display the selected image using `Image.memory()` or `Image.file()`.
-    - Fallback to the existing profile icon if no image is selected.
+#### [MODIFY] [register_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/auth/register_screen.dart)
+- Ensure the `DropdownButtonFormField` for "Provinces" and "Roles" (Specialization) are correctly bound to the dynamic lists in the controller.
+- Add a loading indicator for the initial data fetch if necessary, or rely on the reactive nature of the lists.
 
 ## Verification Plan
 
+### Automated Tests
+- Run `flutter analyze` to verify syntax and type safety.
+
 ### Manual Verification
-1.  Open the Profile screen.
-2.  Tap the edit icon or the profile picture area.
-3.  Select an image from the gallery.
-4.  Verify that the selected image replaces the default person icon in the UI immediately.
-5.  Check that the UI remains responsive and the loading overlay still works.
+1.  Open the Registration screen.
+2.  Switch to the "Service Provider" (مزود خدمة) tab.
+3.  Click the "Specialization" (التخصص) dropdown and verify that roles match the `roles` table in the backend database.
+4.  Verify that the "Province" (المحافظة) dropdown displays the full list from the backend.
+5.  Complete a registration and verify that the `role_id` and `province_id` are correctly sent to the server.

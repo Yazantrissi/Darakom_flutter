@@ -16,7 +16,7 @@ class UserModel {
   final int? experienceYears;
   final String? bio;
   final String? address;
-  final String? profilePicture;
+  final String? profilePicture; // Used for avatar URL
   final String? token;
 
   UserModel({
@@ -59,15 +59,21 @@ class UserModel {
       type: json['type']?.toString() ?? "",
       status: json['status']?.toString() ?? "",
       provinceId: json['province_id'] != null ? parseId(json['province_id']) : null,
-      provinceName: json['province'] is Map ? json['province']['name']?.toString() : null,
-      roleId: json['role_id'] != null ? parseId(json['role_id']) : null,
-      roleName: json['role'] is Map ? json['role']['name']?.toString() : null,
-      syndicateNumber: json['syndicate_number']?.toString(),
-      workArea: json['work_area']?.toString(),
-      experienceYears: json['experience_years'] != null ? parseId(json['experience_years']) : null,
-      bio: json['bio']?.toString(),
+      provinceName: json['province'] is Map 
+          ? json['province']['name']?.toString() 
+          : json['province']?.toString(), // Handle flat string or map
+      roleId: json['role_id'] != null ? parseId(json['role_id']) : (json['profile']?['role_id'] != null ? parseId(json['profile']?['role_id']) : null),
+      roleName: json['role'] is Map 
+          ? json['role']['name']?.toString() 
+          : (json['profile']?['role']?.toString() ?? json['role']?.toString()),
+      syndicateNumber: json['syndicate_number']?.toString() ?? json['profile']?['syndicate_number']?.toString(),
+      workArea: json['work_area']?.toString() ?? json['profile']?['work_area']?.toString(),
+      experienceYears: json['experience_years'] != null 
+          ? parseId(json['experience_years']) 
+          : (json['profile']?['experience'] != null ? parseId(json['profile']?['experience']) : null),
+      bio: json['bio']?.toString() ?? json['profile']?['bio']?.toString(),
       address: json['address']?.toString(),
-      profilePicture: json['profile_picture']?.toString(),
+      profilePicture: json['avatar']?.toString() ?? json['profile_picture']?.toString(), // Map avatar to profilePicture
       token: json['token']?.toString(),
     );
   }

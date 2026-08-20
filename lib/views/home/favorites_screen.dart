@@ -114,7 +114,12 @@ class FavoritesScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: orangeColor.withOpacity(0.5)),
                 ),
-                child: Icon(Icons.engineering_rounded, color: navyColor, size: 28),
+                child: provider.profilePicture != null 
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(11),
+                        child: Image.network(provider.profilePicture!, fit: BoxFit.cover, errorBuilder: (c, e, s) => Icon(Icons.engineering_rounded, color: navyColor, size: 28)),
+                      )
+                    : Icon(Icons.engineering_rounded, color: navyColor, size: 28),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -147,9 +152,9 @@ class FavoritesScreen extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: ElevatedButton.icon(
-                  onPressed: () => controller.sendDirectOffer(provider.name),
+                  onPressed: () => controller.inviteToProject(provider),
                   icon: const Icon(Icons.send_rounded, size: 16, color: Colors.white),
-                  label: const Text('تقديم عرض مباشر', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+                  label: const Text('تقديم دعوة للمشروع', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: orangeColor,
                     elevation: 0,

@@ -31,24 +31,63 @@ class SearchProvidersScreen extends StatelessWidget {
         body: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.only(bottom: 24),
               decoration: BoxDecoration(
                 color: navyColor,
                 borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(32.0), bottomRight: Radius.circular(32.0)),
               ),
-              child: TextField(
-                controller: controller.searchController,
-                onChanged: controller.onSearch,
-                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
-                decoration: InputDecoration(
-                  hintText: 'ابحث بالاسم أو بـ ID المزود...',
-                  hintStyle: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 14),
-                  prefixIcon: const Icon(Icons.search_rounded, color: Colors.grey),
-                  filled: true,
-                  fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.0), borderSide: BorderSide.none),
-                ),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: TextField(
+                      controller: controller.searchController,
+                      onChanged: controller.onSearch,
+                      style: const TextStyle(fontFamily: 'Tajawal', color: Colors.black87),
+                      decoration: InputDecoration(
+                        hintText: 'ابحث بالاسم أو بـ ID المزود...',
+                        hintStyle: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 14),
+                        prefixIcon: const Icon(Icons.search_rounded, color: Colors.grey),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16.0), borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  SizedBox(
+                    height: 40,
+                    child: Obx(() => ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: controller.categories.length,
+                      itemBuilder: (context, index) {
+                        final cat = controller.categories[index];
+                        final bool isSelected = controller.selectedCategoryId.value == cat['id'];
+                        
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: ChoiceChip(
+                            label: Text(cat['display_name'] ?? cat['name']),
+                            selected: isSelected,
+                            onSelected: (_) => controller.selectCategory(cat['id']),
+                            selectedColor: orangeColor,
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white70,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12
+                            ),
+                            backgroundColor: Colors.white.withOpacity(0.1),
+                            checkmarkColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          ),
+                        );
+                      },
+                    )),
+                  ),
+                ],
               ),
             ),
 
@@ -77,7 +116,7 @@ class SearchProvidersScreen extends StatelessWidget {
                   separatorBuilder: (context, index) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final provider = controller.searchResults[index];
-                    return _buildProviderCard(provider, navyColor, orangeColor, bgColor);
+                    return _buildProviderCard(provider, controller, navyColor, orangeColor, bgColor);
                   },
                 );
               }),
@@ -88,7 +127,7 @@ class SearchProvidersScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProviderCard(UserModel provider, Color navyColor, Color orangeColor, Color bgColor) {
+  Widget _buildProviderCard(UserModel provider, SearchProvidersController controller, Color navyColor, Color orangeColor, Color bgColor) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -108,7 +147,12 @@ class SearchProvidersScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: orangeColor.withOpacity(0.5)),
             ),
-            child: Icon(Icons.person_outline_rounded, color: navyColor, size: 28),
+            child: provider.profilePicture != null 
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(11),
+                    child: Image.network(provider.profilePicture!, fit: BoxFit.cover, errorBuilder: (c, e, s) => Icon(Icons.person_outline_rounded, color: navyColor, size: 28)),
+                  )
+                : Icon(Icons.person_outline_rounded, color: navyColor, size: 28),
           ),
           const SizedBox(width: 16),
 
@@ -136,10 +180,19 @@ class SearchProvidersScreen extends StatelessWidget {
                 Text(provider.roleName ?? provider.type, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
                 const SizedBox(height: 12),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
-                    const Text('0.0', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1A2A44))),
+                    Row(
+                      children: [
+                        const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                        const SizedBox(width: 4),
+                        const Text('0.0', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1A2A44))),
+                      ],
+                    ),
+                    TextButton(
+                      onPressed: () => controller.inviteToProject(provider),
+                      child: Text('دعوة لمشروع', style: TextStyle(color: orangeColor, fontSize: 12, fontWeight: FontWeight.bold)),
+                    ),
                   ],
                 ),
               ],

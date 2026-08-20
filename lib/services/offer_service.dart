@@ -63,11 +63,6 @@ class OfferService extends GetxService {
     return [];
   }
 
-  Future<List<OfferModel>> fetchClientOffers({bool isPrivate = false}) async {
-     if (isPrivate) return fetchClientPrivateOffers();
-     return fetchClientPublicOffers();
-  }
-
   Future<bool> submitOffer(int projectId, Map<String, dynamic> data, {List<Map<String, dynamic>>? attachments}) async {
     final result = await submitOfferDetailed(projectId, data, attachments: attachments);
     return result['success'];

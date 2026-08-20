@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'my_projects_controller.dart';
 import '../../models/project_model.dart';
+import '../../models/project_report_model.dart';
 import '../../views/home/client_offers_screen.dart';
 import '../../views/home/add_project_screen.dart';
 import '../../services/project_service.dart';
@@ -12,6 +13,10 @@ class ClientProjectDetailsController extends GetxController {
 
   var project = ProjectModel(id: 0, title: '', description: '', status: '').obs;
   var isLoading = false.obs;
+  var isDeleting = false.obs;
+
+  var reports = <ProjectReportModel>[].obs;
+  var documents = <Map<String, dynamic>>[].obs;
   
   ClientProjectDetailsController({required ProjectModel projectData}) {
     project.value = projectData;
@@ -21,6 +26,8 @@ class ClientProjectDetailsController extends GetxController {
   void onInit() {
     super.onInit();
     refreshProjectDetails();
+    fetchReports();
+    fetchDocuments();
   }
 
   Future<void> refreshProjectDetails() async {
@@ -37,8 +44,26 @@ class ClientProjectDetailsController extends GetxController {
     }
   }
 
+  Future<void> fetchReports() async {
+    try {
+      final list = await _projectService.fetchProjectReports(project.value.id);
+      reports.assignAll(list);
+    } catch (e) {
+      print("Error fetching reports: $e");
+    }
+  }
+
+  Future<void> fetchDocuments() async {
+    try {
+      final list = await _projectService.fetchProjectDocuments(project.value.id);
+      documents.assignAll(list);
+    } catch (e) {
+      print("Error fetching documents: $e");
+    }
+  }
+
   void goToOffers() {
-    Get.to(() => ClientOffersScreen());
+    Get.to(() => ClientOffersScreen(projectId: project.value.id));
   }
 
   Future<void> editProject() async {
@@ -60,19 +85,29 @@ class ClientProjectDetailsController extends GetxController {
       confirmTextColor: Colors.white,
       buttonColor: Colors.redAccent,
       onConfirm: () async {
-        // Step 1: Call API to delete
-        // final success = await _projectService.deleteProject(project.value.id);
-        
-        // Mocking deletion for now as logic is not in ProjectService yet
-        myProjectsController.deletePendingProject(project.value.id);
         Get.back(); // close dialog
-        Get.back(); // return from details
-        Get.snackbar(
-          'تم الحذف',
-          'تم حذف المشروع بنجاح',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-        );
+        isDeleting.value = true;
+        
+        final success = await _projectService.deleteProject(project.value.id);
+        isDeleting.value = false;
+        
+        if (success) {
+          myProjectsController.fetchMyProjects();
+          Get.back(); // return from details
+          Get.snackbar(
+            'تم الحذف',
+            'تم حذف المشروع بنجاح',
+            backgroundColor: Colors.redAccent,
+            colorText: Colors.white,
+          );
+        } else {
+          Get.snackbar(
+            'خطأ',
+            'فشل حذف المشروع، قد يكون لديه عروض مقبولة',
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+          );
+        }
       },
     );
   }

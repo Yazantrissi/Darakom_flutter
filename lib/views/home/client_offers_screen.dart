@@ -6,9 +6,13 @@ import '../../models/offer_model.dart';
 import 'offer_details_screen.dart';
 
 class ClientOffersScreen extends StatelessWidget {
-  ClientOffersScreen({super.key});
+  final int? projectId;
+  ClientOffersScreen({super.key, this.projectId});
 
-  final ClientOffersController controller = Get.put(ClientOffersController());
+  late final ClientOffersController controller = Get.put(
+    ClientOffersController(projectId: projectId),
+    tag: projectId?.toString(), // Distinct controller for specific projects
+  );
 
   final Color navyColor = const Color(0xFF1A2A44);
   final Color orangeColor = const Color(0xFFF58A1E);
@@ -23,7 +27,7 @@ class ClientOffersScreen extends StatelessWidget {
         body: Column(
           children: [
             _buildCustomHeader(),
-            _buildCustomTabBar(),
+            if (projectId == null || projectId == 0) _buildCustomTabBar(),
             Expanded(
               child: Obx(() {
                 if (controller.isLoading.value) {
@@ -38,14 +42,17 @@ class ClientOffersScreen extends StatelessWidget {
                   return _buildEmptyState();
                 }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                  itemCount: currentOffers.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 20),
-                  itemBuilder: (context, index) {
-                    final offer = currentOffers[index];
-                    return _buildOfferCard(offer);
-                  },
+                return RefreshIndicator(
+                  onRefresh: controller.fetchOffers,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                    itemCount: currentOffers.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 20),
+                    itemBuilder: (context, index) {
+                      final offer = currentOffers[index];
+                      return _buildOfferCard(offer);
+                    },
+                  ),
                 );
               }),
             ),
@@ -75,12 +82,18 @@ class ClientOffersScreen extends StatelessWidget {
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 20),
-              onPressed: () => Get.find<ClientDashboardController>().changePage(0),
+              onPressed: () {
+                if (projectId != null) {
+                  Get.back();
+                } else {
+                  Get.find<ClientDashboardController>().changePage(0);
+                }
+              },
             ),
           ),
-          const Text(
-            'العروض المتاحة',
-            style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+          Text(
+            projectId != null ? 'عروض المشروع' : 'العروض المتاحة',
+            style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           Container(
             decoration: BoxDecoration(
@@ -157,15 +170,25 @@ class ClientOffersScreen extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: navyColor.withOpacity(0.1),
-                    child: Icon(Icons.apartment_rounded, color: navyColor, size: 20),
+                  Container(
+                    width: 45,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: navyColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: offer.providerAvatar != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(offer.providerAvatar!, fit: BoxFit.cover, errorBuilder: (c,e,s) => Icon(Icons.person, color: navyColor)),
+                          )
+                        : Icon(Icons.apartment_rounded, color: navyColor, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(offer.providerName ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
+                      Text(offer.providerName ?? "مزود خدمة", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
                       Text(offer.role ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500)),
                     ],
                   ),
@@ -192,37 +215,39 @@ class ClientOffersScreen extends StatelessWidget {
                   Text('(${offer.reviewsCount})', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12)),
                 ],
               ),
-              Text(offer.amount ?? "${offer.cost} ريال", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: orangeColor)),
+              Text(offer.amount ?? "${offer.cost} ل.س", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: orangeColor)),
             ],
           ),
           const Divider(height: 32),
           Row(
             children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              if (offer.status == 'pending') ...[
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () => controller.acceptOffer(offer),
+                    child: const Text('قبول', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   ),
-                  onPressed: () => controller.acceptOffer(offer),
-                  child: const Text('قبول', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.redAccent,
-                    side: const BorderSide(color: Colors.redAccent),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.redAccent,
+                      side: const BorderSide(color: Colors.redAccent),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () => controller.rejectOffer(offer),
+                    child: const Text('رفض', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   ),
-                  onPressed: () => controller.rejectOffer(offer),
-                  child: const Text('رفض', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                 ),
-              ),
-              const SizedBox(width: 8),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -251,7 +276,7 @@ class ClientOffersScreen extends StatelessWidget {
         children: [
           Icon(Icons.assignment_late_outlined, size: 64, color: Colors.grey.shade300),
           const SizedBox(height: 16),
-          Text('لا توجد عروض حالياً في هذا القسم', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 16)),
+          Text('لا توجد عروض حالياً لهذا الطلب', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 16)),
         ],
       ),
     );

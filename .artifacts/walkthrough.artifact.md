@@ -1,33 +1,39 @@
-# Walkthrough - Project Tracking Backend Integration
+# Walkthrough - Final Client-Side Backend Polish
 
-I have fully connected the Project Tracking (Timeline) screen with the Laravel backend, ensuring that both Clients and Providers see real-time progress.
+I have successfully implemented the final set of features and refinements for the client-side of the Darakom app, ensuring complete synchronization with the Laravel backend.
 
-## Key Features Added
+## Key Features Implemented
 
-### 1. Dynamic Project Steps
-- **Model**: Created `ProjectStepModel` to map backend milestones.
-- **Service**: Updated `ProjectService` to fetch steps from `/api/client/projects/{id}/steps` or `/api/provider/projects/{id}/steps`.
-- **UI**: The timeline now dynamically renders steps based on the database, automatically marking them as completed (green) or pending (grey).
+### 1. Real Project Deletion
+- **Service**: Added `deleteProject` to `ProjectService` calling `DELETE /api/projects/{id}`.
+- **Controller**: Replaced the mock deletion logic in `ClientProjectDetailsController` with a real API call.
+- **UI**: Added a loading overlay during the deletion process to prevent multiple clicks and ensure a smooth transition back to the project list.
 
-### 2. Live Progress Synchronization
-- The overall progress bar at the top of the tracking screen now accurately reflects the `progress_percentage` field from the backend `Project` model.
-- Providers can trigger a refresh after adding a completed stage, ensuring the UI stays in sync.
+### 2. Tabbed Project Details View
+- **Information Tab**: Displays general project metadata (area, type, location).
+- **Reports Tab**: A new dynamic section that fetches and displays progress reports submitted by the provider via the `GET /api/client/projects/{id}/reports` endpoint. It supports displaying report descriptions, dates, and associated images.
+- **Files Tab**: A dedicated section to browse all documents uploaded for the project using the `GET /api/client/projects/{id}/documents` endpoint.
 
-### 3. Unified User Experience
-- **Common Logic**: Both user roles use the same tracking screen, but with role-specific actions (e.g., Providers see "Add Completed Stage", while Clients only see "Submit Complaint").
-- **Pull-to-Refresh**: Added a standard refresh indicator to allow manual data updates.
+### 3. Integrated Project Invitations & Offers
+- **Invitations**: Clients can now directly invite providers from the "Search" or "Favorites" screens. This opens a dialog to select an existing project and sends a formal invitation via the API.
+- **Project-Specific Offers**: The "View Offers" button in project details now filters and displays only the bids received for *that specific project*.
+
+### 4. Profile & Data Consistency
+- **Avatar Support**: Updated `UserModel` and `ProfileScreen` to handle the `avatar` field from the backend, ensuring profile pictures are displayed and updated correctly.
+- **Province Mapping**: Synchronized province data to match the latest backend resource structure.
 
 ## Technical Summary
 
-| Component | Logic Update |
+| Component | Improvement |
 | :--- | :--- |
-| **ProjectStepModel** | Handles `id`, `title`, `progress_percent`, and `status`. |
-| **ProjectTrackingController** | Orchestrates dual API calls (Project details + Project steps) to populate the view. |
-| **ProjectService** | Centralized step fetching with role-based routing. |
+| **ProjectReportModel** | New model to handle progress updates from providers. |
+| **ClientProjectDetailsScreen** | Upgraded to a `DefaultTabController` with three specialized tabs. |
+| **SearchProvidersController** | Refactored to support real-time category filtering and direct invitations. |
+| **InteractionService** | Expanded to include invitation and category-based fetching logic. |
 
 ## Verification Results
-- **Visuals**: Confirmed that the timeline icons and connecting lines change color correctly based on step status.
-- **Data Flow**: Verified that navigation arguments (projectId, isProvider) are correctly handled.
+- **Connectivity**: Confirmed that accepting/rejecting offers correctly updates the backend project status.
+- **Data Flow**: Verified that reports and documents are pulled and rendered correctly in their respective tabs.
 
 > [!TIP]
-> Providers should add steps to the project via the backend or specialized UI to see them appear in this timeline.
+> The app is now fully functional for clients. You can manage the entire lifecycle of a project, from creation and invitation to tracking progress through detailed provider reports.

@@ -26,9 +26,8 @@ class RatingsController extends GetxController {
       final ratings = await _interactionService.fetchClientRatings();
       
       // Categorizing based on a type or logic if available in backend
-      // Assuming for now the API returns all client-related ratings
       givenRatings.value = ratings.where((r) => r.type == 'given' || r.reviewerName == null).toList();
-      receivedRatings.value = ratings.where((r) => r.type == 'received' || r.providerName == null).toList();
+      receivedRatings.value = ratings.where((r) => r.type == 'received' || r.toUserName == null).toList();
       
     } catch (e) {
       print("Error in fetchRatings: $e");
@@ -39,17 +38,17 @@ class RatingsController extends GetxController {
 
   Future<void> submitRating(int projectId, double rating, String comment) async {
     isLoading.value = true;
-    final success = await _interactionService.submitRating(projectId, {
+    final result = await _interactionService.submitRating(projectId, {
       'rating': rating,
       'comment': comment,
     });
     isLoading.value = false;
 
-    if (success) {
+    if (result['success'] == true) {
       Get.snackbar('تم بنجاح', 'شكراً لك على تقييمك!', backgroundColor: Colors.green, colorText: Colors.white);
       fetchRatings();
     } else {
-      Get.snackbar('خطأ', 'فشل إرسال التقييم، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar('خطأ', result['message'] ?? 'فشل إرسال التقييم، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
     }
   }
 }

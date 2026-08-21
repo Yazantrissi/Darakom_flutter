@@ -194,23 +194,6 @@ class ClientProjectDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAdditionalDetailsGrid(ProjectModel projectData) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 2.2,
-      children: [
-        _buildDetailItem(Icons.straighten, 'المساحة', '${projectData.area} م²'),
-        _buildDetailItem(Icons.category_outlined, 'النوع', projectData.work_type == 'construction' ? 'إنشاء' : 'تشطيب'),
-        _buildDetailItem(Icons.engineering_outlined, 'التخصص المطلوب', projectData.specialization ?? "غير محدد"),
-        _buildDetailItem(Icons.timer_outlined, 'مدة الطرح', '${projectData.duration} يوم'),
-      ],
-    );
-  }
-
   Widget _buildDetailItem(IconData icon, String label, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -235,6 +218,23 @@ class ClientProjectDetailsScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAdditionalDetailsGrid(ProjectModel projectData) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      childAspectRatio: 2.2,
+      children: [
+        _buildDetailItem(Icons.straighten, 'المساحة', '${projectData.area} م²'),
+        _buildDetailItem(Icons.category_outlined, 'النوع', projectData.work_type == 'construction' ? 'إنشاء' : 'تشطيب'),
+        _buildDetailItem(Icons.engineering_outlined, 'التخصص المطلوب', projectData.specialization ?? "غير محدد"),
+        _buildDetailItem(Icons.timer_outlined, 'مدة الطرح', '${projectData.duration} يوم'),
+      ],
     );
   }
 

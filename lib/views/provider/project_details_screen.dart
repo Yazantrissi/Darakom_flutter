@@ -44,7 +44,7 @@ class ProjectDetailsScreen extends StatelessWidget {
                 children: [
                   Expanded(child: _buildDetailCard(Icons.straighten_outlined, 'المساحة', '350 م²')), // Mock data
                   const SizedBox(width: 16),
-                  Expanded(child: _buildDetailCard(Icons.map_outlined, 'المحافظة', projectData.location ?? "")),
+                  Expanded(child: _buildDetailCard(Icons.map_outlined, 'المحافظة', projectData.address ?? "")),
                 ],
               ),
               const SizedBox(height: 16),

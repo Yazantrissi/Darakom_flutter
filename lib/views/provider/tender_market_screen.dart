@@ -150,7 +150,7 @@ class TenderMarketScreen extends StatelessWidget {
           const SizedBox(height: 12),
           _buildInfoRow(Icons.person_outline, tender.clientName ?? ""),
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.location_on_outlined, tender.location ?? ""),
+          _buildInfoRow(Icons.location_on_outlined, tender.address ?? ""),
           const SizedBox(height: 8),
           _buildInfoRow(Icons.payments_outlined, tender.budget ?? "", color: Colors.green.shade700),
           const Divider(height: 32),

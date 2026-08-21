@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../models/complaint_model.dart';
 import '../../services/interaction_service.dart';
+import '../../services/project_service.dart';
 
 class ComplaintsController extends GetxController {
   final InteractionService _interactionService = Get.find<InteractionService>();
+  final ProjectService _projectService = Get.find<ProjectService>();
 
   var isLoading = false.obs;
 
@@ -43,15 +45,29 @@ class ComplaintsController extends GetxController {
     if (description.isEmpty) return;
     
     isLoading.value = true;
-    final success = await _interactionService.submitComplaint(projectId, description);
+    
+    // 1. Fetch project to get performer ID
+    final project = await _projectService.fetchProjectDetails(projectId);
+    if (project == null || project.performerUserId == null) {
+      isLoading.value = false;
+      Get.snackbar('تنبيه', 'لا يمكن تقديم شكوى حالياً، المقاول غير محدد', backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
+    // 2. Submit complaint
+    final result = await _interactionService.submitComplaint(
+      projectId: projectId, 
+      text: description,
+      againstUserId: project.performerUserId!,
+    );
     isLoading.value = false;
 
-    if (success) {
-      Get.snackbar('تم الإرسال', 'تم رفع الشكوى للإدارة وسيتم التواصل معك قريباً', 
+    if (result['success'] == true) {
+      Get.snackbar('تم الإرسال', result['message'] ?? 'تم رفع الشكوى للإدارة وسيتم التواصل معك قريباً', 
         backgroundColor: Colors.green, colorText: Colors.white);
       fetchComplaints();
     } else {
-      Get.snackbar('خطأ', 'فشل إرسال الشكوى، حاول مرة أخرى', 
+      Get.snackbar('خطأ', result['message'] ?? 'فشل إرسال الشكوى، حاول مرة أخرى', 
         backgroundColor: Colors.redAccent, colorText: Colors.white);
     }
   }

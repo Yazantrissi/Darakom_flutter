@@ -10,13 +10,13 @@ class MyProjectsController extends GetxController {
 
   var isLoading = false.obs;
 
-  // 1. قائمة المشاريع قيد الانتظار
+  // 1. قائمة المشاريع قيد الانتظار (Execution: not_started)
   var pendingProjects = <ProjectModel>[].obs;
 
-  // 2. قائمة المشاريع قيد الإنشاء
+  // 2. قائمة المشاريع قيد الإنشاء (Execution: in_progress)
   var activeProjects = <ProjectModel>[].obs;
 
-  // 3. قائمة المشاريع المنتهية
+  // 3. قائمة المشاريع المنتهية (Execution: finished)
   var completedProjects = <ProjectModel>[].obs;
 
   @override
@@ -30,9 +30,10 @@ class MyProjectsController extends GetxController {
     try {
       final allProjects = await _projectService.fetchClientProjects();
       
-      pendingProjects.value = allProjects.where((p) => p.status == 'new' || p.status == 'pending').toList();
-      activeProjects.value = allProjects.where((p) => p.status == 'active').toList();
-      completedProjects.value = allProjects.where((p) => p.status == 'completed' || p.status == 'finished').toList();
+      // Categorizing based on execution_status from backend
+      pendingProjects.value = allProjects.where((p) => p.executionStatus == 'not_started').toList();
+      activeProjects.value = allProjects.where((p) => p.executionStatus == 'in_progress').toList();
+      completedProjects.value = allProjects.where((p) => p.executionStatus == 'finished' || p.status == 'completed').toList();
       
     } catch (e) {
       print("Error fetching my projects: $e");
@@ -41,16 +42,12 @@ class MyProjectsController extends GetxController {
     }
   }
 
-  void deletePendingProject(int id) {
-    pendingProjects.removeWhere((p) => p.id == id);
+  Future<void> refreshProjects() async {
+    await fetchMyProjects();
   }
 
-  void updatePendingProject(ProjectModel updatedProject) {
-    int index = pendingProjects.indexWhere((p) => p.id == updatedProject.id);
-    if (index != -1) {
-      pendingProjects[index] = updatedProject;
-      pendingProjects.refresh();
-    }
+  void deletePendingProject(int id) {
+    pendingProjects.removeWhere((p) => p.id == id);
   }
 
   // --- دوال التفاعل مع المشاريع المنتهية ---
@@ -103,22 +100,27 @@ class MyProjectsController extends GetxController {
       onConfirm: () async {
         Get.back();
         isLoading.value = true;
-        final success = await _interactionService.submitRating(project.id, {
+        final result = await _interactionService.submitRating(project.id, {
           'rating': selectedRating,
           'comment': commentController.text,
         });
         isLoading.value = false;
 
-        if (success) {
-          Get.snackbar('شكراً لك', 'تم إرسال تقييمك بنجاح', backgroundColor: Colors.green, colorText: Colors.white);
+        if (result['success']) {
+          Get.snackbar('شكراً لك', result['message'], backgroundColor: Colors.green, colorText: Colors.white);
         } else {
-          Get.snackbar('خطأ', 'فشل إرسال التقييم، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+          Get.snackbar('خطأ', result['message'], backgroundColor: Colors.redAccent, colorText: Colors.white);
         }
       },
     );
   }
 
   void showComplaintDialog(ProjectModel project) {
+    if (project.performerUserId == null) {
+      Get.snackbar('تنبيه', 'لا يمكن تقديم شكوى على مشروع ليس له مقاول منفذ بعد', backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
     final TextEditingController complaintController = TextEditingController();
     Get.defaultDialog(
       title: 'تقديم شكوى',
@@ -147,13 +149,17 @@ class MyProjectsController extends GetxController {
         if (complaintController.text.isNotEmpty) {
           Get.back();
           isLoading.value = true;
-          final success = await _interactionService.submitComplaint(project.id, complaintController.text);
+          final result = await _interactionService.submitComplaint(
+            projectId: project.id, 
+            text: complaintController.text,
+            againstUserId: project.performerUserId!,
+          );
           isLoading.value = false;
 
-          if (success) {
-            Get.snackbar('تم الاستلام', 'تم رفع الشكوى للإدارة وسيتم التواصل معك قريباً', backgroundColor: Colors.green, colorText: Colors.white);
+          if (result['success']) {
+            Get.snackbar('تم الاستلام', result['message'], backgroundColor: Colors.green, colorText: Colors.white);
           } else {
-            Get.snackbar('خطأ', 'فشل إرسال الشكوى، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+            Get.snackbar('خطأ', result['message'], backgroundColor: Colors.redAccent, colorText: Colors.white);
           }
         } else {
           Get.snackbar('تنبيه', 'يرجى كتابة تفاصيل الشكوى أولاً', backgroundColor: Colors.orange, colorText: Colors.white);

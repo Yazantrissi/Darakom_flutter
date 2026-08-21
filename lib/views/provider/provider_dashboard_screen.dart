@@ -371,7 +371,7 @@ class _ProviderHomeTab extends StatelessWidget {
                   child: LinearProgressIndicator(value: project.progressPercentage / 100, backgroundColor: Colors.grey.shade200, valueColor: AlwaysStoppedAnimation<Color>(orangeColor), minHeight: 8),
                 ),
                 const SizedBox(height: 12),
-                Text('المرحلة القادمة: ${project.nextMilestone ?? ""}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
+                Text('المرحلة القادمة: قيد التحديث', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade600, fontSize: 12)),
               ],
             ),
           );

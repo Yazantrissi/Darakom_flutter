@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../controllers/home/client_dashboard_controller.dart';
-import '../../controllers/auth/auth_controller.dart';
+import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 import 'profile_screen.dart'; // استيراد شاشة البروفايل
 import '../tracking/project_tracking_screen.dart'; // استيراد شاشة متابعة المشروع
@@ -15,6 +16,7 @@ class CustomDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ClientDashboardController controller = Get.find<ClientDashboardController>();
+    final AuthService authService = Get.find<AuthService>();
 
     return Drawer(
       backgroundColor: const Color(0xFF0D1B2A), // الكحلي الداكن جداً
@@ -124,8 +126,15 @@ class CustomDrawer extends StatelessWidget {
               icon: Icons.logout_rounded,
               title: 'تسجيل الخروج',
               color: Colors.redAccent,
-              onTap: () {
-                Get.find<AuthController>().logout();
+              onTap: () async {
+                Get.back();
+                final success = await authService.logout();
+                if (!success) {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.clear();
+                }
+                Get.offAll(() => LoginScreen());
+                Get.snackbar('تسجيل الخروج', 'تم تسجيل الخروج بنجاح', backgroundColor: Colors.black87, colorText: Colors.white);
               },
             ),
             const SizedBox(height: 16),

@@ -17,6 +17,9 @@ class ProjectTrackingController extends GetxController {
   var progress = 0.0.obs;
   var steps = <ProjectStepModel>[].obs;
   var isLoading = false.obs;
+  
+  // Track performer ID for complaints
+  int? performerUserId;
 
   @override
   void onInit() {
@@ -35,10 +38,11 @@ class ProjectTrackingController extends GetxController {
     try {
       isLoading.value = true;
       
-      // 1. Load project details for overall progress
+      // 1. Load project details for overall progress and performer info
       final project = await _projectService.fetchProjectDetails(projectId);
       if (project != null) {
         progress.value = project.progressPercentage / 100.0;
+        performerUserId = project.performerUserId;
       }
 
       // 2. Load milestones/steps
@@ -53,6 +57,11 @@ class ProjectTrackingController extends GetxController {
   }
 
   void showComplaintDialog() {
+    if (!isProvider && performerUserId == null) {
+      Get.snackbar('تنبيه', 'لا يمكن تقديم شكوى حالياً، المقاول غير محدد', backgroundColor: Colors.orange, colorText: Colors.white);
+      return;
+    }
+
     final TextEditingController complaintController = TextEditingController();
     Get.defaultDialog(
       title: 'تقديم شكوى',
@@ -84,13 +93,24 @@ class ProjectTrackingController extends GetxController {
       onConfirm: () async {
         if (complaintController.text.isNotEmpty) {
           Get.back();
-          final success = await _interactionService.submitComplaint(projectId, complaintController.text);
-          if (success) {
-            Get.snackbar('تم الإرسال', 'تم رفع الشكوى للإدارة وسيتم التواصل معك قريباً', 
-              backgroundColor: Colors.green, colorText: Colors.white);
+          isLoading.value = true;
+          
+          // Determine who the complaint is against
+          // If Client is reporting, it's against performerUserId
+          // If Provider is reporting, it might be against the Client (this part can be expanded)
+          int againstId = performerUserId ?? 0; 
+          
+          final result = await _interactionService.submitComplaint(
+            projectId: projectId, 
+            text: complaintController.text,
+            againstUserId: againstId,
+          );
+          isLoading.value = false;
+
+          if (result['success']) {
+            Get.snackbar('تم الإرسال', result['message'], backgroundColor: Colors.green, colorText: Colors.white);
           } else {
-            Get.snackbar('خطأ', 'فشل إرسال الشكوى، حاول مرة أخرى', 
-              backgroundColor: Colors.redAccent, colorText: Colors.white);
+            Get.snackbar('خطأ', result['message'], backgroundColor: Colors.redAccent, colorText: Colors.white);
           }
         } else {
           Get.snackbar('تنبيه', 'يرجى كتابة تفاصيل الشكوى أولاً', backgroundColor: Colors.orange, colorText: Colors.white);

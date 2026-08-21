@@ -1,34 +1,41 @@
-# Implementation Plan - Dynamic Roles and Provinces for Registration
+# Implementation Plan - Fixing Ratings and Complaints Submission
 
-This plan outlines the steps to replace hardcoded roles and provinces in the `RegisterScreen` with dynamic data fetched from the Laravel backend.
+This plan addresses the "Submission Failed" error when a client tries to send a rating or a complaint by aligning the frontend request structure with the Laravel backend requirements.
+
+## User Review Required
+
+> [!IMPORTANT]
+> - **Complaint Requirements**: The backend requires identifying *who* the complaint is against. I will update the project model to fetch the Provider's ID so the app can automatically route the complaint to the correct person.
+> - **Rating Rules**: Ratings will only be successful for projects marked as "Finished" in the system. I will ensure the UI accurately reflects this state.
 
 ## Proposed Changes
 
-### 1. Controller Layer
+### 1. Data Models
 
-#### [MODIFY] [register_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/auth/register_controller.dart)
-- Update `_fetchInitialData()` to call:
-    - `_authService.fetchProvinces()`
-    - `_authService.fetchRoles()`
-    - `_authService.fetchDocumentTypes()`
-- Clear the hardcoded initial values for `provinces`, `roles`, and `documentTypes`.
-- Update the `register()` method to use the selected `RoleModel` ID correctly.
-- Update the document upload logic to use the first available `DocumentTypeModel` ID if no specific type is selected by the user.
+#### [MODIFY] [project_model.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/models/project_model.dart)
+- Add `performerUserId` field.
+- Update `fromJson` to extract this ID from the `performer` relation or `provider_profile` data.
 
-### 2. View Layer
+### 2. Service Layer
 
-#### [MODIFY] [register_screen.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/views/auth/register_screen.dart)
-- Ensure the `DropdownButtonFormField` for "Provinces" and "Roles" (Specialization) are correctly bound to the dynamic lists in the controller.
-- Add a loading indicator for the initial data fetch if necessary, or rely on the reactive nature of the lists.
+#### [MODIFY] [interaction_service.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/services/interaction_service.dart)
+- Update `submitComplaint(int projectId, String text, int againstUserId)`:
+    - Include `type: 'against_provider'` and `against_user_id` in the payload.
+- Update `submitRating(int projectId, Map<String, dynamic> data)`:
+    - Ensure it uses the correct backend field names (`rate`, `comment`).
+
+### 3. Controller Layer
+
+#### [MODIFY] [my_projects_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/home/my_projects_controller.dart)
+- Update `showComplaintDialog` to pass the `project.performerUserId` to the service.
+
+#### [MODIFY] [project_tracking_controller.dart](file:///C:/Users/Yazan/Desktop/darakom_app/lib/controllers/tracking/project_tracking_controller.dart)
+- Fetch and store the `performerUserId` when loading project details.
+- Update `showComplaintDialog` accordingly.
 
 ## Verification Plan
 
-### Automated Tests
-- Run `flutter analyze` to verify syntax and type safety.
-
 ### Manual Verification
-1.  Open the Registration screen.
-2.  Switch to the "Service Provider" (مزود خدمة) tab.
-3.  Click the "Specialization" (التخصص) dropdown and verify that roles match the `roles` table in the backend database.
-4.  Verify that the "Province" (المحافظة) dropdown displays the full list from the backend.
-5.  Complete a registration and verify that the `role_id` and `province_id` are correctly sent to the server.
+1. **Submit Complaint**: Open a project with an assigned provider. Submit a complaint and verify it appears in the backend `complaints` table with the correct `against_user_id`.
+2. **Submit Rating**: Complete a project (set to `finished`). Rate it and verify the stars and comment are saved in the `ratings` table.
+3. **Error Handling**: Try rating a project twice or one that isn't finished; verify the app shows the specific error message from the server (e.g., "Already rated").

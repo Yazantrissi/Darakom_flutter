@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 import '../../services/auth_service.dart';
+import '../../views/auth/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsController extends GetxController {
   final AuthService _authService = Get.find<AuthService>();
@@ -12,7 +14,15 @@ class SettingsController extends GetxController {
   }
 
   Future<void> logout() async {
-    // Calling the centralized logout logic that clears prefs and revokes token on server
-    await _authService.logout();
+    final success = await _authService.logout();
+    
+    if (success) {
+      Get.offAll(() => LoginScreen());
+    } else {
+      // Manual cleanup if API call fails
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      Get.offAll(() => LoginScreen());
+    }
   }
 }

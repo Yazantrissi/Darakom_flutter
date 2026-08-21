@@ -4,6 +4,7 @@ import '../core/api_constants.dart';
 import '../models/complaint_model.dart';
 import '../models/rating_model.dart';
 import '../models/user_model.dart';
+import 'package:dio/dio.dart';
 
 class InteractionService extends GetxService {
   final ApiService _apiService = Get.find<ApiService>();
@@ -22,19 +23,33 @@ class InteractionService extends GetxService {
     return [];
   }
 
-  Future<bool> submitComplaint(int projectId, String text) async {
+  Future<Map<String, dynamic>> submitComplaint({
+    required int projectId, 
+    required String text, 
+    required int againstUserId,
+    String type = 'against_provider',
+  }) async {
     try {
       final response = await _apiService.post(
         ApiConstants.clientComplaints, 
         data: {
           'text': text,
           'project_id': projectId,
+          'against_user_id': againstUserId,
+          'type': type,
         }
       );
-      return response.data['success'];
+      return {
+        'success': response.data['success'] ?? false,
+        'message': response.data['message'] ?? 'تم إرسال الشكوى',
+      };
+    } on DioException catch (e) {
+      return {
+        'success': false,
+        'message': e.response?.data['message'] ?? 'فشل إرسال الشكوى',
+      };
     } catch (e) {
-      print("Error submitting complaint: $e");
-      return false;
+      return {'success': false, 'message': 'حدث خطأ غير متوقع'};
     }
   }
 
@@ -52,8 +67,9 @@ class InteractionService extends GetxService {
     return [];
   }
 
-  Future<bool> submitRating(int projectId, Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> submitRating(int projectId, Map<String, dynamic> data) async {
     try {
+      // Backend expects 'rate' and 'comment'
       final response = await _apiService.post(
         "client/projects/$projectId/ratings", 
         data: {
@@ -61,10 +77,17 @@ class InteractionService extends GetxService {
           'comment': data['comment'],
         }
       );
-      return response.data['success'];
+      return {
+        'success': response.data['success'] ?? false,
+        'message': response.data['message'] ?? 'تم إرسال التقييم بنجاح',
+      };
+    } on DioException catch (e) {
+      return {
+        'success': false,
+        'message': e.response?.data['message'] ?? 'فشل إرسال التقييم',
+      };
     } catch (e) {
-      print("Error submitting rating: $e");
-      return false;
+      return {'success': false, 'message': 'حدث خطأ غير متوقع'};
     }
   }
 

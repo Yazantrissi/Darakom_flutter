@@ -15,7 +15,8 @@ class ProviderProjectsController extends GetxController {
       title: 'فيلا حي الياسمين',
       clientName: 'محمد العتيبي',
       progressPercentage: 65,
-      status: 'قيد التنفيذ',
+      status: 'active',
+      executionStatus: 'in_progress',
       description: '',
     ),
     ProjectModel(
@@ -23,7 +24,8 @@ class ProviderProjectsController extends GetxController {
       title: 'تجديد عمارة سكنية',
       clientName: 'أحمد خالد',
       progressPercentage: 30,
-      status: 'قيد التنفيذ',
+      status: 'active',
+      executionStatus: 'in_progress',
       description: '',
     ),
   ].obs;
@@ -35,7 +37,8 @@ class ProviderProjectsController extends GetxController {
       title: 'تصميم مكتب تجاري',
       clientName: 'شركة النور',
       progressPercentage: 85,
-      status: 'قيد التنفيذ',
+      status: 'active',
+      executionStatus: 'in_progress',
       description: '',
     ),
   ].obs;

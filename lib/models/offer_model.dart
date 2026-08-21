@@ -2,6 +2,7 @@ class OfferModel {
   final int id;
   final int projectId;
   final String status;
+  final String? statusLabel;
   final double cost;
   final int duration;
   final String durationUnit;
@@ -22,6 +23,7 @@ class OfferModel {
     required this.id,
     required this.projectId,
     required this.status,
+    this.statusLabel,
     required this.cost,
     required this.duration,
     required this.durationUnit,
@@ -40,23 +42,32 @@ class OfferModel {
   });
 
   factory OfferModel.fromJson(Map<String, dynamic> json) {
-    // Extracting nested provider and project info based on Laravel backend structure
+    // 1. Extract Provider info
     final provider = json['provider'] as Map<String, dynamic>?;
-    final project = json['project'] as Map<String, dynamic>?;
-    
-    // Handling provider user nested structure if it's there (common in Laravel with() relations)
     final providerUser = provider?['user'] as Map<String, dynamic>?;
     final providerRole = provider?['role'] as Map<String, dynamic>?;
 
-    String? name = provider?['name'] ?? providerUser?['full_name'];
+    String? name = provider?['name'] ?? 
+                  providerUser?['full_name'] ?? 
+                  (providerUser != null ? "${providerUser['first_name']} ${providerUser['last_name']}" : null);
+    
     String? avatar = provider?['avatar'] ?? providerUser?['avatar'];
+    if (avatar != null && !avatar.startsWith('http')) {
+       // Assuming it's a relative path from storage
+       avatar = "http://127.0.0.1:8000/storage/$avatar";
+    }
+
     String? roleName = provider?['role_name'] ?? providerRole?['name'] ?? "مزود خدمة";
     double avgRating = (provider?['average_rating'] ?? json['rating'] ?? 0.0).toDouble();
+
+    // 2. Extract Project info
+    final project = json['project'] as Map<String, dynamic>?;
 
     return OfferModel(
       id: json['id'] ?? 0,
       projectId: project?['id'] ?? json['project_id'] ?? 0,
-      status: json['status'] ?? "",
+      status: json['status'] ?? "pending",
+      statusLabel: json['status_label'],
       cost: (json['cost'] ?? 0).toDouble(),
       duration: json['duration'] ?? 0,
       durationUnit: json['duration_unit'] ?? json['durationUnit'] ?? "يوم",

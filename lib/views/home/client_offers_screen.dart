@@ -11,7 +11,7 @@ class ClientOffersScreen extends StatelessWidget {
 
   late final ClientOffersController controller = Get.put(
     ClientOffersController(projectId: projectId),
-    tag: projectId?.toString(), // Distinct controller for specific projects
+    tag: projectId?.toString(), 
   );
 
   final Color navyColor = const Color(0xFF1A2A44);
@@ -92,7 +92,7 @@ class ClientOffersScreen extends StatelessWidget {
             ),
           ),
           Text(
-            projectId != null ? 'عروض المشروع' : 'العروض المتاحة',
+            projectId != null ? 'عروض المشروع' : 'العروض الواردة',
             style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           Container(
@@ -101,8 +101,8 @@ class ClientOffersScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: IconButton(
-              icon: const Icon(Icons.search_rounded, color: Colors.white, size: 22),
-              onPressed: controller.onSearchTap,
+              icon: const Icon(Icons.refresh_rounded, color: Colors.white, size: 22),
+              onPressed: controller.fetchOffers,
             ),
           ),
         ],
@@ -121,8 +121,8 @@ class ClientOffersScreen extends StatelessWidget {
       ),
       child: Obx(() => Row(
         children: [
-          _buildTabItem('عروض عامة', 0),
-          _buildTabItem('عروض خاصة', 1),
+          _buildTabItem('عروض المشاريع العامة', 0),
+          _buildTabItem('عروض المشاريع الخاصة', 1),
         ],
       )),
     );
@@ -146,7 +146,7 @@ class ClientOffersScreen extends StatelessWidget {
               fontFamily: 'Tajawal',
               color: isSelected ? Colors.white : Colors.grey.shade600,
               fontWeight: FontWeight.bold,
-              fontSize: 14,
+              fontSize: 12,
             ),
           ),
         ),
@@ -165,6 +165,23 @@ class ClientOffersScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Project Name (Header)
+          Row(
+            children: [
+              Icon(Icons.assignment_outlined, size: 14, color: orangeColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  offer.projectName ?? "مشروع غير محدد",
+                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: orangeColor),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -180,25 +197,29 @@ class ClientOffersScreen extends StatelessWidget {
                     child: offer.providerAvatar != null
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.network(offer.providerAvatar!, fit: BoxFit.cover, errorBuilder: (c,e,s) => Icon(Icons.person, color: navyColor)),
+                            child: Image.network(
+                              offer.providerAvatar!, 
+                              fit: BoxFit.cover, 
+                              errorBuilder: (c,e,s) => Icon(Icons.person, color: navyColor)
+                            ),
                           )
-                        : Icon(Icons.apartment_rounded, color: navyColor, size: 20),
+                        : Icon(Icons.person_outline_rounded, color: navyColor, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(offer.providerName ?? "مزود خدمة", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: navyColor)),
-                      Text(offer.role ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500)),
+                      Text(offer.providerName ?? "مزود خدمة", style: TextStyle(fontFamily: 'Tajawal', fontSize: 15, fontWeight: FontWeight.bold, color: navyColor)),
+                      Text(offer.role ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: Colors.grey.shade500)),
                     ],
                   ),
                 ],
               ),
-              if (offer.badge != null)
+              if (offer.statusLabel != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: orangeColor.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                  child: Text(offer.badge!, style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 10, fontWeight: FontWeight.bold)),
+                  decoration: BoxDecoration(color: navyColor.withOpacity(0.05), borderRadius: BorderRadius.circular(20)),
+                  child: Text(offer.statusLabel!, style: TextStyle(fontFamily: 'Tajawal', color: navyColor, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
             ],
           ),
@@ -212,7 +233,7 @@ class ClientOffersScreen extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text('${offer.rating}', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: navyColor)),
                   const SizedBox(width: 4),
-                  Text('(${offer.reviewsCount})', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12)),
+                  Text('(${offer.reviewsCount})', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 11)),
                 ],
               ),
               Text(offer.amount ?? "${offer.cost} ل.س", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: orangeColor)),
@@ -229,6 +250,7 @@ class ClientOffersScreen extends StatelessWidget {
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => controller.acceptOffer(offer),
                     child: const Text('قبول', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
@@ -241,6 +263,7 @@ class ClientOffersScreen extends StatelessWidget {
                       foregroundColor: Colors.redAccent,
                       side: const BorderSide(color: Colors.redAccent),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => controller.rejectOffer(offer),
                     child: const Text('رفض', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
@@ -255,6 +278,7 @@ class ClientOffersScreen extends StatelessWidget {
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onPressed: () => Get.to(() => OfferDetailsScreen(offer: offer))?.then((val) {
                     if (val == true) controller.fetchOffers();

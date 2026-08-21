@@ -11,7 +11,7 @@ class ClientProjectDetailsController extends GetxController {
   final ProjectService _projectService = Get.find<ProjectService>();
   final MyProjectsController myProjectsController = Get.find<MyProjectsController>();
 
-  var project = ProjectModel(id: 0, title: '', description: '', status: '').obs;
+  var project = ProjectModel(id: 0, title: '', description: '', status: '', executionStatus: 'not_started').obs;
   var isLoading = false.obs;
   var isDeleting = false.obs;
 

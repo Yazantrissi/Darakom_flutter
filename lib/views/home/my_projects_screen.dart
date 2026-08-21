@@ -4,7 +4,6 @@ import '../../controllers/home/my_projects_controller.dart';
 import '../../controllers/home/client_dashboard_controller.dart';
 import '../../models/project_model.dart';
 import '../tracking/project_tracking_screen.dart';
-import 'client_offers_screen.dart';
 import 'client_project_details_screen.dart';
 
 class MyProjectsScreen extends StatelessWidget {
@@ -29,15 +28,27 @@ class MyProjectsScreen extends StatelessWidget {
               _buildCustomHeader(),
               Expanded(
                 child: Obx(() {
-                  if (controller.isLoading.value) {
+                  if (controller.isLoading.value && 
+                      controller.pendingProjects.isEmpty && 
+                      controller.activeProjects.isEmpty && 
+                      controller.completedProjects.isEmpty) {
                     return const Center(child: CircularProgressIndicator());
                   }
                   
                   return TabBarView(
                     children: [
-                      _buildPendingProjectsList(),
-                      _buildActiveProjectsList(),
-                      _buildCompletedProjectsList(),
+                      RefreshIndicator(
+                        onRefresh: controller.refreshProjects,
+                        child: _buildPendingProjectsList(),
+                      ),
+                      RefreshIndicator(
+                        onRefresh: controller.refreshProjects,
+                        child: _buildActiveProjectsList(),
+                      ),
+                      RefreshIndicator(
+                        onRefresh: controller.refreshProjects,
+                        child: _buildCompletedProjectsList(),
+                      ),
                     ],
                   );
                 }),
@@ -107,6 +118,7 @@ class MyProjectsScreen extends StatelessWidget {
     }
     return ListView.separated(
       padding: const EdgeInsets.all(24.0),
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: controller.pendingProjects.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
@@ -147,7 +159,7 @@ class MyProjectsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'الحالة: ${project.status}',
+                  'الحالة: قيد الانتظار',
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 16),
@@ -192,6 +204,7 @@ class MyProjectsScreen extends StatelessWidget {
     }
     return ListView.separated(
       padding: const EdgeInsets.all(24.0),
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: controller.activeProjects.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
@@ -221,7 +234,7 @@ class MyProjectsScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(project.providerName ?? "قيد البحث", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
+                Text(project.providerName ?? "قيد التنفيذ", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
                 const SizedBox(height: 16),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8.0),
@@ -249,6 +262,7 @@ class MyProjectsScreen extends StatelessWidget {
     }
     return ListView.separated(
       padding: const EdgeInsets.all(24.0),
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: controller.completedProjects.length,
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {

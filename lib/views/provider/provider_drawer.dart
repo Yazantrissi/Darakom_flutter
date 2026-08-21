@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../controllers/provider/provider_dashboard_controller.dart';
+import '../../services/auth_service.dart';
+import '../auth/login_screen.dart';
 
 // استيراد شاشات التقييمات والشكاوي (نفس الشاشات المستخدمة للعميل)
 import '../home/ratings_screen.dart';
@@ -16,6 +19,7 @@ class ProviderDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     // استدعاء المتحكم لتغيير التبويبات عند الضغط على عناصر القائمة الأساسية
     final ProviderDashboardController controller = Get.find<ProviderDashboardController>();
+    final AuthService authService = Get.find<AuthService>();
 
     return Drawer(
       backgroundColor: Colors.white,
@@ -124,9 +128,15 @@ class ProviderDrawer extends StatelessWidget {
                   title: 'تسجيل الخروج',
                   iconColor: Colors.redAccent,
                   textColor: Colors.redAccent,
-                  onTap: () {
+                  onTap: () async {
                     Get.back();
-                    Get.snackbar('تسجيل الخروج', 'تم تسجيل الخروج بنجاح', backgroundColor: Colors.redAccent, colorText: Colors.white);
+                    final success = await authService.logout();
+                    if (!success) {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.clear();
+                    }
+                    Get.offAll(() => LoginScreen());
+                    Get.snackbar('تسجيل الخروج', 'تم تسجيل الخروج بنجاح', backgroundColor: Colors.black87, colorText: Colors.white);
                   },
                 ),
               ],
@@ -157,7 +167,7 @@ class ProviderDrawer extends StatelessWidget {
         ),
       ),
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 4.0),
     );
   }
 }

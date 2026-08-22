@@ -1,10 +1,11 @@
 import 'package:get/get.dart' hide Response;
+import 'package:dio/dio.dart';
 import 'api_service.dart';
 import '../core/api_constants.dart';
+import '../core/api_response.dart';
 import '../models/complaint_model.dart';
 import '../models/rating_model.dart';
 import '../models/user_model.dart';
-import 'package:dio/dio.dart';
 
 class InteractionService extends GetxService {
   final ApiService _apiService = Get.find<ApiService>();
@@ -12,9 +13,10 @@ class InteractionService extends GetxService {
   Future<List<ComplaintModel>> fetchClientComplaints() async {
     try {
       final response = await _apiService.get(ApiConstants.clientComplaints);
-      if (response.data['success']) {
-        return (response.data['data'] as List)
-            .map((e) => ComplaintModel.fromJson(e))
+      if (ApiResponse.isSuccess(response.data)) {
+        final list = ApiResponse.dataOf(response.data) as List? ?? [];
+        return list
+            .map((e) => ComplaintModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
       }
     } catch (e) {
@@ -24,41 +26,44 @@ class InteractionService extends GetxService {
   }
 
   Future<Map<String, dynamic>> submitComplaint({
-    required int projectId, 
-    required String text, 
+    required int projectId,
+    required String text,
     required int againstUserId,
     String type = 'against_provider',
+    String? subject,
   }) async {
     try {
       final response = await _apiService.post(
-        ApiConstants.clientComplaints, 
+        ApiConstants.clientComplaints,
         data: {
-          'text': text,
-          'project_id': projectId,
+          'subject': subject ?? 'شكوى على مشروع',
+          'message': text,
           'against_user_id': againstUserId,
+          'reported_user_id': againstUserId,
+          'project_id': projectId,
           'type': type,
-        }
+        },
       );
-      return {
-        'success': response.data['success'] ?? false,
-        'message': response.data['message'] ?? 'تم إرسال الشكوى',
-      };
+      return ApiResponse.fromBody(response.data);
     } on DioException catch (e) {
+      return ApiResponse.failureFromDio(e);
+    } catch (e) {
       return {
         'success': false,
-        'message': e.response?.data['message'] ?? 'فشل إرسال الشكوى',
+        'message': 'حدث خطأ غير متوقع',
+        'data': null,
+        'errors': null,
       };
-    } catch (e) {
-      return {'success': false, 'message': 'حدث خطأ غير متوقع'};
     }
   }
 
   Future<List<RatingModel>> fetchClientRatings() async {
     try {
       final response = await _apiService.get(ApiConstants.clientRatings);
-      if (response.data['success']) {
-        return (response.data['data'] as List)
-            .map((e) => RatingModel.fromJson(e))
+      if (ApiResponse.isSuccess(response.data)) {
+        final list = ApiResponse.dataOf(response.data) as List? ?? [];
+        return list
+            .map((e) => RatingModel.fromJson(Map<String, dynamic>.from(e)))
             .toList();
       }
     } catch (e) {
@@ -69,35 +74,42 @@ class InteractionService extends GetxService {
 
   Future<Map<String, dynamic>> submitRating(int projectId, Map<String, dynamic> data) async {
     try {
-      // Backend expects 'rate' and 'comment'
+      final score = data['score'] ?? data['rating'] ?? data['rate'] ?? 0;
       final response = await _apiService.post(
-        "client/projects/$projectId/ratings", 
+        ApiConstants.rateProject(projectId),
         data: {
-          'rate': data['rating'],
+          'rating': score,
+          'score': score is num ? score.round() : int.tryParse(score.toString()) ?? 0,
           'comment': data['comment'],
-        }
+          if (data['reviewed_user_id'] != null) 'reviewed_user_id': data['reviewed_user_id'],
+        },
       );
-      return {
-        'success': response.data['success'] ?? false,
-        'message': response.data['message'] ?? 'تم إرسال التقييم بنجاح',
-      };
+      return ApiResponse.fromBody(response.data);
     } on DioException catch (e) {
+      return ApiResponse.failureFromDio(e);
+    } catch (e) {
       return {
         'success': false,
-        'message': e.response?.data['message'] ?? 'فشل إرسال التقييم',
+        'message': 'حدث خطأ غير متوقع',
+        'data': null,
+        'errors': null,
       };
-    } catch (e) {
-      return {'success': false, 'message': 'حدث خطأ غير متوقع'};
     }
   }
 
   Future<List<UserModel>> fetchFavorites() async {
     try {
       final response = await _apiService.get(ApiConstants.favorites);
-      if (response.data['success']) {
-        return (response.data['data'] as List)
-            .map((e) => UserModel.fromJson(e))
-            .toList();
+      if (ApiResponse.isSuccess(response.data)) {
+        final list = ApiResponse.dataOf(response.data) as List? ?? [];
+        return list.map((e) {
+          final map = Map<String, dynamic>.from(e as Map);
+          final favoriteUser = map['favorite_user'];
+          if (favoriteUser is Map) {
+            return UserModel.fromJson(Map<String, dynamic>.from(favoriteUser));
+          }
+          return UserModel.fromJson(map);
+        }).toList();
       }
     } catch (e) {
       print("Error fetching favorites: $e");
@@ -107,8 +119,14 @@ class InteractionService extends GetxService {
 
   Future<bool> toggleFavorite(int providerId) async {
     try {
-      final response = await _apiService.post(ApiConstants.toggleFavorite, data: {'provider_id': providerId});
-      return response.data['success'];
+      final response = await _apiService.post(
+        ApiConstants.toggleFavorite,
+        data: {
+          'favorite_user_id': providerId,
+          'provider_id': providerId,
+        },
+      );
+      return ApiResponse.isSuccess(response.data);
     } catch (e) {
       print("Error toggling favorite: $e");
       return false;
@@ -118,8 +136,8 @@ class InteractionService extends GetxService {
   Future<List<dynamic>> fetchServiceCategories() async {
     try {
       final response = await _apiService.get(ApiConstants.serviceCategories);
-      if (response.data['success']) {
-        return response.data['data'] as List;
+      if (ApiResponse.isSuccess(response.data)) {
+        return (ApiResponse.dataOf(response.data) as List?) ?? [];
       }
     } catch (e) {
       print("Error fetching categories: $e");
@@ -127,26 +145,49 @@ class InteractionService extends GetxService {
     return [];
   }
 
-  Future<List<UserModel>> fetchProvidersByCategory(int categoryId) async {
+  Future<List<UserModel>> _fetchClientProviders({
+    String? q,
+    String? providerType,
+    int? provinceId,
+    int? categoryId,
+  }) async {
     try {
-      final response = await _apiService.get("${ApiConstants.serviceCategories}/$categoryId");
-      if (response.data['success']) {
-        final List profiles = response.data['data']['profiles'] ?? [];
-        return profiles.map((e) => UserModel.fromJson(e)).toList();
+      final query = <String, dynamic>{};
+      if (q != null && q.trim().isNotEmpty) query['q'] = q.trim();
+      if (providerType != null && providerType.isNotEmpty) {
+        query['provider_type'] = providerType;
+      }
+      if (provinceId != null) query['province_id'] = provinceId;
+      if (categoryId != null) query['category_id'] = categoryId;
+
+      final response = await _apiService.get(
+        ApiConstants.clientProviders,
+        queryParameters: query.isEmpty ? null : query,
+      );
+
+      if (ApiResponse.isSuccess(response.data)) {
+        final list = ApiResponse.dataOf(response.data) as List? ?? [];
+        return list
+            .map((e) => UserModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
       }
     } catch (e) {
-      print("Error fetching providers by category: $e");
+      print("Error fetching client providers: $e");
     }
     return [];
   }
 
-  Future<bool> sendProjectInvitation(int projectId, int providerProfileId) async {
+  Future<List<UserModel>> fetchProvidersByCategory(int categoryId) async {
+    return _fetchClientProviders(categoryId: categoryId);
+  }
+
+  Future<bool> sendProjectInvitation(int projectId, int providerId) async {
     try {
       final response = await _apiService.post(
-        "${ApiConstants.inviteProvider}/$projectId/invitations",
-        data: {'provider_profile_id': providerProfileId}
+        ApiConstants.inviteProvider(projectId),
+        data: {'provider_id': providerId},
       );
-      return response.data['success'];
+      return ApiResponse.isSuccess(response.data);
     } catch (e) {
       print("Error sending invitation: $e");
       return false;
@@ -154,15 +195,6 @@ class InteractionService extends GetxService {
   }
 
   Future<List<UserModel>> searchProviders(String query) async {
-    try {
-      final response = await _apiService.get(ApiConstants.profiles, queryParameters: {'search': query});
-      if (response.data['success']) {
-        final List list = response.data['data']['data'] ?? []; 
-        return list.map((e) => UserModel.fromJson(e)).toList();
-      }
-    } catch (e) {
-      print("Error searching providers: $e");
-    }
-    return [];
+    return _fetchClientProviders(q: query);
   }
 }

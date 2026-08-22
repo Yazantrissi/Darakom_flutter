@@ -1,11 +1,13 @@
 class OfferModel {
   final int id;
   final int projectId;
+  final int? providerId;
   final String status;
   final String? statusLabel;
   final double cost;
   final int duration;
   final String durationUnit;
+  final String? currency;
   final String? projectName;
   final String? date;
   final String? amount;
@@ -17,16 +19,20 @@ class OfferModel {
   final String? badge;
   final String? specialty;
   final String? workSummary;
+  final String? projectVisibility;
   final List<Map<String, dynamic>>? attachments;
+  final List<Map<String, dynamic>>? stages;
 
   OfferModel({
     required this.id,
     required this.projectId,
+    this.providerId,
     required this.status,
     this.statusLabel,
     required this.cost,
     required this.duration,
     required this.durationUnit,
+    this.currency,
     this.projectName,
     this.date,
     this.amount,
@@ -38,56 +44,89 @@ class OfferModel {
     this.badge,
     this.specialty,
     this.workSummary,
+    this.projectVisibility,
     this.attachments,
+    this.stages,
   });
 
   factory OfferModel.fromJson(Map<String, dynamic> json) {
-    // 1. Extract Provider info
     final provider = json['provider'] as Map<String, dynamic>?;
     final providerUser = provider?['user'] as Map<String, dynamic>?;
     final providerRole = provider?['role'] as Map<String, dynamic>?;
-
-    String? name = provider?['name'] ?? 
-                  providerUser?['full_name'] ?? 
-                  (providerUser != null ? "${providerUser['first_name']} ${providerUser['last_name']}" : null);
-    
-    String? avatar = provider?['avatar'] ?? providerUser?['avatar'];
-    if (avatar != null && !avatar.startsWith('http')) {
-       // Assuming it's a relative path from storage
-       avatar = "http://127.0.0.1:8000/storage/$avatar";
-    }
-
-    String? roleName = provider?['role_name'] ?? providerRole?['name'] ?? "مزود خدمة";
-    double avgRating = (provider?['average_rating'] ?? json['rating'] ?? 0.0).toDouble();
-
-    // 2. Extract Project info
     final project = json['project'] as Map<String, dynamic>?;
 
+    double parseDouble(dynamic val) {
+      if (val is double) return val;
+      if (val is int) return val.toDouble();
+      if (val is String) return double.tryParse(val) ?? 0.0;
+      return 0.0;
+    }
+
+    int parseInt(dynamic val) {
+      if (val is int) return val;
+      if (val is double) return val.round();
+      return int.tryParse(val?.toString() ?? '') ?? 0;
+    }
+
+    final costValue = parseDouble(json['amount'] ?? json['price'] ?? json['cost'] ?? 0);
+    final currency = json['currency']?.toString() ?? 'SYP';
+
+    String? name = provider?['name']?.toString() ??
+        providerUser?['full_name']?.toString() ??
+        providerUser?['name']?.toString() ??
+        (providerUser != null
+            ? "${providerUser['first_name'] ?? ''} ${providerUser['last_name'] ?? ''}".trim()
+            : null);
+
+    String? avatar = provider?['avatar_url']?.toString() ??
+        provider?['avatar']?.toString() ??
+        providerUser?['avatar']?.toString();
+    if (avatar != null && avatar.isNotEmpty && !avatar.startsWith('http')) {
+      avatar = "http://127.0.0.1:8000/storage/$avatar";
+    }
+
+    String? roleName = provider?['role_name']?.toString() ??
+        providerRole?['label']?.toString() ??
+        providerRole?['name']?.toString() ??
+        provider?['role']?.toString() ??
+        "مزود خدمة";
+
     return OfferModel(
-      id: json['id'] ?? 0,
-      projectId: project?['id'] ?? json['project_id'] ?? 0,
-      status: json['status'] ?? "pending",
-      statusLabel: json['status_label'],
-      cost: (json['cost'] ?? 0).toDouble(),
-      duration: json['duration'] ?? 0,
-      durationUnit: json['duration_unit'] ?? json['durationUnit'] ?? "يوم",
-      
-      projectName: project?['title'] ?? json['projectName'],
-      date: json['created_at']?.split('T')[0] ?? json['date'],
-      amount: json['cost'] != null ? "${json['cost']} ل.س" : json['amount'],
-      
+      id: parseInt(json['id']),
+      projectId: parseInt(project?['id'] ?? json['project_id']),
+      providerId: (json['provider_id'] != null || provider?['id'] != null)
+          ? parseInt(json['provider_id'] ?? provider?['id'])
+          : null,
+      status: json['status']?.toString() ?? "pending",
+      statusLabel: json['status_label']?.toString(),
+      cost: costValue,
+      duration: parseInt(json['delivery_days'] ?? json['duration']),
+      durationUnit: json['duration_unit']?.toString() ?? json['durationUnit']?.toString() ?? "يوم",
+      currency: currency,
+      projectName: project?['title']?.toString() ?? json['projectName']?.toString(),
+      date: json['created_at']?.toString().split('T').first ?? json['date']?.toString(),
+      amount: "$costValue $currency",
       providerName: name,
       providerAvatar: avatar,
       role: roleName,
-      rating: avgRating,
-      reviewsCount: provider?['reviews_count'] ?? json['reviewsCount'] ?? 0,
-      
-      badge: json['badge'],
+      rating: parseDouble(provider?['average_rating'] ?? json['rating'] ?? 0.0),
+      reviewsCount: parseInt(provider?['reviews_count'] ?? json['reviewsCount'] ?? 0),
+      badge: json['badge']?.toString(),
       specialty: roleName,
-      workSummary: json['provider_comment'] ?? json['details'] ?? json['workSummary'],
-      attachments: json['documents'] != null 
-          ? List<Map<String, dynamic>>.from(json['documents']) 
-          : (json['attachments'] != null ? List<Map<String, dynamic>>.from(json['attachments']) : null),
+      workSummary: json['notes']?.toString() ??
+          json['provider_comment']?.toString() ??
+          json['details']?.toString() ??
+          json['workSummary']?.toString(),
+      projectVisibility: project?['visibility']?.toString() ??
+          project?['tender_type']?.toString(),
+      attachments: json['documents'] != null
+          ? List<Map<String, dynamic>>.from(json['documents'])
+          : (json['attachments'] != null
+              ? List<Map<String, dynamic>>.from(json['attachments'])
+              : null),
+      stages: json['stages'] != null
+          ? List<Map<String, dynamic>>.from(json['stages'])
+          : null,
     );
   }
 
@@ -95,10 +134,12 @@ class OfferModel {
     return {
       'id': id,
       'projectId': projectId,
+      'providerId': providerId,
       'status': status,
       'cost': cost,
       'duration': duration,
       'durationUnit': durationUnit,
+      'currency': currency,
       'projectName': projectName,
       'date': date,
       'amount': amount,
@@ -110,6 +151,7 @@ class OfferModel {
       'specialty': specialty,
       'workSummary': workSummary,
       'attachments': attachments,
+      'stages': stages,
     };
   }
 }

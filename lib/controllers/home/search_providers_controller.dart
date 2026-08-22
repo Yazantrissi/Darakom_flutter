@@ -26,7 +26,20 @@ class SearchProvidersController extends GetxController {
 
   Future<void> fetchCategories() async {
     final list = await _interactionService.fetchServiceCategories();
-    categories.assignAll(list.map((e) => e as Map<String, dynamic>).toList());
+    final flat = <Map<String, dynamic>>[];
+    for (final e in list) {
+      if (e is! Map) continue;
+      final m = Map<String, dynamic>.from(e);
+      final children = m['children'] as List?;
+      if (children != null && children.isNotEmpty) {
+        for (final c in children) {
+          if (c is Map) flat.add(Map<String, dynamic>.from(c));
+        }
+      } else {
+        flat.add(m);
+      }
+    }
+    categories.assignAll(flat);
   }
 
   void selectCategory(int id) {
@@ -49,8 +62,8 @@ class SearchProvidersController extends GetxController {
     }
   }
 
-  void onSearch(String query) {
-    if (selectedCategoryId.value != 0) return; 
+  Future<void> onSearch(String query) {
+    if (selectedCategoryId.value != 0) return Future.value();
 
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () async {
@@ -64,6 +77,7 @@ class SearchProvidersController extends GetxController {
         isLoading.value = false;
       }
     });
+    return Future.value();
   }
 
   void inviteToProject(UserModel provider) async {

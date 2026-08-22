@@ -75,27 +75,44 @@ class SubmitOfferController extends GetxController {
     }
 
     isLoading.value = true;
-    
+
+    final amount = int.tryParse(totalPriceController.text) ?? 0;
+    final deliveryDays = int.tryParse(totalDurationController.text) ?? 1;
+
+    final stages = projectStages
+        .where((stage) => stage.nameController.text.trim().isNotEmpty)
+        .map((stage) => {
+              'title': stage.nameController.text.trim(),
+              'duration_days': int.tryParse(stage.durationController.text),
+            })
+        .toList();
+
     final Map<String, dynamic> data = {
-      'cost': double.tryParse(totalPriceController.text) ?? 0,
-      'duration': int.tryParse(totalDurationController.text) ?? 1,
-      'duration_unit': 'day', // Default to day, backend also accepts month, year
-      'provider_comment': offerProjectNameController.text, // Using this as a comment for now
-      'details': 'Submitted from mobile app',
+      'amount': amount,
+      'delivery_days': deliveryDays,
+      if (offerProjectNameController.text.isNotEmpty)
+        'notes': offerProjectNameController.text,
+      if (stages.isNotEmpty) 'stages': stages,
     };
 
-    List<Map<String, dynamic>> attachments = [];
-    for (var attr in offerAttachments) {
-      if (attr.fileBytes.value != null || attr.filePath.value != null) {
-        attachments.add({
-          'file_path': attr.filePath.value,
-          'file_bytes': attr.fileBytes.value,
-          'file_name': attr.fileName.value,
+    final docs = <Map<String, dynamic>>[];
+    for (final att in offerAttachments) {
+      if (att.fileBytes.value != null ||
+          (att.filePath.value != null && att.filePath.value!.isNotEmpty)) {
+        docs.add({
+          'file_path': att.filePath.value,
+          'file_bytes': att.fileBytes.value,
+          'file_name': att.fileName.value,
+          'title': att.type.value ?? att.fileName.value,
         });
       }
     }
 
-    final result = await _offerService.submitOfferDetailed(projectId, data, attachments: attachments);
+    final result = await _offerService.submitOfferDetailed(
+      projectId,
+      data,
+      attachments: docs.isNotEmpty ? docs : null,
+    );
     isLoading.value = false;
 
     if (result['success']) {

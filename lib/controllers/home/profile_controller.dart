@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -118,25 +117,26 @@ class ProfileController extends GetxController {
     final Map<String, dynamic> data = {
       'first_name': firstNameController.text,
       'last_name': lastNameController.text,
-      'email': emailController.text,
+      'name': '${firstNameController.text} ${lastNameController.text}'.trim(),
       'phone': phoneController.text,
       'address': addressController.text,
       'bio': bioController.text,
+      'city': selectedProvince.value?.name,
+      'province_name': selectedProvince.value?.name,
       'province_id': selectedProvince.value?.id,
     };
 
-    // Handling multipart if image is picked
     dynamic payload;
     if (pickedImagePath.isNotEmpty || pickedImageBytes.value != null) {
       final formData = dio.FormData.fromMap(data);
       if (kIsWeb && pickedImageBytes.value != null) {
         formData.files.add(MapEntry(
-          'profile_picture',
+          'avatar_file',
           dio.MultipartFile.fromBytes(pickedImageBytes.value!, filename: 'profile.jpg'),
         ));
       } else if (pickedImagePath.isNotEmpty) {
         formData.files.add(MapEntry(
-          'profile_picture',
+          'avatar_file',
           await dio.MultipartFile.fromFile(pickedImagePath.value, filename: 'profile.jpg'),
         ));
       }
@@ -145,14 +145,13 @@ class ProfileController extends GetxController {
       payload = data;
     }
 
-    final success = await _profileService.updateProfile(payload);
+    final result = await _profileService.updateProfile(payload);
     isLoading.value = false;
 
-    if (success) {
+    if (result['success'] == true) {
       final fullName = "${firstNameController.text} ${lastNameController.text}";
       fullUserName.value = fullName;
       
-      // تحديث لوحة التحكم إذا كانت موجودة ليعكس الاسم الجديد في القائمة الجانبية
       if (Get.isRegistered<ClientDashboardController>()) {
         final dashboard = Get.find<ClientDashboardController>();
         dashboard.fullUserName.value = fullName;
@@ -162,7 +161,9 @@ class ProfileController extends GetxController {
 
       Get.snackbar(
         'تم الحفظ',
-        'تم تحديث بيانات البروفايل بنجاح.',
+        result['message']?.toString().isNotEmpty == true
+            ? result['message']
+            : 'تم تحديث بيانات البروفايل بنجاح.',
         backgroundColor: Colors.green,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,
@@ -171,7 +172,7 @@ class ProfileController extends GetxController {
     } else {
       Get.snackbar(
         'خطأ',
-        'فشل في تحديث بيانات البروفايل.',
+        result['message'] ?? 'فشل في تحديث بيانات البروفايل.',
         backgroundColor: Colors.redAccent,
         colorText: Colors.white,
         snackPosition: SnackPosition.BOTTOM,

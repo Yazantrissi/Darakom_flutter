@@ -12,7 +12,7 @@ import '../../views/home/client_dashboard_screen.dart';
 import '../../views/provider/provider_dashboard_screen.dart';
 
 class RegisterController extends GetxController {
-  final AuthService _authService = Get.put(AuthService());
+  final AuthService _authService = Get.find<AuthService>();
 
   // أدوات التحكم بالنصوص
   final TextEditingController firstNameController = TextEditingController();
@@ -54,13 +54,18 @@ class RegisterController extends GetxController {
     try {
       final pList = await _authService.fetchProvinces();
       provinces.assignAll(pList);
-      
-      final rList = await _authService.fetchRoles();
-      roles.assignAll(rList);
-      
+
+      // Prefer provider types (Arabic + craftsman subtypes); fall back to roles
+      final providerRoles = await _authService.fetchProviderTypesAsRoles();
+      if (providerRoles.isNotEmpty) {
+        roles.assignAll(providerRoles);
+      } else {
+        final rList = await _authService.fetchRoles();
+        roles.assignAll(rList);
+      }
+
       final dtList = await _authService.fetchDocumentTypes();
       documentTypes.assignAll(dtList);
-      
     } catch (e) {
       print("Error fetching initial data: $e");
     } finally {
@@ -127,13 +132,25 @@ class RegisterController extends GetxController {
       'password': passwordController.text,
       'password_confirmation': confirmPasswordController.text,
       'province_id': selectedProvince.value?.id,
+      'city': selectedProvince.value?.name,
       'type': isCustomerTab.value ? 'client' : 'provider',
     };
 
     if (!isCustomerTab.value) {
-      data['role_id'] = selectedRole.value?.id;
-      data['experience_start'] = "2020-01-01"; // Placeholder or add UI field
+      final role = selectedRole.value;
+      final providerType = role?.providerType ?? role?.name;
+      data['provider_type'] = providerType;
+      data['specialty'] = role?.name;
+      data['role_id'] = role?.id;
       data['syndicate_number'] = syndicateNumberController.text;
+
+      final subtype = role?.craftsmanSubtype;
+      if (subtype != null && subtype.isNotEmpty) {
+        data['craftsman_subtype'] = subtype;
+      } else if (providerType == 'حرفي') {
+        // Fallback: if UI selected craftsman main type without subtype binding
+        data['craftsman_subtype'] = role?.name;
+      }
     }
 
     List<Map<String, dynamic>> docs = [];
@@ -169,9 +186,8 @@ class RegisterController extends GetxController {
       } else {
         Get.offAll(() => ClientDashboardScreen());
       }
-    } else {
-      Get.snackbar('خطأ', 'فشل إنشاء الحساب، يرجى التحقق من البيانات', backgroundColor: Colors.red, colorText: Colors.white);
     }
+    // AuthService already surfaces Arabic API / 422 errors
   }
 
   bool _validateInput() {

@@ -29,12 +29,12 @@ class MyProjectsController extends GetxController {
     isLoading.value = true;
     try {
       final allProjects = await _projectService.fetchClientProjects();
-      
-      // Categorizing based on execution_status from backend
-      pendingProjects.value = allProjects.where((p) => p.executionStatus == 'not_started').toList();
-      activeProjects.value = allProjects.where((p) => p.executionStatus == 'in_progress').toList();
-      completedProjects.value = allProjects.where((p) => p.executionStatus == 'finished' || p.status == 'completed').toList();
-      
+
+      // pending = status pending|open OR execution not_started
+      pendingProjects.value = allProjects.where((p) => p.isPendingLifecycle).toList();
+      activeProjects.value = allProjects.where((p) => p.isInProgressLifecycle).toList();
+      completedProjects.value = allProjects.where((p) => p.isCompletedLifecycle).toList();
+
     } catch (e) {
       print("Error fetching my projects: $e");
     } finally {

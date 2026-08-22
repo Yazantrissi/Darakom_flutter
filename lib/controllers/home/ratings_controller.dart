@@ -24,11 +24,9 @@ class RatingsController extends GetxController {
     try {
       isLoading.value = true;
       final ratings = await _interactionService.fetchClientRatings();
-      
-      // Categorizing based on a type or logic if available in backend
-      givenRatings.value = ratings.where((r) => r.type == 'given' || r.reviewerName == null).toList();
-      receivedRatings.value = ratings.where((r) => r.type == 'received' || r.toUserName == null).toList();
-      
+      // Client endpoint returns ratings given by the logged-in client
+      givenRatings.value = ratings;
+      receivedRatings.value = [];
     } catch (e) {
       print("Error in fetchRatings: $e");
     } finally {

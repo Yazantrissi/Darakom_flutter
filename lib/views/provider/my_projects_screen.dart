@@ -24,6 +24,10 @@ class ProviderMyProjectsScreen extends StatelessWidget {
             _buildCustomTabBar(),
             Expanded(
               child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
                 final projects = controller.currentTabIndex.value == 0
                     ? controller.publicProjects
                     : controller.privateProjects;
@@ -32,13 +36,16 @@ class ProviderMyProjectsScreen extends StatelessWidget {
                   return _buildEmptyState();
                 }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(24.0),
-                  itemCount: projects.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    return _buildProjectCard(projects[index]);
-                  },
+                return RefreshIndicator(
+                  onRefresh: controller.fetchProjects,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(24.0),
+                    itemCount: projects.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      return _buildProjectCard(projects[index]);
+                    },
+                  ),
                 );
               }),
             ),

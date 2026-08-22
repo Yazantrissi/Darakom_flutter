@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../../services/interaction_service.dart';
 import '../../services/project_service.dart';
 import '../../models/user_model.dart';
-import '../../models/project_model.dart';
 
 class FavoritesController extends GetxController {
   final InteractionService _interactionService = Get.find<InteractionService>();

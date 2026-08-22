@@ -65,14 +65,14 @@ class ClientOffersController extends GetxController {
       onConfirm: () async {
         Get.back();
         isLoading.value = true;
-        final success = await _offerService.acceptOffer(offer.projectId, offer.id);
+        final result = await _offerService.acceptOfferDetailed(offer.projectId, offer.id);
         
-        if (success) {
-          Get.snackbar('نجاح', 'تم قبول العرض بنجاح وبدء المشروع', backgroundColor: Colors.green, colorText: Colors.white);
+        if (result['success'] == true) {
+          Get.snackbar('نجاح', result['message']?.toString() ?? 'تم قبول العرض بنجاح وبدء المشروع', backgroundColor: Colors.green, colorText: Colors.white);
           fetchOffers(); 
         } else {
           isLoading.value = false;
-          Get.snackbar('خطأ', 'فشل قبول العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+          Get.snackbar('خطأ', result['message']?.toString() ?? 'فشل قبول العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
         }
       },
     );
@@ -89,14 +89,14 @@ class ClientOffersController extends GetxController {
       onConfirm: () async {
         Get.back();
         isLoading.value = true;
-        final success = await _offerService.rejectOffer(offer.projectId, offer.id);
+        final result = await _offerService.rejectOfferDetailed(offer.projectId, offer.id);
         
-        if (success) {
-          Get.snackbar('تم الرفض', 'تم رفض العرض بنجاح', backgroundColor: Colors.grey.shade800, colorText: Colors.white);
+        if (result['success'] == true) {
+          Get.snackbar('تم الرفض', result['message']?.toString() ?? 'تم رفض العرض بنجاح', backgroundColor: Colors.grey.shade800, colorText: Colors.white);
           fetchOffers();
         } else {
           isLoading.value = false;
-          Get.snackbar('خطأ', 'فشل رفض العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+          Get.snackbar('خطأ', result['message']?.toString() ?? 'فشل رفض العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
         }
       },
     );

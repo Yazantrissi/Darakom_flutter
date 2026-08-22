@@ -1,13 +1,30 @@
 class RoleModel {
   final int id;
   final String name;
+  /// Main provider type sent to API (e.g. مقاول, حرفي).
+  final String? providerType;
+  /// Craftsman subtype when providerType is حرفي.
+  final String? craftsmanSubtype;
 
-  RoleModel({required this.id, required this.name});
+  RoleModel({
+    required this.id,
+    required this.name,
+    this.providerType,
+    this.craftsmanSubtype,
+  });
 
   factory RoleModel.fromJson(Map<String, dynamic> json) {
+    int parseId(dynamic val) {
+      if (val is int) return val;
+      if (val is String) return int.tryParse(val) ?? 0;
+      return 0;
+    }
+
     return RoleModel(
-      id: json['id'],
-      name: json['name'],
+      id: parseId(json['id']),
+      name: (json['label'] ?? json['name'] ?? '').toString(),
+      providerType: json['provider_type']?.toString(),
+      craftsmanSubtype: json['craftsman_subtype']?.toString(),
     );
   }
 

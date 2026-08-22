@@ -1,47 +1,48 @@
 import 'package:get/get.dart';
 import '../../models/project_model.dart';
+import '../../services/project_service.dart';
 import '../../views/provider/add_completed_stage_screen.dart';
 import '../../views/tracking/project_tracking_screen.dart';
 
 class ProviderProjectsController extends GetxController {
-  // التبويبات (مشاريع عامة = 0 / مشاريع خاصة = 1)
+  final ProjectService _projectService = Get.find<ProjectService>();
+
   var currentTabIndex = 0.obs;
   var isLoading = false.obs;
 
-  // قائمة المشاريع العامة (Mock Data)
-  final List<ProjectModel> publicProjects = [
-    ProjectModel(
-      id: 7001,
-      title: 'فيلا حي الياسمين',
-      clientName: 'محمد العتيبي',
-      progressPercentage: 65,
-      status: 'active',
-      executionStatus: 'in_progress',
-      description: '',
-    ),
-    ProjectModel(
-      id: 7002,
-      title: 'تجديد عمارة سكنية',
-      clientName: 'أحمد خالد',
-      progressPercentage: 30,
-      status: 'active',
-      executionStatus: 'in_progress',
-      description: '',
-    ),
-  ].obs;
+  final publicProjects = <ProjectModel>[].obs;
+  final privateProjects = <ProjectModel>[].obs;
 
-  // قائمة المشاريع الخاصة
-  final List<ProjectModel> privateProjects = [
-    ProjectModel(
-      id: 8001,
-      title: 'تصميم مكتب تجاري',
-      clientName: 'شركة النور',
-      progressPercentage: 85,
-      status: 'active',
-      executionStatus: 'in_progress',
-      description: '',
-    ),
-  ].obs;
+  @override
+  void onInit() {
+    super.onInit();
+    fetchProjects();
+  }
+
+  Future<void> fetchProjects() async {
+    isLoading.value = true;
+    try {
+      final projects = await _projectService.fetchProviderProjects();
+
+      // Public tab: visibility public (or null) AND in_progress/completed assigned
+      publicProjects.assignAll(
+        projects
+            .where((p) =>
+                p.isPublicVisibility &&
+                (p.isInProgressLifecycle || p.isCompletedLifecycle))
+            .toList(),
+      );
+
+      // Private tab: visibility private
+      privateProjects.assignAll(
+        projects.where((p) => p.isPrivateVisibility).toList(),
+      );
+    } catch (e) {
+      print('Error fetching provider projects: $e');
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   void changeTab(int index) {
     currentTabIndex.value = index;
@@ -52,9 +53,7 @@ class ProviderProjectsController extends GetxController {
       'projectId': project.id,
       'projectTitle': project.title,
     })?.then((val) {
-      if (val == true) {
-        // Refresh project list if needed
-      }
+      if (val == true) fetchProjects();
     });
   }
 

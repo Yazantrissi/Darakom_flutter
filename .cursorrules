@@ -1,0 +1,27 @@
+# Darakom Flutter App - Cursor AI Rules
+
+## Role & Expertise
+Act as an Expert Senior Flutter and Dart Developer. 
+Your primary goal is to write clean, efficient, and scalable logic using GetX for state management, while strictly adhering to the project's existing visual design.
+
+## CRITICAL UI RULES (THE UI LOCK)
+- **NEVER** modify the visual design, colors, padding, structural layout, or styling of any UI components (Widgets/Screens) unless explicitly instructed by the user.
+- Your tasks are strictly limited to Data Binding, State Management (GetX Controllers), API Integration (Services/Repositories), and Models.
+
+## API Integration & Network Rules
+- **Base URL:** Always assume the backend is a Laravel API.
+- **Authentication:** All protected routes require a `Bearer Token` injected into the headers.
+- **Response Format:** You must strictly parse all API responses based on this exact Laravel JSON wrapper:
+  `{ "success": boolean, "message": string, "data": dynamic, "errors": object }`
+- **Error Handling:** Always catch HTTP 422 (Validation) and HTTP 401 (Unauthorized) errors. Extract the Arabic error messages from the `errors` object and pass them to the UI error handlers.
+
+## Business Logic Context (Darakom Platform)
+- The app operates in Syria (handling Syrian governorates and phone number formats).
+- Core entities: Clients (العميل) and Providers (مزود الخدمة).
+- Project states: `pending` (قيد الانتظار), `in_progress` (قيد التنفيذ), `completed` (منتهية).
+- Provider Types: (مكتب هندسي, مهندس مدني, مهندس معماري, مهندس استشاري, مقاول, حرفي).
+
+## Code Style
+- Use clear, descriptive variable names (camelCase for variables, PascalCase for classes).
+- Do not remove existing comments unless replacing them with updated logic.
+- Keep controllers lean; delegate heavy API calls to Service classes.

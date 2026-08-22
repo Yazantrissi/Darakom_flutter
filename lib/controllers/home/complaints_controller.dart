@@ -29,11 +29,21 @@ class ComplaintsController extends GetxController {
     try {
       isLoading.value = true;
       final complaints = await _interactionService.fetchClientComplaints();
-      
-      pendingComplaints.value = complaints.where((c) => c.status == 'pending').toList();
-      resolvedComplaints.value = complaints.where((c) => c.status == 'resolved').toList();
-      rejectedComplaints.value = complaints.where((c) => c.status == 'rejected').toList();
-      
+
+      const pendingStatuses = {
+        'pending_review',
+        'pending',
+        'open',
+        'in_review',
+      };
+
+      pendingComplaints.value =
+          complaints.where((c) => pendingStatuses.contains(c.status)).toList();
+      resolvedComplaints.value =
+          complaints.where((c) => c.status == 'resolved').toList();
+      rejectedComplaints.value =
+          complaints.where((c) => c.status == 'rejected').toList();
+
     } catch (e) {
       print("Error in fetchComplaints: $e");
     } finally {

@@ -11,12 +11,11 @@ class ClientDashboardController extends GetxController {
 
   var currentIndex = 0.obs;
   var isLoading = false.obs;
-  
-  var userName = "العميل".obs;
-  var fullUserName = "اسم العميل".obs;
-  var userEmail = "email@example.com".obs;
 
-  // Stats
+  var userName = 'العميل'.obs;
+  var fullUserName = 'اسم العميل'.obs;
+  var userEmail = 'email@example.com'.obs;
+
   var totalProjects = 0.obs;
   var inProgressCount = 0.obs;
   var completedCount = 0.obs;
@@ -36,7 +35,7 @@ class ClientDashboardController extends GetxController {
   Future<void> fetchUserProfile() async {
     final user = await _profileService.fetchProfile();
     if (user != null) {
-      userName.value = user.name.split(' ')[0];
+      userName.value = user.name.split(' ').first;
       fullUserName.value = user.name;
       userEmail.value = user.email;
     }
@@ -44,33 +43,40 @@ class ClientDashboardController extends GetxController {
 
   Future<void> fetchDashboardData() async {
     isLoading.value = true;
-    
-    // Fetch stats and summary data
-    final dashboardData = await _projectService.fetchClientDashboard();
-    
-    if (dashboardData != null) {
-      final stats = dashboardData['stats'];
-      totalProjects.value = stats['total_projects'] ?? 0;
-      inProgressCount.value = stats['in_progress_count'] ?? 0;
-      completedCount.value = stats['completed_count'] ?? 0;
-      pendingOffersCount.value = stats['pending_offers'] ?? 0;
+    try {
+      final dashboardData = await _projectService.fetchClientDashboard();
+      final projects = await _projectService.fetchClientProjects();
 
-      final projects = dashboardData['projects'];
-      
-      pendingProjects.value = (projects['pending'] as List)
-          .map((e) => ProjectModel.fromJson(e))
-          .toList();
-          
-      activeProjects.value = (projects['in_progress'] as List)
-          .map((e) => ProjectModel.fromJson(e))
-          .toList();
-          
-      completedProjects.value = (projects['completed'] as List)
-          .map((e) => ProjectModel.fromJson(e))
-          .toList();
+      if (dashboardData != null) {
+        totalProjects.value =
+            _asInt(dashboardData['projects_count'] ?? dashboardData['total_projects']);
+        inProgressCount.value = _asInt(
+            dashboardData['in_progress_projects'] ?? dashboardData['in_progress_count']);
+        completedCount.value =
+            _asInt(dashboardData['completed_projects'] ?? dashboardData['completed_count']);
+        pendingOffersCount.value = _asInt(dashboardData['pending_offers']);
+      }
+
+      pendingProjects.value = projects.where((p) => p.isPendingLifecycle).toList();
+      activeProjects.value = projects.where((p) => p.isInProgressLifecycle).toList();
+      completedProjects.value = projects.where((p) => p.isCompletedLifecycle).toList();
+
+      if (dashboardData == null) {
+        totalProjects.value = projects.length;
+        inProgressCount.value = activeProjects.length;
+        completedCount.value = completedProjects.length;
+      }
+    } catch (e) {
+      print('Error fetching client dashboard: $e');
+    } finally {
+      isLoading.value = false;
     }
-    
-    isLoading.value = false;
+  }
+
+  int _asInt(dynamic v) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse('$v') ?? 0;
   }
 
   void changePage(int index) {

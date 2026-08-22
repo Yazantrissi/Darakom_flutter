@@ -7,7 +7,7 @@ import '../../views/home/client_dashboard_screen.dart';
 import '../../views/provider/provider_dashboard_screen.dart';
 
 class AuthController extends GetxController {
-  final AuthService _authService = Get.put(AuthService());
+  final AuthService _authService = Get.find<AuthService>();
 
   // حقول الإدخال
   final TextEditingController emailController = TextEditingController();
@@ -43,10 +43,8 @@ class AuthController extends GetxController {
       } else {
         Get.offAll(() => ClientDashboardScreen());
       }
-    } else {
-      Get.snackbar('خطأ', 'فشل تسجيل الدخول، يرجى التأكد من البيانات',
-          backgroundColor: Colors.red, colorText: Colors.white);
     }
+    // AuthService already shows Arabic API/422 errors via snackbar
   }
 
   Future<void> logout() async {

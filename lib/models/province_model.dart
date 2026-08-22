@@ -5,9 +5,15 @@ class ProvinceModel {
   ProvinceModel({required this.id, required this.name});
 
   factory ProvinceModel.fromJson(Map<String, dynamic> json) {
+    int parseId(dynamic val) {
+      if (val is int) return val;
+      if (val is String) return int.tryParse(val) ?? 0;
+      return 0;
+    }
+
     return ProvinceModel(
-      id: json['id'],
-      name: json['name'],
+      id: parseId(json['id']),
+      name: json['name']?.toString() ?? '',
     );
   }
 

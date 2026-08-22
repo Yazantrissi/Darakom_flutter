@@ -42,13 +42,41 @@ class ProjectDetailsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _buildDetailCard(Icons.straighten_outlined, 'المساحة', '350 م²')), // Mock data
+                  Expanded(
+                    child: _buildDetailCard(
+                      Icons.straighten_outlined,
+                      'المساحة',
+                      projectData.area != null && projectData.area!.isNotEmpty
+                          ? '${projectData.area} م²'
+                          : 'غير محدد',
+                    ),
+                  ),
                   const SizedBox(width: 16),
-                  Expanded(child: _buildDetailCard(Icons.map_outlined, 'المحافظة', projectData.address ?? "")),
+                  Expanded(
+                    child: _buildDetailCard(
+                      Icons.map_outlined,
+                      'المحافظة',
+                      projectData.governorate ?? projectData.address ?? 'غير محدد',
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 16),
-              _buildDetailSection(Icons.location_on_outlined, 'العنوان التفصيلي', 'المزة - فيلات غربية - شارع الجلاء'), // Mock data
+              _buildDetailSection(
+                Icons.location_on_outlined,
+                'العنوان التفصيلي',
+                projectData.address?.isNotEmpty == true
+                    ? projectData.address!
+                    : (projectData.governorate ?? 'لا يوجد عنوان تفصيلي'),
+              ),
+              if (projectData.budget != null && projectData.budget!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _buildDetailSection(
+                  Icons.payments_outlined,
+                  'الميزانية',
+                  '${projectData.budget} ${projectData.currency ?? 'ل.س'}',
+                ),
+              ],
               const SizedBox(height: 24),
               _buildSectionTitle('المرفقات'),
               const SizedBox(height: 12),
@@ -143,30 +171,26 @@ class ProjectDetailsScreen extends StatelessWidget {
   }
 
   Widget _buildAttachmentsList() {
-    // Mock attachments
-    final attachments = [
-      {'name': 'المخطط الهندسي.pdf', 'icon': Icons.picture_as_pdf_outlined},
-      {'name': 'صورة الموقع 1.jpg', 'icon': Icons.image_outlined},
-    ];
-
-    return Column(
-      children: attachments.map((att) => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Row(
-          children: [
-            Icon(att['icon'] as IconData, color: navyColor),
-            const SizedBox(width: 16),
-            Expanded(child: Text(att['name'] as String, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14))),
-            Icon(Icons.download_for_offline_outlined, color: orangeColor),
-          ],
-        ),
-      )).toList(),
+    // No project-documents endpoint on Laravel — keep same card layout with empty state.
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.insert_drive_file_outlined, color: navyColor),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              'لا توجد مرفقات متاحة حالياً',
+              style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

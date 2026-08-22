@@ -24,6 +24,10 @@ class TenderMarketScreen extends StatelessWidget {
             _buildCustomTabBar(),
             Expanded(
               child: Obx(() {
+                if (controller.isLoading.value) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
                 final tenders = controller.currentTabIndex.value == 0
                     ? controller.publicTenders
                     : controller.privateTenders;
@@ -32,13 +36,16 @@ class TenderMarketScreen extends StatelessWidget {
                   return _buildEmptyState();
                 }
 
-                return ListView.separated(
-                  padding: const EdgeInsets.all(24.0),
-                  itemCount: tenders.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    return _buildTenderCard(tenders[index]);
-                  },
+                return RefreshIndicator(
+                  onRefresh: controller.fetchTenders,
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(24.0),
+                    itemCount: tenders.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      return _buildTenderCard(tenders[index]);
+                    },
+                  ),
                 );
               }),
             ),

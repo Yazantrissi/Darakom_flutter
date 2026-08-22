@@ -42,19 +42,19 @@ class OfferDetailsController extends GetxController {
       onConfirm: () async {
         Get.back();
         isLoading.value = true;
-        final success = await _offerService.acceptOffer(offer.value.projectId, offer.value.id);
+        final result = await _offerService.acceptOfferDetailed(offer.value.projectId, offer.value.id);
         isLoading.value = false;
         
-        if (success) {
+        if (result['success'] == true) {
           Get.snackbar(
             'تم قبول العرض',
-            'تهانينا! تم قبول العرض بنجاح.',
+            result['message']?.toString() ?? 'تهانينا! تم قبول العرض بنجاح.',
             backgroundColor: Colors.green,
             colorText: Colors.white,
           );
-          Get.back(result: true); // العودة للشاشة السابقة مع إشارة للنجاح لتحديث القائمة
+          Get.back(result: true);
         } else {
-          Get.snackbar('خطأ', 'فشل قبول العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+          Get.snackbar('خطأ', result['message']?.toString() ?? 'فشل قبول العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
         }
       },
     );
@@ -77,19 +77,19 @@ class OfferDetailsController extends GetxController {
       onConfirm: () async {
         Get.back();
         isLoading.value = true;
-        final success = await _offerService.rejectOffer(offer.value.projectId, offer.value.id);
+        final result = await _offerService.rejectOfferDetailed(offer.value.projectId, offer.value.id);
         isLoading.value = false;
         
-        if (success) {
+        if (result['success'] == true) {
           Get.snackbar(
             'تم الرفض',
-            'تم رفض العرض بنجاح.',
+            result['message']?.toString() ?? 'تم رفض العرض بنجاح.',
             backgroundColor: Colors.grey.shade800,
             colorText: Colors.white,
           );
           Get.back(result: true);
         } else {
-          Get.snackbar('خطأ', 'فشل رفض العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
+          Get.snackbar('خطأ', result['message']?.toString() ?? 'فشل رفض العرض، حاول مرة أخرى', backgroundColor: Colors.redAccent, colorText: Colors.white);
         }
       },
     );

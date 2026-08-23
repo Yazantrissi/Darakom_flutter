@@ -25,16 +25,35 @@ class InteractionService extends GetxService {
     return [];
   }
 
+  Future<List<ComplaintModel>> fetchProviderComplaints() async {
+    try {
+      final response = await _apiService.get(ApiConstants.providerComplaints);
+      if (ApiResponse.isSuccess(response.data)) {
+        final list = ApiResponse.dataOf(response.data) as List? ?? [];
+        return list
+            .map((e) => ComplaintModel.fromJson(Map<String, dynamic>.from(e)))
+            .toList();
+      }
+    } catch (e) {
+      print("Error fetching provider complaints: $e");
+    }
+    return [];
+  }
+
   Future<Map<String, dynamic>> submitComplaint({
     required int projectId,
     required String text,
     required int againstUserId,
     String type = 'against_provider',
     String? subject,
+    bool asProvider = false,
   }) async {
     try {
+      final endpoint = asProvider
+          ? ApiConstants.providerComplaints
+          : ApiConstants.clientComplaints;
       final response = await _apiService.post(
-        ApiConstants.clientComplaints,
+        endpoint,
         data: {
           'subject': subject ?? 'شكوى على مشروع',
           'message': text,
@@ -196,5 +215,18 @@ class InteractionService extends GetxService {
 
   Future<List<UserModel>> searchProviders(String query) async {
     return _fetchClientProviders(q: query);
+  }
+
+  Future<Map<String, dynamic>?> fetchProviderPublicProfile(int id) async {
+    try {
+      final response = await _apiService.get(ApiConstants.clientProviderProfile(id));
+      if (ApiResponse.isSuccess(response.data)) {
+        final data = ApiResponse.dataOf(response.data);
+        if (data is Map) return Map<String, dynamic>.from(data);
+      }
+    } catch (e) {
+      print("Error fetching provider profile: $e");
+    }
+    return null;
   }
 }

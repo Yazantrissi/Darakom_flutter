@@ -5,6 +5,7 @@ class ApiConstants {
   static const String login = "/login";
   static const String register = "/register";
   static const String logout = "/logout";
+  static const String switchAccount = "/switch-account";
   static const String forgotPassword = "/forgot-password";
   static const String resetPassword = "/reset-password";
   static const String changePassword = "/change-password";
@@ -26,7 +27,9 @@ class ApiConstants {
   // Client
   static const String clientDashboard = "/client/dashboard";
   static const String clientProjects = "/client/projects";
-  static const String clientProviders = "/client/providers";
+  static String clientProviders = "/client/providers";
+
+  static String clientProviderProfile(int id) => "/client/providers/$id";
   static const String clientComplaints = "/client/complaints";
   static const String clientRatings = "/client/my-ratings";
   static const String clientPublicOffers = "/client/offers/public";
@@ -82,9 +85,9 @@ class ApiConstants {
 
   static String declineInvitation(int id) => "/provider/invitations/$id/decline";
 
-  static String markNotificationRead(int id) => "/notifications/$id/read";
+  static String markNotificationRead(String id) => "/notifications/$id/read";
 
-  static String deleteNotification(int id) => "/notifications/$id";
+  static String deleteNotification(String id) => "/notifications/$id";
 
   static String providerOffer(int id) => "/provider/offers/$id";
 

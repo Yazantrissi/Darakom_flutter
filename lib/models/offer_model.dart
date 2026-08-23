@@ -20,6 +20,7 @@ class OfferModel {
   final String? specialty;
   final String? workSummary;
   final String? projectVisibility;
+  final String? clientName;
   final List<Map<String, dynamic>>? attachments;
   final List<Map<String, dynamic>>? stages;
 
@@ -45,6 +46,7 @@ class OfferModel {
     this.specialty,
     this.workSummary,
     this.projectVisibility,
+    this.clientName,
     this.attachments,
     this.stages,
   });
@@ -119,6 +121,10 @@ class OfferModel {
           json['workSummary']?.toString(),
       projectVisibility: project?['visibility']?.toString() ??
           project?['tender_type']?.toString(),
+      clientName: project?['client'] is Map
+          ? (project!['client']['name']?.toString() ??
+              "${project['client']['first_name'] ?? ''} ${project['client']['last_name'] ?? ''}".trim())
+          : null,
       attachments: json['documents'] != null
           ? List<Map<String, dynamic>>.from(json['documents'])
           : (json['attachments'] != null

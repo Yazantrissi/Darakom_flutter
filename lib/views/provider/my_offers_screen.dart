@@ -124,7 +124,7 @@ class MyOffersScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text('عرض لمشروع #${offer.projectId}', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16, color: navyColor))),
+              Expanded(child: Text(offer.projectName ?? 'عرض لمشروع #${offer.projectId}', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16, color: navyColor))),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: statusColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
@@ -132,29 +132,44 @@ class MyOffersScreen extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _buildInfoRow(Icons.payments_outlined, 'السعر: ${offer.cost} ر.س'),
+          if (offer.clientName != null && offer.clientName!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _buildInfoRow(Icons.person_outline, 'العميل: ${offer.clientName}'),
+          ],
           const SizedBox(height: 8),
-          _buildInfoRow(Icons.timer_outlined, 'المدة: ${offer.duration} ${offer.durationUnit}'),
+          _buildInfoRow(Icons.payments_outlined, 'السعر: ${offer.cost} ل.س'),
+          const SizedBox(height: 8),
+          _buildInfoRow(Icons.timer_outlined, 'المدة: ${offer.duration} يوم'),
+          if (offer.date != null) ...[
+            const SizedBox(height: 8),
+            _buildInfoRow(Icons.calendar_today_outlined, 'تاريخ التقديم: ${offer.date}'),
+          ],
           const Divider(height: 32),
           Row(
             children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => Get.to(() => SubmitOfferScreen(
-                        projectId: offer.projectId ?? 0,
-                        projectName: "مشروع #${offer.projectId}",
-                        isEditMode: true,
-                      )),
-                  icon: const Icon(Icons.edit_outlined, size: 16),
-                  label: const Text('تعديل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
-                  style: ElevatedButton.styleFrom(backgroundColor: navyColor, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+              if (offer.status == 'pending')
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final updated = await Get.to(() => SubmitOfferScreen(
+                            projectId: offer.projectId,
+                            projectName: offer.projectName ?? "مشروع #${offer.projectId}",
+                            isEditMode: true,
+                            existingOffer: offer,
+                          ));
+                      if (updated == true) controller.fetchOffers();
+                    },
+                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    label: const Text('تعديل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
+                    style: ElevatedButton.styleFrom(backgroundColor: navyColor, foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
+              if (offer.status == 'pending') const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => controller.deleteOffer(offer.id, isPublic),
+                  onPressed: offer.status == 'pending'
+                      ? () => controller.deleteOffer(offer.id, isPublic)
+                      : null,
                   icon: const Icon(Icons.delete_outline, size: 16),
                   label: const Text('حذف', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
                   style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent, side: const BorderSide(color: Colors.redAccent), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),

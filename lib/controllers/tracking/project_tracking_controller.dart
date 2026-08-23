@@ -1,25 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../views/provider/add_completed_stage_screen.dart';
+import '../../views/home/complaints_screen.dart';
+import '../../controllers/home/complaints_controller.dart';
 import '../../services/interaction_service.dart';
 import '../../services/project_service.dart';
 import '../../models/project_step_model.dart';
+import '../../models/project_model.dart';
 
 class ProjectTrackingController extends GetxController {
   final InteractionService _interactionService = Get.find<InteractionService>();
   final ProjectService _projectService = Get.find<ProjectService>();
 
-  // Data from arguments
   late final int projectId;
   late final String projectTitle;
   late final bool isProvider;
+  late final bool canRate;
 
   var progress = 0.0.obs;
   var steps = <ProjectStepModel>[].obs;
   var isLoading = false.obs;
-  
-  // Track performer ID for complaints
+  var project = Rxn<ProjectModel>();
+
   int? performerUserId;
+  String? providerName;
+  String? providerType;
+  String? provinceName;
+  String? clientName;
 
   @override
   void onInit() {
@@ -28,27 +35,42 @@ class ProjectTrackingController extends GetxController {
     projectId = args['projectId'] ?? 0;
     projectTitle = args['projectTitle'] ?? "مشروع غير محدد";
     isProvider = args['isProvider'] ?? false;
-    
+    canRate = args['canRate'] == true;
     loadTrackingData();
   }
 
   Future<void> loadTrackingData() async {
     if (projectId == 0) return;
-    
+
     try {
       isLoading.value = true;
-      
-      // 1. Load project details for overall progress and performer info
-      final project = await _projectService.fetchProjectDetails(projectId);
-      if (project != null) {
-        progress.value = project.progressPercentage / 100.0;
-        performerUserId = project.performerUserId;
+
+      final details = await _projectService.fetchProjectDetails(projectId);
+      if (details != null) {
+        project.value = details;
+        progress.value = details.progressPercentage / 100.0;
+        performerUserId = details.performerUserId;
+        providerName = details.providerName;
+        providerType = details.providerType ?? details.type;
+        provinceName = details.governorate;
+        clientName = details.clientName;
+        if (details.isCompletedLifecycle) {
+          progress.value = 1.0;
+        }
       }
 
-      // 2. Load milestones/steps
-      final stepsData = await _projectService.fetchProjectSteps(projectId, isProvider: isProvider);
-      steps.assignAll(stepsData.map((e) => ProjectStepModel.fromJson(e)).toList());
-      
+      final stepsData =
+          await _projectService.fetchProjectSteps(projectId, isProvider: isProvider);
+      final mapped = stepsData
+          .map((e) => ProjectStepModel.fromJson(Map<String, dynamic>.from(e as Map)))
+          .toList();
+      mapped.sort((a, b) => a.id.compareTo(b.id));
+      steps.assignAll(mapped);
+
+      if (steps.isNotEmpty && progress.value == 0) {
+        final completed = steps.where((s) => s.isCompleted).length;
+        progress.value = completed / steps.length;
+      }
     } catch (e) {
       print("Error loading tracking data: $e");
     } finally {
@@ -56,64 +78,128 @@ class ProjectTrackingController extends GetxController {
     }
   }
 
+  void openComplaintForm() {
+    if (Get.isRegistered<ComplaintsController>()) {
+      Get.delete<ComplaintsController>();
+    }
+    Get.to(
+      () => ComplaintsScreen(),
+      arguments: {
+        'prefill': true,
+        'providerId': performerUserId,
+        'providerName': providerName,
+        'projectId': projectId,
+        'projectTitle': projectTitle,
+        'clientName': clientName,
+      },
+    );
+  }
+
   void showComplaintDialog() {
     if (!isProvider && performerUserId == null) {
-      Get.snackbar('تنبيه', 'لا يمكن تقديم شكوى حالياً، المقاول غير محدد', backgroundColor: Colors.orange, colorText: Colors.white);
+      Get.snackbar(
+        'تنبيه',
+        'لا يمكن تقديم شكوى حالياً، المقاول غير محدد',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
       return;
     }
 
-    final TextEditingController complaintController = TextEditingController();
-    Get.defaultDialog(
-      title: 'تقديم شكوى',
-      titleStyle: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18, color: Colors.redAccent),
-      content: Column(
-        children: [
-          const Text(
-            'هل تواجه مشكلة أو تأخير في سير العمل؟',
-            style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: complaintController,
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: 'اشرح تفاصيل المشكلة هنا ليتم التدخل من الإدارة...',
-              hintStyle: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: Colors.redAccent)),
-            ),
-          ),
-        ],
-      ),
-      textConfirm: 'إرسال الشكوى',
-      textCancel: 'تراجع',
-      confirmTextColor: Colors.white,
-      buttonColor: Colors.redAccent,
-      onConfirm: () async {
-        if (complaintController.text.isNotEmpty) {
-          Get.back();
-          isLoading.value = true;
-          
-          // Determine who the complaint is against
-          // If Client is reporting, it's against performerUserId
-          // If Provider is reporting, it might be against the Client (this part can be expanded)
-          int againstId = performerUserId ?? 0; 
-          
-          final result = await _interactionService.submitComplaint(
-            projectId: projectId, 
-            text: complaintController.text,
-            againstUserId: againstId,
-          );
-          isLoading.value = false;
+    openComplaintForm();
+  }
 
-          if (result['success']) {
-            Get.snackbar('تم الإرسال', result['message'], backgroundColor: Colors.green, colorText: Colors.white);
-          } else {
-            Get.snackbar('خطأ', result['message'], backgroundColor: Colors.redAccent, colorText: Colors.white);
-          }
+  void showRatingDialog() {
+    final current = project.value;
+    if (current == null) return;
+
+    double selectedRating = 5.0;
+    final TextEditingController commentController = TextEditingController();
+
+    Get.defaultDialog(
+      title: 'تقييم مزود الخدمة',
+      titleStyle: const TextStyle(
+        fontFamily: 'Tajawal',
+        fontWeight: FontWeight.bold,
+        fontSize: 18,
+      ),
+      content: StatefulBuilder(
+        builder: (context, setState) {
+          return Column(
+            children: [
+              Text(
+                'المزود: ${providerName ?? "مزود الخدمة"}',
+                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'المشروع: $projectTitle',
+                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+              if (clientName != null)
+                Text(
+                  'العميل: $clientName',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(
+                      index < selectedRating
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      color: Colors.amber,
+                      size: 36,
+                    ),
+                    onPressed: () => setState(() => selectedRating = index + 1.0),
+                  );
+                }),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: commentController,
+                maxLines: 2,
+                decoration: InputDecoration(
+                  hintText: 'أضف تعليقك هنا (اختياري)...',
+                  hintStyle: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+      textConfirm: 'إرسال التقييم',
+      textCancel: 'إلغاء',
+      confirmTextColor: Colors.white,
+      buttonColor: const Color(0xFFF58A1E),
+      onConfirm: () async {
+        Get.back();
+        isLoading.value = true;
+        final result = await _interactionService.submitRating(projectId, {
+          'rating': selectedRating,
+          'score': selectedRating.round(),
+          'comment': commentController.text,
+          if (performerUserId != null) 'reviewed_user_id': performerUserId,
+        });
+        isLoading.value = false;
+
+        if (result['success'] == true) {
+          Get.snackbar(
+            'شكراً لك',
+            result['message'] ?? 'تم إرسال التقييم',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
         } else {
-          Get.snackbar('تنبيه', 'يرجى كتابة تفاصيل الشكوى أولاً', backgroundColor: Colors.orange, colorText: Colors.white);
+          Get.snackbar(
+            'خطأ',
+            result['message'] ?? 'فشل إرسال التقييم',
+            backgroundColor: Colors.redAccent,
+            colorText: Colors.white,
+          );
         }
       },
     );

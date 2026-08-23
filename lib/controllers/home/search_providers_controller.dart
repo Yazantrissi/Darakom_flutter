@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../services/interaction_service.dart';
 import '../../services/project_service.dart';
 import '../../models/user_model.dart';
+import '../../views/home/public_provider_profile_screen.dart';
 import 'dart:async';
 
 class SearchProvidersController extends GetxController {
@@ -78,6 +79,29 @@ class SearchProvidersController extends GetxController {
       }
     });
     return Future.value();
+  }
+
+  void viewProviderProfile(UserModel provider) {
+    Get.to(() => PublicProviderProfileScreen(providerId: provider.id));
+  }
+
+  Future<void> toggleFavorite(UserModel provider) async {
+    final success = await _interactionService.toggleFavorite(provider.id);
+    if (success) {
+      Get.snackbar(
+        'المفضلة',
+        'تم تحديث المفضلة لـ ${provider.name}',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
+    } else {
+      Get.snackbar(
+        'خطأ',
+        'تعذر تحديث المفضلة',
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
+    }
   }
 
   void inviteToProject(UserModel provider) async {

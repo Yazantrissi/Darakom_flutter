@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import '../../services/offer_service.dart';
 import '../../models/attachment_model.dart';
+import '../../models/offer_model.dart';
 
 class SubmitOfferController extends GetxController {
   final OfferService _offerService = Get.find<OfferService>();
@@ -17,10 +20,55 @@ class SubmitOfferController extends GetxController {
   var projectStages = <StageItem>[].obs;
   var offerAttachments = <AttachmentModel>[].obs;
 
+  int? editingOfferId;
+  bool isEditMode = false;
+
   @override
   void onInit() {
     super.onInit();
     addAttachment();
+  }
+
+  void loadFromOffer(OfferModel offer, {required String projectName}) {
+    isEditMode = true;
+    editingOfferId = offer.id;
+    offerProjectNameController.text = projectName;
+    totalDurationController.text = offer.duration.toString();
+    totalPriceController.text = offer.cost.round().toString();
+
+    String? startDate;
+    if (offer.workSummary != null && offer.workSummary!.trim().startsWith('{')) {
+      try {
+        final parsed = jsonDecode(offer.workSummary!);
+        if (parsed is Map) {
+          startDate = parsed['startDate']?.toString();
+          final stages = parsed['stages'];
+          if (stages is List && (offer.stages == null || offer.stages!.isEmpty)) {
+            projectStages.clear();
+            for (final s in stages) {
+              if (s is! Map) continue;
+              final item = StageItem();
+              item.nameController.text = (s['name'] ?? s['title'] ?? '').toString();
+              item.durationController.text =
+                  (s['duration_days'] ?? s['duration'] ?? '').toString().replaceAll(RegExp(r'[^\d]'), '');
+              projectStages.add(item);
+            }
+          }
+        }
+      } catch (_) {}
+    }
+    startDateController.text = startDate ?? '';
+
+    if (offer.stages != null && offer.stages!.isNotEmpty) {
+      projectStages.clear();
+      for (final s in offer.stages!) {
+        final item = StageItem();
+        item.nameController.text = (s['title'] ?? s['name'] ?? '').toString();
+        item.durationController.text =
+            (s['duration_days'] ?? s['duration'] ?? '').toString().replaceAll(RegExp(r'[^\d]'), '');
+        projectStages.add(item);
+      }
+    }
   }
 
   void addStage() {
@@ -87,11 +135,18 @@ class SubmitOfferController extends GetxController {
             })
         .toList();
 
+    final notesPayload = <String, dynamic>{
+      if (startDateController.text.trim().isNotEmpty)
+        'startDate': startDateController.text.trim(),
+      if (stages.isNotEmpty) 'stages': stages,
+      if (offerProjectNameController.text.trim().isNotEmpty)
+        'projectTitle': offerProjectNameController.text.trim(),
+    };
+
     final Map<String, dynamic> data = {
       'amount': amount,
       'delivery_days': deliveryDays,
-      if (offerProjectNameController.text.isNotEmpty)
-        'notes': offerProjectNameController.text,
+      if (notesPayload.isNotEmpty) 'notes': jsonEncode(notesPayload),
       if (stages.isNotEmpty) 'stages': stages,
     };
 
@@ -108,18 +163,37 @@ class SubmitOfferController extends GetxController {
       }
     }
 
-    final result = await _offerService.submitOfferDetailed(
-      projectId,
-      data,
-      attachments: docs.isNotEmpty ? docs : null,
-    );
+    final Map<String, dynamic> result;
+    if (isEditMode && editingOfferId != null) {
+      result = await _offerService.updateOfferDetailed(
+        editingOfferId!,
+        data,
+        attachments: docs.isNotEmpty ? docs : null,
+      );
+    } else {
+      result = await _offerService.submitOfferDetailed(
+        projectId,
+        data,
+        attachments: docs.isNotEmpty ? docs : null,
+      );
+    }
     isLoading.value = false;
 
-    if (result['success']) {
-      Get.back();
-      Get.snackbar('نجاح', 'تم إرسال العرض بنجاح', backgroundColor: Colors.green, colorText: Colors.white);
+    if (result['success'] == true) {
+      Get.back(result: true);
+      Get.snackbar(
+        'نجاح',
+        isEditMode ? 'تم تحديث العرض بنجاح' : 'تم إرسال العرض بنجاح',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+      );
     } else {
-      Get.snackbar('خطأ', 'فشل في إرسال العرض: ${result['message']}', backgroundColor: Colors.redAccent, colorText: Colors.white);
+      Get.snackbar(
+        'خطأ',
+        'فشل في حفظ العرض: ${result['message']}',
+        backgroundColor: Colors.redAccent,
+        colorText: Colors.white,
+      );
     }
   }
 

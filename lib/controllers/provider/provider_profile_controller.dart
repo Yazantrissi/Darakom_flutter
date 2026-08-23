@@ -28,6 +28,7 @@ class ProviderProfileController extends GetxController {
   var isEditing = false.obs;
   var isLoading = false.obs;
   var fullUserName = ''.obs;
+  var averageRating = 0.0.obs;
 
   var posts = <PostModel>[].obs;
   var provinces = <ProvinceModel>[].obs;
@@ -113,6 +114,7 @@ class ProviderProfileController extends GetxController {
         syndicateNumberController.text = user.syndicateNumber ?? '';
         experienceYearsController.text = user.experienceYears?.toString() ?? '';
         bioController.text = user.bio ?? '';
+        averageRating.value = user.averageRating ?? 0;
 
         if (user.city != null && user.city!.isNotEmpty) {
           selectedGovernorate.value =
@@ -218,6 +220,7 @@ class ProviderProfileController extends GetxController {
   Future<void> addPost() async {
     final TextEditingController titleController = TextEditingController();
     final TextEditingController descController = TextEditingController();
+    XFile? pickedImage;
 
     Get.bottomSheet(
       Container(
@@ -231,7 +234,7 @@ class ProviderProfileController extends GetxController {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('إضافة بوست جديد',
+              const Text('إضافة عمل سابق',
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 16),
               TextField(
@@ -254,10 +257,10 @@ class ProviderProfileController extends GetxController {
               ElevatedButton.icon(
                 onPressed: () async {
                   final ImagePicker picker = ImagePicker();
-                  await picker.pickMultiImage();
+                  pickedImage = await picker.pickImage(source: ImageSource.gallery);
                 },
                 icon: const Icon(Icons.add_photo_alternate_outlined),
-                label: const Text('إضافة صور'),
+                label: const Text('إضافة صورة'),
                 style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey.shade100, foregroundColor: Colors.black87),
               ),
@@ -267,14 +270,23 @@ class ProviderProfileController extends GetxController {
                   if (descController.text.isEmpty) return;
                   Get.back();
                   isLoading.value = true;
+                  List<int>? bytes;
+                  String? path;
+                  if (pickedImage != null) {
+                    bytes = await pickedImage!.readAsBytes();
+                    path = pickedImage!.path;
+                  }
                   final result = await _profileService.createPreviousWork(
                     title: titleController.text.isEmpty ? 'عمل سابق' : titleController.text,
                     description: descController.text,
+                    imageBytes: bytes,
+                    imagePath: path,
+                    imageFileName: pickedImage?.name,
                   );
                   isLoading.value = false;
                   if (result['success'] == true) {
                     await _loadPreviousWorks();
-                    Get.snackbar('تم', result['message'] ?? 'تم نشر البوست بنجاح',
+                    Get.snackbar('تم', result['message'] ?? 'تم نشر العمل بنجاح',
                         backgroundColor: Colors.orange, colorText: Colors.white);
                   } else {
                     Get.snackbar('خطأ', result['message'] ?? 'فشل النشر',
@@ -291,6 +303,19 @@ class ProviderProfileController extends GetxController {
         ),
       ),
     );
+  }
+
+  Future<void> deletePost(String id) async {
+    final workId = int.tryParse(id);
+    if (workId == null) return;
+    final result = await _profileService.deletePreviousWork(workId);
+    if (result['success'] == true) {
+      posts.removeWhere((p) => p.id == id);
+      Get.snackbar('تم', 'تم حذف العمل السابق', backgroundColor: Colors.black87, colorText: Colors.white);
+    } else {
+      Get.snackbar('خطأ', result['message'] ?? 'فشل الحذف',
+          backgroundColor: Colors.redAccent, colorText: Colors.white);
+    }
   }
 
   @override

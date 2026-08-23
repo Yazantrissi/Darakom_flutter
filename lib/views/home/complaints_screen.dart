@@ -74,7 +74,16 @@ class ComplaintsScreen extends StatelessWidget {
                 'سجل الشكاوي',
                 style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 48),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                  onPressed: () => controller.openNewComplaintDialog(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -210,12 +219,25 @@ class ComplaintsScreen extends StatelessWidget {
             style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade600, height: 1.5),
           ),
 
-          if (type == 'resolved' && complaint.resolution != null) ...[
+          if ((type == 'resolved' || type == 'rejected') &&
+              complaint.resolution != null &&
+              complaint.resolution!.isNotEmpty) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8)),
-              child: Text('النتيجة: ${complaint.resolution}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.green.shade800, fontWeight: FontWeight.bold)),
+              decoration: BoxDecoration(
+                color: type == 'resolved' ? Colors.green.shade50 : Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'رد الإدارة: ${complaint.resolution}',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 12,
+                  color: type == 'resolved' ? Colors.green.shade800 : Colors.red.shade800,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
 

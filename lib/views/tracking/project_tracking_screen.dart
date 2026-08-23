@@ -76,11 +76,38 @@ class ProjectTrackingScreen extends StatelessWidget {
         children: [
           Text(controller.projectTitle, style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold, color: navyColor)),
           const SizedBox(height: 8),
+          if (controller.providerName != null)
+            Row(
+              children: [
+                Icon(Icons.engineering_outlined, size: 18, color: Colors.grey.shade500),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${controller.providerName}${controller.providerType != null ? " • ${controller.providerType}" : ""}',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600),
+                  ),
+                ),
+              ],
+            ),
+          if (controller.provinceName != null) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(Icons.location_on_outlined, size: 18, color: Colors.grey.shade500),
+                const SizedBox(width: 8),
+                Text(controller.provinceName!, style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600)),
+              ],
+            ),
+          ],
+          const SizedBox(height: 6),
           Row(
             children: [
-              Icon(Icons.engineering_outlined, size: 18, color: Colors.grey.shade500),
+              Icon(Icons.percent_rounded, size: 18, color: Colors.grey.shade500),
               const SizedBox(width: 8),
-              Text('المشروع رقم: #${controller.projectId}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600)),
+              Text(
+                'التقدم: ${(controller.progress.value * 100).toInt()}/100',
+                style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey.shade600),
+              ),
             ],
           ),
         ],
@@ -201,6 +228,29 @@ class ProjectTrackingScreen extends StatelessWidget {
                           const SizedBox(height: 4),
                           Text(step.description!, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                         ],
+                        if (step.attachments != null && step.attachments!.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: step.attachments!.map((att) {
+                              final url = (att['path'] ?? att['url'] ?? '').toString();
+                              final title = (att['description'] ?? att['title'] ?? att['file_name'] ?? 'مرفق').toString();
+                              final isImage = (att['file_type']?.toString() == 'image') ||
+                                  url.toLowerCase().endsWith('.png') ||
+                                  url.toLowerCase().endsWith('.jpg') ||
+                                  url.toLowerCase().endsWith('.jpeg');
+                              return Chip(
+                                avatar: Icon(
+                                  isImage ? Icons.image_outlined : Icons.picture_as_pdf_outlined,
+                                  size: 16,
+                                  color: isImage ? orangeColor : Colors.redAccent,
+                                ),
+                                label: Text(title, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11)),
+                              );
+                            }).toList(),
+                          ),
+                        ],
                         const SizedBox(height: 8),
                         Row(
                           children: [
@@ -258,18 +308,39 @@ class ProjectTrackingScreen extends StatelessWidget {
           ),
         ],
       );
-    } else {
-      return OutlinedButton.icon(
-        onPressed: controller.showComplaintDialog,
-        icon: const Icon(Icons.report_problem_outlined, color: Colors.redAccent),
-        label: const Text('تقديم شكوى على سير العمل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.redAccent)),
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          side: const BorderSide(color: Colors.redAccent, width: 1.5),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-          backgroundColor: Colors.redAccent.withOpacity(0.05),
-        ),
-      );
     }
+
+    return Column(
+      children: [
+        if (controller.canRate || (controller.project.value?.isCompletedLifecycle ?? false)) ...[
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: controller.showRatingDialog,
+              icon: const Icon(Icons.star_outline_rounded, color: Colors.white),
+              label: const Text('تقييم مزود الخدمة', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: orangeColor,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+                elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        OutlinedButton.icon(
+          onPressed: controller.showComplaintDialog,
+          icon: const Icon(Icons.report_problem_outlined, color: Colors.redAccent),
+          label: const Text('تقديم شكوى على سير العمل', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.redAccent)),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            side: const BorderSide(color: Colors.redAccent, width: 1.5),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+            backgroundColor: Colors.redAccent.withOpacity(0.05),
+          ),
+        ),
+      ],
+    );
   }
 }

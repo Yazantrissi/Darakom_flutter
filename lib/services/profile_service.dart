@@ -156,14 +156,38 @@ class ProfileService extends GetxService {
   Future<Map<String, dynamic>> createPreviousWork({
     required String title,
     required String description,
+    String? imagePath,
+    List<int>? imageBytes,
+    String? imageFileName,
   }) async {
     try {
+      final formData = FormData.fromMap({
+        'title': title,
+        'description': description,
+        'comment': description,
+      });
+
+      if (imageBytes != null) {
+        formData.files.add(MapEntry(
+          'cover_image_file',
+          MultipartFile.fromBytes(
+            imageBytes,
+            filename: imageFileName ?? 'work.jpg',
+          ),
+        ));
+      } else if (imagePath != null && imagePath.isNotEmpty) {
+        formData.files.add(MapEntry(
+          'cover_image_file',
+          await MultipartFile.fromFile(
+            imagePath,
+            filename: imageFileName ?? 'work.jpg',
+          ),
+        ));
+      }
+
       final response = await _apiService.post(
         ApiConstants.previousWorks,
-        data: {
-          'title': title,
-          'description': description,
-        },
+        data: formData,
       );
       return ApiResponse.fromBody(response.data);
     } on DioException catch (e) {
@@ -172,6 +196,22 @@ class ProfileService extends GetxService {
       return {
         'success': false,
         'message': 'فشل إضافة العمل السابق',
+        'data': null,
+        'errors': null,
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deletePreviousWork(int id) async {
+    try {
+      final response = await _apiService.delete(ApiConstants.previousWork(id));
+      return ApiResponse.fromBody(response.data);
+    } on DioException catch (e) {
+      return ApiResponse.failureFromDio(e);
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'فشل حذف العمل السابق',
         'data': null,
         'errors': null,
       };

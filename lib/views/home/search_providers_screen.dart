@@ -186,12 +186,40 @@ class SearchProvidersScreen extends StatelessWidget {
                       children: [
                         const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
                         const SizedBox(width: 4),
-                        const Text('0.0', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1A2A44))),
+                        Text(
+                          (provider.averageRating ?? 0).toStringAsFixed(1),
+                          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1A2A44)),
+                        ),
                       ],
                     ),
-                    TextButton(
-                      onPressed: () => controller.inviteToProject(provider),
-                      child: Text('دعوة لمشروع', style: TextStyle(color: orangeColor, fontSize: 12, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => controller.viewProviderProfile(provider),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: navyColor,
+                          side: BorderSide(color: navyColor.withOpacity(0.3)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('عرض الملف الشخصي', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => controller.toggleFavorite(provider),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: orangeColor,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('إضافة للمفضلة', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
                     ),
                   ],
                 ),

@@ -111,19 +111,32 @@ class NotificationsScreen extends StatelessWidget {
     IconData iconData;
     Color iconColor;
 
-    // Mapping backend notification type classes to UI
+    // Mapping backend notification type to UI icons
     switch (notification.type) {
-      case 'AcceptProvider':
-        iconData = Icons.check_circle_outline_rounded;
+      case 'offer':
+        iconData = Icons.request_quote_outlined;
         iconColor = Colors.green;
         break;
-      case 'UrgentProject':
+      case 'tender':
         iconData = Icons.flash_on_rounded;
         iconColor = Colors.redAccent;
         break;
-      case 'RejectOffer':
-        iconData = Icons.cancel_outlined;
-        iconColor = Colors.grey;
+      case 'review':
+        iconData = Icons.star_outline_rounded;
+        iconColor = Colors.amber;
+        break;
+      case 'complaint':
+        iconData = Icons.warning_amber_rounded;
+        iconColor = Colors.red;
+        break;
+      case 'update':
+      case 'project':
+        iconData = Icons.engineering_outlined;
+        iconColor = Colors.blue;
+        break;
+      case 'system':
+        iconData = Icons.check_circle_outline_rounded;
+        iconColor = Colors.green;
         break;
       default:
         iconData = Icons.notifications_none_rounded;
@@ -146,9 +159,7 @@ class NotificationsScreen extends StatelessWidget {
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
       child: GestureDetector(
-        onTap: () {
-          if (!isRead) controller.markAsRead(notification.id);
-        },
+        onTap: () => controller.openNotification(notification),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -233,11 +244,25 @@ class NotificationsScreen extends StatelessWidget {
   }
 
   String _getNotificationTitle(NotificationModel n) {
+    if (n.title != null && n.title!.trim().isNotEmpty) {
+      return n.title!;
+    }
     switch (n.type) {
-      case 'AcceptProvider': return 'تم قبول العرض';
-      case 'UrgentProject': return 'مناقصة مستعجلة';
-      case 'RejectOffer': return 'تم رفض العرض';
-      default: return 'تنبيه جديد';
+      case 'offer':
+        return 'عرض جديد';
+      case 'tender':
+        return 'مناقصة جديدة';
+      case 'review':
+        return 'تقييم جديد';
+      case 'complaint':
+        return 'إشعار شكوى';
+      case 'update':
+      case 'project':
+        return 'تحديث المشروع';
+      case 'system':
+        return 'إشعار النظام';
+      default:
+        return 'تنبيه جديد';
     }
   }
 

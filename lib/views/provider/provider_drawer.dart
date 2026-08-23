@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../controllers/provider/provider_dashboard_controller.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
+import '../home/client_dashboard_screen.dart';
 
 // استيراد شاشات التقييمات والشكاوي (نفس الشاشات المستخدمة للعميل)
 import '../home/ratings_screen.dart';
@@ -118,6 +119,18 @@ class ProviderDrawer extends StatelessWidget {
                   onTap: () {
                     Get.back();
                     Get.to(() => ComplaintsScreen()); // الانتقال لشاشة الشكاوي
+                  },
+                ),
+
+                _buildDrawerItem(
+                  icon: Icons.swap_horiz_rounded,
+                  title: 'تبديل الحساب (عميل)',
+                  onTap: () async {
+                    Get.back();
+                    final user = await authService.switchAccount('client');
+                    if (user != null) {
+                      Get.offAll(() => ClientDashboardScreen());
+                    }
                   },
                 ),
 

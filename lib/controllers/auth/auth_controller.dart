@@ -40,11 +40,14 @@ class AuthController extends GetxController {
 
       if (user.type == 'provider') {
         Get.offAll(() => ProviderDashboardScreen());
+      } else if (user.type == 'admin') {
+        Get.snackbar('تنبيه', 'لوحة الأدمن متاحة عبر الويب',
+            backgroundColor: Colors.orange, colorText: Colors.white);
       } else {
         Get.offAll(() => ClientDashboardScreen());
       }
     }
-    // AuthService already shows Arabic API/422 errors via snackbar
+    // AuthService already shows Arabic API/422/403 errors (incl. rejection_reason) via snackbar
   }
 
   Future<void> logout() async {

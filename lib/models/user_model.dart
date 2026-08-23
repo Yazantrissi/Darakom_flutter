@@ -23,6 +23,8 @@ class UserModel {
   final String? address;
   final String? profilePicture;
   final String? token;
+  final double? averageRating;
+  final int? ratingsCount;
 
   UserModel({
     required this.id,
@@ -49,6 +51,8 @@ class UserModel {
     this.address,
     this.profilePicture,
     this.token,
+    this.averageRating,
+    this.ratingsCount,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -90,7 +94,8 @@ class UserModel {
       provinceName: json['province'] is Map
           ? json['province']['name']?.toString()
           : json['province']?.toString(),
-      city: json['city']?.toString(),
+      city: json['city']?.toString() ??
+          (json['province'] is Map ? json['province']['name']?.toString() : null),
       specialty: json['specialty']?.toString() ??
           profile?['specialty']?.toString() ??
           json['provider_type']?.toString(),
@@ -120,11 +125,21 @@ class UserModel {
               ? parseId(profile?['experience'])
               : null),
       bio: json['bio']?.toString() ?? profile?['bio']?.toString(),
-      address: json['address']?.toString(),
+      address: json['detailed_address']?.toString() ??
+          json['address']?.toString() ??
+          profile?['address']?.toString(),
       profilePicture: json['avatar_url']?.toString() ??
           json['avatar']?.toString() ??
           json['profile_picture']?.toString(),
       token: json['token']?.toString(),
+      averageRating: () {
+        final raw = json['average_rating'] ?? json['rating'];
+        if (raw is num) return raw.toDouble();
+        return double.tryParse('${raw ?? ''}');
+      }(),
+      ratingsCount: json['ratings_count'] != null
+          ? parseId(json['ratings_count'])
+          : null,
     );
   }
 

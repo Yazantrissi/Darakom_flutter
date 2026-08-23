@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/home/offer_details_controller.dart';
 import '../../models/offer_model.dart';
+import 'public_provider_profile_screen.dart';
 
 class OfferDetailsScreen extends StatelessWidget {
   final OfferModel offer;
@@ -117,6 +118,13 @@ class OfferDetailsScreen extends StatelessWidget {
                   o.specialty ?? "",
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500),
                 ),
+                if (o.providerId != null) ...[
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Get.to(() => PublicProviderProfileScreen(providerId: o.providerId!)),
+                    child: Text('عرض الملف الشخصي', style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ),
+                ],
               ],
             ),
           ),

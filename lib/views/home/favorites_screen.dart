@@ -167,7 +167,7 @@ class FavoritesScreen extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: OutlinedButton(
-                  onPressed: () => controller.viewProfile(provider.name),
+                  onPressed: () => controller.viewProfile(provider),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     side: BorderSide(color: navyColor, width: 1.2),

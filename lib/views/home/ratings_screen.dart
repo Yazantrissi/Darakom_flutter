@@ -72,7 +72,16 @@ class RatingsScreen extends StatelessWidget {
                 'التقييمات',
                 style: TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(width: 48),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                  onPressed: () => controller.openNewRatingDialog(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),

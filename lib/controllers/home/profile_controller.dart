@@ -120,6 +120,7 @@ class ProfileController extends GetxController {
       'name': '${firstNameController.text} ${lastNameController.text}'.trim(),
       'phone': phoneController.text,
       'address': addressController.text,
+      'detailed_address': addressController.text,
       'bio': bioController.text,
       'city': selectedProvince.value?.name,
       'province_name': selectedProvince.value?.name,

@@ -135,10 +135,25 @@ class AuthService extends GetxService {
 
       final errMsg = _errorsMessage(response.data) ??
           ApiResponse.messageOf(response.data, fallback: 'فشل تسجيل الدخول');
-      _showError(errMsg);
+      String? rejection;
+      final errors = response.data is Map ? response.data['errors'] : null;
+      if (errors is Map) {
+        final rr = errors['rejection_reason'];
+        if (rr is List && rr.isNotEmpty) rejection = rr.first.toString();
+        if (rr is String) rejection = rr;
+      }
+      _showError(rejection != null && rejection.isNotEmpty ? '$errMsg\nسبب الرفض: $rejection' : errMsg);
       return null;
     } on DioException catch (e) {
-      _showError(ApiResponse.extractError(e, fallback: 'فشل تسجيل الدخول'));
+      final data = e.response?.data;
+      String? rejection;
+      if (data is Map && data['errors'] is Map) {
+        final rr = data['errors']['rejection_reason'];
+        if (rr is List && rr.isNotEmpty) rejection = rr.first.toString();
+        if (rr is String) rejection = rr;
+      }
+      final base = ApiResponse.extractError(e, fallback: 'فشل تسجيل الدخول');
+      _showError(rejection != null && rejection.isNotEmpty ? '$base\nسبب الرفض: $rejection' : base);
     } catch (e) {
       print("Login error: $e");
       _showError('فشل تسجيل الدخول');
@@ -254,13 +269,40 @@ class AuthService extends GetxService {
       final response = await _apiService.post(ApiConstants.logout);
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-      return ApiResponse.isSuccess(response.data);
+      return ApiResponse.isSuccess(response.data) || true;
     } catch (e) {
-      print("Logout error: $e");
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
+      return true;
     }
-    return false;
+  }
+
+  Future<UserModel?> switchAccount(String role) async {
+    try {
+      final response = await _apiService.post(
+        ApiConstants.switchAccount,
+        data: {'role': role},
+      );
+      if (ApiResponse.isSuccess(response.data)) {
+        final data = ApiResponse.dataOf(response.data);
+        if (data is Map) {
+          final user = UserModel.fromJson(Map<String, dynamic>.from(data));
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_type', user.type);
+          if (user.token != null) {
+            await _saveToken(user.token);
+          }
+          return user;
+        }
+      }
+      _showError(ApiResponse.messageOf(response.data, fallback: 'تعذر تبديل الحساب'));
+    } on DioException catch (e) {
+      _showError(ApiResponse.extractError(e, fallback: 'تعذر تبديل الحساب'));
+    } catch (e) {
+      print('Switch account error: $e');
+      _showError('تعذر تبديل الحساب');
+    }
+    return null;
   }
 
   Future<bool> forgotPassword(String email) async {

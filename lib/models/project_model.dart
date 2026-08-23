@@ -13,6 +13,7 @@ class ProjectModel {
   final String? providerName;
   final int? performerUserId;
   final String? clientName;
+  final int? clientId;
   final String? area;
   final String? governorate;
   final String? address;
@@ -29,6 +30,10 @@ class ProjectModel {
   final int? invitedProviderId;
   final int? serviceCategoryId;
   final List<Map<String, dynamic>>? attachments;
+  final String? timeLeft;
+  final String? providerType;
+  final String? offerAmount;
+  final int? deliveryDays;
 
   ProjectModel({
     required this.id,
@@ -45,6 +50,7 @@ class ProjectModel {
     this.providerName,
     this.performerUserId,
     this.clientName,
+    this.clientId,
     this.area,
     this.governorate,
     this.address,
@@ -61,6 +67,10 @@ class ProjectModel {
     this.invitedProviderId,
     this.serviceCategoryId,
     this.attachments,
+    this.timeLeft,
+    this.providerType,
+    this.offerAmount,
+    this.deliveryDays,
   });
 
   String? get projectName => title;
@@ -129,6 +139,8 @@ class ProjectModel {
     final performer = json['performer'] as Map<String, dynamic>?;
     final performerUser = performer?['user'] as Map<String, dynamic>?;
     final provider = json['provider'] as Map<String, dynamic>?;
+    final acceptedOffer = json['accepted_offer'] as Map<String, dynamic>?;
+    final acceptedProvider = acceptedOffer?['provider'] as Map<String, dynamic>?;
     final client = json['client'] as Map<String, dynamic>?;
     final offers = json['offers'] as List?;
     final rawStatus = (json['status'] ?? '').toString();
@@ -143,6 +155,19 @@ class ProjectModel {
             ? executionFromApi
             : _mapExecutionStatus(rawStatus.isNotEmpty ? rawStatus : status);
 
+    final resolvedProviderName = provider?['name']?.toString() ??
+        acceptedProvider?['name']?.toString() ??
+        performerUser?['full_name']?.toString() ??
+        performerUser?['name']?.toString() ??
+        json['provider_name']?.toString() ??
+        json['providerName']?.toString();
+
+    final resolvedProviderType = provider?['provider_type']?.toString() ??
+        acceptedProvider?['provider_type']?.toString() ??
+        provider?['craftsman_subtype']?.toString() ??
+        json['provider_type']?.toString() ??
+        performer?['role']?['name']?.toString();
+
     return ProjectModel(
       id: parseInt(json['id']) ?? 0,
       title: json['title'] ?? json['projectName'] ?? "",
@@ -156,18 +181,20 @@ class ProjectModel {
       endDate: json['deadline'] ?? json['end_date'] ?? json['endDate'],
       progressPercentage:
           parseDouble(json['progress_percentage'] ?? json['progress'] ?? 0.0),
-      providerName: provider?['name']?.toString() ??
-          performerUser?['full_name']?.toString() ??
-          performerUser?['name']?.toString() ??
-          json['providerName']?.toString(),
+      providerName: resolvedProviderName,
       performerUserId: parseInt(json['performer_user_id']) ??
           parseInt(json['provider_id']) ??
           parseInt(provider?['id']) ??
+          parseInt(acceptedOffer?['provider_id']) ??
+          parseInt(acceptedProvider?['id']) ??
           parseInt(performerUser?['id']) ??
           parseInt(json['performerUserId']),
       clientName: client?['name']?.toString() ??
           client?['full_name']?.toString() ??
           json['clientName']?.toString(),
+      clientId: parseInt(json['client_id']) ??
+          parseInt(client?['id']) ??
+          parseInt(json['clientId']),
       area: json['area']?.toString(),
       governorate: province?['name'] ?? json['governorate'] ?? json['city'],
       address: json['location']?.toString() ??
@@ -183,10 +210,16 @@ class ProjectModel {
           json['specialization']?.toString(),
       publishDate:
           json['created_at']?.toString().split('T').first ?? json['publishDate'],
-      duration: parseInt(json['tender_duration']) ?? parseInt(json['duration']),
-      budget: json['budget']?.toString(),
+      duration: parseInt(json['delivery_days']) ??
+          parseInt(acceptedOffer?['delivery_days']) ??
+          parseInt(json['tender_duration']) ??
+          parseInt(json['duration']),
+      budget: (json['offer_amount'] ??
+              json['offer_value'] ??
+              acceptedOffer?['amount'] ??
+              json['budget'])
+          ?.toString(),
       currency: json['currency']?.toString() ?? 'SYP',
-      // Keep tender_type aligned with visibility (public|private)
       tender_type: visibility ?? json['tender_type']?.toString(),
       invitationId:
           parseInt(json['invitation_id']) ?? parseInt(json['invitationId']),
@@ -197,6 +230,17 @@ class ProjectModel {
       attachments: json['attachments'] != null
           ? List<Map<String, dynamic>>.from(json['attachments'])
           : null,
+      timeLeft: json['time_left']?.toString() ??
+          (json['days_remaining'] != null
+              ? '${json['days_remaining']} يوم'
+              : null),
+      providerType: resolvedProviderType,
+      offerAmount: (json['offer_amount'] ??
+              json['offer_value'] ??
+              acceptedOffer?['amount'])
+          ?.toString(),
+      deliveryDays: parseInt(json['delivery_days']) ??
+          parseInt(acceptedOffer?['delivery_days']),
     );
   }
 

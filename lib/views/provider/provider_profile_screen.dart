@@ -113,6 +113,23 @@ class ProviderProfileScreen extends StatelessWidget {
             controller.selectedSpecialization.value?.name ?? "تخصص غير محدد",
             style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 14),
           )),
+          const SizedBox(height: 8),
+          Obx(() => Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+              const SizedBox(width: 4),
+              Text(
+                (controller.averageRating.value).toStringAsFixed(1),
+                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                controller.selectedGovernorate.value?.name ?? '',
+                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white70, fontSize: 13),
+              ),
+            ],
+          )),
         ],
       ),
     );
@@ -279,12 +296,13 @@ class ProviderProfileScreen extends StatelessWidget {
                         child: Icon(Icons.engineering, color: orangeColor, size: 20)
                     ),
                     const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('نُشر في ${post.createdAt.day}/${post.createdAt.month}/${post.createdAt.year}',
-                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500)),
-                      ],
+                    Expanded(
+                      child: Text('نُشر في ${post.createdAt.day}/${post.createdAt.month}/${post.createdAt.year}',
+                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500)),
+                    ),
+                    IconButton(
+                      onPressed: () => controller.deletePost(post.id),
+                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
                     ),
                   ],
                 ),
@@ -295,7 +313,11 @@ class ProviderProfileScreen extends StatelessWidget {
                   height: 150,
                   width: double.infinity,
                   decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12)),
-                  child: Center(child: Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 40)),
+                  clipBehavior: Clip.antiAlias,
+                  child: post.images.isNotEmpty
+                      ? Image.network(post.images.first, fit: BoxFit.cover, errorBuilder: (_, __, ___) =>
+                          Center(child: Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 40)))
+                      : Center(child: Icon(Icons.image_outlined, color: Colors.grey.shade400, size: 40)),
                 ),
               ],
             ),

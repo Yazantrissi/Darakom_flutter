@@ -1,16 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/provider/submit_offer_controller.dart';
+import '../../models/offer_model.dart';
 import '../../widgets/custom_file_upload_section.dart';
 
 class SubmitOfferScreen extends StatelessWidget {
   final int projectId;
   final String projectName;
   final bool isEditMode;
+  final OfferModel? existingOffer;
   
-  SubmitOfferScreen({super.key, required this.projectId, required this.projectName, this.isEditMode = false});
+  SubmitOfferScreen({
+    super.key,
+    required this.projectId,
+    required this.projectName,
+    this.isEditMode = false,
+    this.existingOffer,
+  }) : controller = _createController();
 
-  final SubmitOfferController controller = Get.put(SubmitOfferController());
+  final SubmitOfferController controller;
+
+  static SubmitOfferController _createController() {
+    if (Get.isRegistered<SubmitOfferController>()) {
+      Get.delete<SubmitOfferController>(force: true);
+    }
+    return Get.put(SubmitOfferController());
+  }
 
   final Color navyColor = const Color(0xFF1A2A44);
   final Color orangeColor = const Color(0xFFF58A1E);
@@ -18,9 +33,10 @@ class SubmitOfferScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // تعيين اسم المشروع تلقائياً في البداية
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (controller.offerProjectNameController.text.isEmpty) {
+      if (isEditMode && existingOffer != null && controller.editingOfferId == null) {
+        controller.loadFromOffer(existingOffer!, projectName: projectName);
+      } else if (controller.offerProjectNameController.text.isEmpty) {
         controller.offerProjectNameController.text = projectName;
       }
     });

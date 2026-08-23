@@ -399,11 +399,44 @@ class ProjectService extends GetxService {
         }
       }
 
-      if (stepId == null) return false;
+      if (stepId == null) {
+        // لا توجد مراحل معلّقة — أرسل تقريراً فقط
+        final reportData = FormData.fromMap({
+          'title': 'تقرير إنجاز',
+          'details': description,
+          'description': description,
+        });
+        var docIndex = 0;
+        for (final att in attachments ?? []) {
+          final fileName = att['file_name']?.toString() ?? 'document';
+          MultipartFile? multipart;
+          if (att['file_bytes'] != null) {
+            multipart = MultipartFile.fromBytes(
+              att['file_bytes'] as List<int>,
+              filename: fileName,
+            );
+          } else if (att['file_path'] != null && att['file_path'].toString().isNotEmpty) {
+            multipart = await MultipartFile.fromFile(
+              att['file_path'].toString(),
+              filename: fileName,
+            );
+          }
+          if (multipart != null) {
+            reportData.files.add(MapEntry('documents[]', multipart));
+            docIndex++;
+          }
+        }
+        final reportRes = await _apiService.post(
+          ApiConstants.providerProjectReports(projectId),
+          data: reportData,
+        );
+        return ApiResponse.isSuccess(reportRes.data);
+      }
 
       final formData = FormData.fromMap({
         'status': 'completed',
         if (description.isNotEmpty) 'description': description,
+        '_method': 'PUT',
       });
 
       var docIndex = 0;
@@ -433,7 +466,7 @@ class ProjectService extends GetxService {
         }
       }
 
-      final updateRes = await _apiService.put(
+      final updateRes = await _apiService.post(
         '/provider/steps/$stepId',
         data: formData,
       );

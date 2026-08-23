@@ -103,6 +103,12 @@ class AddProjectController extends GetxController {
       print("Error fetching initial data for project: $e");
     } finally {
       isLoading.value = false;
+      if (isEditMode.value && editingProjectId.value != 0) {
+        final current = Get.arguments;
+        if (current is ProjectModel) {
+          _bindLookupsForEdit(current);
+        }
+      }
     }
   }
 
@@ -145,7 +151,19 @@ class AddProjectController extends GetxController {
     visibility.value = project.visibility ?? project.tender_type ?? 'public';
     selectedInvitedProviderId.value = project.invitedProviderId;
 
+    _bindLookupsForEdit(project);
     addAttachment();
+  }
+
+  void _bindLookupsForEdit(ProjectModel project) {
+    if (project.provinceId != null && provinces.isNotEmpty) {
+      selectedProvince.value =
+          provinces.firstWhereOrNull((p) => p.id == project.provinceId);
+    }
+    if (project.serviceCategoryId != null && roles.isNotEmpty) {
+      selectedRole.value =
+          roles.firstWhereOrNull((r) => r.id == project.serviceCategoryId);
+    }
   }
 
   void switchTab(bool isConstruction) {

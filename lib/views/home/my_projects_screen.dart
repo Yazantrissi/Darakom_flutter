@@ -158,10 +158,32 @@ class MyProjectsScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
+                if (project.description.isNotEmpty)
+                  Text(
+                    project.description,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                  ),
+                if (project.description.isNotEmpty) const SizedBox(height: 8),
                 Text(
                   'الحالة: قيد الانتظار',
                   style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
                 ),
+                if (project.governorate != null && project.governorate!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'المحافظة: ${project.governorate}',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
+                if (project.timeLeft != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'الوقت المتبقي: ${project.timeLeft}',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Divider(color: Colors.grey.shade100, height: 1),
                 const SizedBox(height: 12),
@@ -234,6 +256,25 @@ class MyProjectsScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
+                Text(
+                  'الحالة: قيد التنفيذ',
+                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500),
+                ),
+                if (project.offerAmount != null || project.budget != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'قيمة العرض: ${project.offerAmount ?? project.budget} ${project.currency ?? "ل.س"}',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
+                if (project.duration != null || project.deliveryDays != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'المدة: ${project.deliveryDays ?? project.duration} يوم',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500),
+                  ),
+                ],
+                const SizedBox(height: 6),
                 Text(project.providerName ?? "قيد التنفيذ", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
                 const SizedBox(height: 16),
                 ClipRRect(
@@ -247,6 +288,14 @@ class MyProjectsScreen extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text('تاريخ التسليم المتوقع: ${project.endDate ?? "غير محدد"}', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade500, fontSize: 12)),
                   ],
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'متابعة سير المشروع',
+                    style: TextStyle(fontFamily: 'Tajawal', color: orangeColor, fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ),
@@ -267,7 +316,15 @@ class MyProjectsScreen extends StatelessWidget {
       separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         final project = controller.completedProjects[index];
-        return Container(
+        return InkWell(
+          onTap: () => Get.to(() => ProjectTrackingScreen(), arguments: {
+            'projectId': project.id,
+            'projectTitle': project.title,
+            'isProvider': false,
+            'canRate': true,
+          }),
+          borderRadius: BorderRadius.circular(16.0),
+          child: Container(
           padding: const EdgeInsets.all(20.0),
           decoration: BoxDecoration(
             color: Colors.white,
@@ -290,12 +347,29 @@ class MyProjectsScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                    child: const Text('مكتمل', style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
+                    child: const Text('مكتمل 100%', style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontSize: 12, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
               const SizedBox(height: 6),
-              Text(project.providerName ?? "", style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500)),
+              Text(
+                '${project.providerName ?? ""} ${project.providerType != null ? "• ${project.providerType}" : ""}',
+                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey.shade500),
+              ),
+              if (project.offerAmount != null || project.budget != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'القيمة: ${project.offerAmount ?? project.budget} ${project.currency ?? "ل.س"}',
+                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500),
+                ),
+              ],
+              if (project.duration != null || project.deliveryDays != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  'المدة المستغرقة: ${project.deliveryDays ?? project.duration} يوم',
+                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500),
+                ),
+              ],
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -312,9 +386,14 @@ class MyProjectsScreen extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => controller.showRatingDialog(project),
-                      icon: const Icon(Icons.star_outline_rounded, size: 18, color: Colors.white),
-                      label: const Text('تقييم', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                      onPressed: () => Get.to(() => ProjectTrackingScreen(), arguments: {
+                        'projectId': project.id,
+                        'projectTitle': project.title,
+                        'isProvider': false,
+                        'canRate': true,
+                      }),
+                      icon: const Icon(Icons.visibility_outlined, size: 18, color: Colors.white),
+                      label: const Text('التفاصيل والتقييم', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: orangeColor,
                         elevation: 0,
@@ -340,6 +419,7 @@ class MyProjectsScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
         );
       },
     );

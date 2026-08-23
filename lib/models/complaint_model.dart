@@ -72,7 +72,8 @@ class ComplaintModel {
       date: json['created_at']?.toString().split('T').first ?? "",
       projectName: project?['title']?.toString() ?? "مشروع غير محدد",
       defendantName: dName ?? "غير محدد",
-      resolution: json['admin_response']?.toString(),
+      resolution: json['admin_reply']?.toString() ??
+          json['admin_response']?.toString(),
       subject: json['subject']?.toString(),
     );
   }

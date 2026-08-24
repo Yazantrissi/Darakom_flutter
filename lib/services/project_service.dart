@@ -138,7 +138,7 @@ class ProjectService extends GetxService {
       }
 
       if (multipart != null) {
-        formData.files.add(MapEntry('documents[]', multipart));
+        formData.files.add(MapEntry('documents[$docIndex]', multipart));
         final title = att['title']?.toString();
         if (title != null && title.isNotEmpty) {
           formData.fields.add(MapEntry('document_titles[$docIndex]', title));
@@ -210,10 +210,16 @@ class ProjectService extends GetxService {
       }
 
       if (multipart == null) return false;
-      formData.files.add(MapEntry('documents[]', multipart));
+      formData.files.add(MapEntry('documents[0]', multipart));
+      final title = attr['title']?.toString();
+      if (title != null && title.isNotEmpty) {
+        formData.fields.add(MapEntry('document_titles[0]', title));
+      }
+      // Method spoofing: PHP multipart is unreliable on raw PUT
+      formData.fields.add(const MapEntry('_method', 'PUT'));
 
       final response = await _apiService.post(
-        ApiConstants.projects,
+        ApiConstants.projectById(projectId),
         data: formData,
       );
       return ApiResponse.isSuccess(response.data);
@@ -422,7 +428,7 @@ class ProjectService extends GetxService {
             );
           }
           if (multipart != null) {
-            reportData.files.add(MapEntry('documents[]', multipart));
+            reportData.files.add(MapEntry('documents[$docIndex]', multipart));
             docIndex++;
           }
         }
@@ -457,7 +463,7 @@ class ProjectService extends GetxService {
         }
 
         if (multipart != null) {
-          formData.files.add(MapEntry('documents[]', multipart));
+          formData.files.add(MapEntry('documents[$docIndex]', multipart));
           final title = att['title']?.toString();
           if (title != null && title.isNotEmpty) {
             formData.fields.add(MapEntry('document_titles[$docIndex]', title));
@@ -467,7 +473,7 @@ class ProjectService extends GetxService {
       }
 
       final updateRes = await _apiService.post(
-        '/provider/steps/$stepId',
+        ApiConstants.providerStep(stepId),
         data: formData,
       );
       return ApiResponse.isSuccess(updateRes.data);

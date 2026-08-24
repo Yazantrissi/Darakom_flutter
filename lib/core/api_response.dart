@@ -1,6 +1,13 @@
 import 'package:dio/dio.dart';
 
 class ApiResponse {
+  static const String serverErrorMessage =
+      'حدث خطأ في الخادم. يرجى المحاولة لاحقاً';
+  static const String forbiddenMessage =
+      'ليس لديك صلاحية لتنفيذ هذا الإجراء';
+  static const String unauthorizedMessage =
+      'غير مصرح لك بالوصول. يرجى تسجيل الدخول.';
+
   static bool isSuccess(dynamic body) {
     return body is Map && body['success'] == true;
   }
@@ -11,22 +18,43 @@ class ApiResponse {
   }
 
   static String messageOf(dynamic body, {String fallback = 'حدث خطأ'}) {
-    if (body is Map && body['message'] != null && body['message'].toString().isNotEmpty) {
+    if (body is Map &&
+        body['message'] != null &&
+        body['message'].toString().isNotEmpty) {
       return body['message'].toString();
     }
     return fallback;
   }
 
-  /// Extracts Arabic validation / API error messages from DioException (esp. 422).
-  static String extractError(DioException e, {String fallback = 'حدث خطأ في الاتصال بالسيرفر'}) {
+  /// Parses Laravel API errors: 401 / 403 / 422 / 5xx.
+  static String extractError(
+    DioException e, {
+    String fallback = 'حدث خطأ في الاتصال بالسيرفر',
+  }) {
+    final status = e.response?.statusCode;
+
+    if (status == 401) return unauthorizedMessage;
+    if (status == 403) {
+      final data = e.response?.data;
+      if (data is Map &&
+          data['message'] != null &&
+          data['message'].toString().isNotEmpty) {
+        return data['message'].toString();
+      }
+      return forbiddenMessage;
+    }
+    if (status != null && status >= 500) return serverErrorMessage;
+
     final data = e.response?.data;
     if (data is Map) {
+      // 422: prefer flattened Arabic validation messages
       final fromErrors = _flattenErrors(data['errors']);
       if (fromErrors.isNotEmpty) return fromErrors;
       if (data['message'] != null && data['message'].toString().isNotEmpty) {
         return data['message'].toString();
       }
     }
+
     if (e.message != null && e.message!.isNotEmpty) {
       return e.message!;
     }
@@ -40,6 +68,7 @@ class ApiResponse {
       'message': extractError(e),
       'data': null,
       'errors': data is Map ? data['errors'] : null,
+      'status': e.response?.statusCode,
     };
   }
 

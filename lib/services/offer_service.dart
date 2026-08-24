@@ -105,7 +105,7 @@ class OfferService extends GetxService {
       }
 
       if (multipart != null) {
-        formData.files.add(MapEntry('documents[]', multipart));
+        formData.files.add(MapEntry('documents[$docIndex]', multipart));
         final title = att['title']?.toString();
         if (title != null && title.isNotEmpty) {
           formData.fields.add(MapEntry('document_titles[$docIndex]', title));

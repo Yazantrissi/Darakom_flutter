@@ -1,3 +1,5 @@
+import '../core/api_constants.dart';
+
 class OfferModel {
   final int id;
   final int projectId;
@@ -84,7 +86,7 @@ class OfferModel {
         provider?['avatar']?.toString() ??
         providerUser?['avatar']?.toString();
     if (avatar != null && avatar.isNotEmpty && !avatar.startsWith('http')) {
-      avatar = "http://127.0.0.1:8000/storage/$avatar";
+      avatar = ApiConstants.resolveStorageUrl(avatar);
     }
 
     String? roleName = provider?['role_name']?.toString() ??

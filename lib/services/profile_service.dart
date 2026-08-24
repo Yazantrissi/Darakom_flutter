@@ -84,7 +84,19 @@ class ProfileService extends GetxService {
         }
       }
 
-      final response = await _apiService.put(ApiConstants.updateProfile, data: body);
+      if (body is FormData) {
+        final fd = body as FormData;
+        if (!fd.fields.any((e) => e.key == '_method')) {
+          fd.fields.add(const MapEntry('_method', 'PUT'));
+        }
+        // POST + _method: PHP parses multipart reliably
+        final response =
+            await _apiService.post(ApiConstants.updateProfile, data: fd);
+        return ApiResponse.fromBody(response.data);
+      }
+
+      final response =
+          await _apiService.put(ApiConstants.updateProfile, data: body);
       return ApiResponse.fromBody(response.data);
     } on DioException catch (e) {
       return ApiResponse.failureFromDio(e);
